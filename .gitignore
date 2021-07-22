@@ -1,8 +1,14 @@
+# REST Test file
+*.http
+
 # ENV File
 .env.*
 config.*
 
-# compiled output
+# Caches
+.eslintcache
+
+# Compiled output
 /dist
 /node_modules
 
