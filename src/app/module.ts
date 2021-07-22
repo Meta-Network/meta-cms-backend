@@ -1,12 +1,12 @@
+import * as fs from 'fs';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import * as fs from 'fs';
+import config from '../config';
 import { SiteConfigModule } from '../site/config/module';
 import { SiteInfoModule } from '../site/info/module';
 import { AppController } from './controller';
 import { AppService } from './service';
-import config from '../config';
 
 @Module({
   imports: [

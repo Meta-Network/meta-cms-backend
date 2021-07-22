@@ -11,7 +11,7 @@ export class SiteInfoService {
       keywords: null,
       author: 'John Doe',
       icon: null,
-      linkedAccount: ''
-    }
+      linkedAccount: '',
+    };
   }
 }

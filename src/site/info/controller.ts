@@ -3,12 +3,10 @@ import { SiteInfoService } from './service';
 
 @Controller('site')
 export class SiteInfoController {
-  constructor(
-    private readonly service: SiteInfoService
-  ) {}
+  constructor(private readonly service: SiteInfoService) {}
 
   @Get('info')
   getSiteInfo() {
-    return this.service.getSiteInfo()
+    return this.service.getSiteInfo();
   }
 }

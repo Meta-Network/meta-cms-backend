@@ -9,7 +9,7 @@ export class SiteConfigService {
       timezone: 'UTC+8',
       theme: 'landscape',
       platform: 'github',
-      subdomain: 'example.com'
-    }
+      subdomain: 'example.com',
+    };
   }
 }
