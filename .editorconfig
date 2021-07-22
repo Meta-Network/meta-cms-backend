@@ -14,6 +14,6 @@ trim_trailing_whitespace = false
 quote_type = single
 spaces_around_operators = true
 
-[*.{js,jsx,ts,tsx,css,scss}]
+[*.{js,jsx,ts,tsx,css,scss,yaml}]
 indent_size = 2
 indent_style = space

@@ -1,37 +1,37 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import * as fs from 'fs';
-import { SiteConfigModule } from 'src/site/config/module';
-import { SiteInfoModule } from 'src/site/info/module';
+import { SiteConfigModule } from '../site/config/module';
+import { SiteInfoModule } from '../site/info/module';
 import { AppController } from './controller';
 import { AppService } from './service';
-
-require('dotenv').config({
-  path:
-    process.env.NODE_ENV === 'production'
-      ? '.env.production'
-      : '.env.development',
-});
+import config from '../config';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      load: [config],
     }),
-    TypeOrmModule.forRoot({
-      type: 'mysql',
-      host: process.env.DB_HOST,
-      ssl: {
-        ca: fs.readFileSync('./rds-ca-2019-root.pem', 'utf8').toString(),
-      },
-      port: 3306,
-      connectTimeout: 60 * 60 * 1000,
-      username: process.env.DB_USERNAME,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_NAME,
-      autoLoadEntities: true,
-      entities: [],
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: async (configService: ConfigService) => ({
+        type: 'mysql',
+        host: configService.get<string>('db.host'),
+        ssl: {
+          ca: fs.readFileSync('./rds-ca-2019-root.pem', 'utf8').toString(),
+        },
+        port: configService.get<number>('db.port', 3306),
+        connectTimeout: 60 * 60 * 1000,
+        username: configService.get<string>('db.username'),
+        password: configService.get<string>('db.password'),
+        database: configService.get<string>('db.database'),
+        autoLoadEntities: true,
+        entities: [],
+        synchronize: false,
+      }),
     }),
     SiteInfoModule,
     SiteConfigModule,
