@@ -1,17 +1,17 @@
 import { Request } from 'express';
-import { Observable } from 'rxjs';
 import { ExecutionContext, Injectable } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { validateRequestCookie } from '../validator/request';
+import { AuthService } from './service';
 
 @Injectable()
 export class JWTAuthGuard extends AuthGuard('jwt') {
-  canActivate(
-    context: ExecutionContext,
-  ): boolean | Promise<boolean> | Observable<boolean> {
+  constructor(private readonly authService: AuthService) {
+    super();
+  }
+
+  canActivate(context: ExecutionContext) {
     const request: Request = context.switchToHttp().getRequest();
-    const [state] = validateRequestCookie(request);
-    if (state) return true;
+    this.authService.validateJWT(request);
     return super.canActivate(context);
   }
 }

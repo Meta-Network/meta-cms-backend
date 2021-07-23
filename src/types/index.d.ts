@@ -1,7 +1,5 @@
 import { Request } from 'express';
-import * as core from 'express-serve-static-core';
 import { JwtPayload } from 'jsonwebtoken';
-import qs from 'qs';
 
 export interface UCenterUser {
   bio: string;
@@ -22,22 +20,10 @@ export interface UCenterAccount {
 }
 
 export interface UCenterJWTPayload extends JwtPayload, UCenterUser {
-  purpose: string;
+  purpose: 'access_token' | 'refresh_token' | string;
   account: UCenterAccount;
 }
 
-export interface RequestBodyWithJWTPayload
-  extends Record<string | number | symbol, any> {
-  jwtPayload: UCenterJWTPayload;
-}
-
-export type RequestWithJWTPayload = Request<
-  core.ParamsDictionary,
-  any,
-  RequestBodyWithJWTPayload,
-  qs.ParsedQs
->;
-
-export type RequestWithUser = {
+export interface RequestWithUser extends Request {
   user: UCenterJWTPayload;
-} & Request;
+}
