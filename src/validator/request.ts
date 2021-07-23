@@ -7,8 +7,11 @@ import {
   JWTExpiredException,
   RequirdHttpHeadersNotFoundException,
 } from '../exceptions';
+import { UCenterJWTPayload } from 'src/types';
 
-export const validateRequest = (req: Request): boolean => {
+export const validateRequestCookie = (
+  req: Request,
+): [boolean, UCenterJWTPayload] => {
   const cookie = req.cookies;
   if (!cookie || !cookie.ucenter_accessToken) {
     throw new RequirdHttpHeadersNotFoundException();
@@ -22,9 +25,8 @@ export const validateRequest = (req: Request): boolean => {
       audienceId,
       PUBLIC_KEYS.DEVELOPMENT,
     );
-    console.log('Token:', token, 'Payload:', decodedJwtPayload);
 
-    return true;
+    return [true, decodedJwtPayload as UCenterJWTPayload];
   } catch (error) {
     if (error instanceof TokenExpiredError) {
       throw new JWTExpiredException();
@@ -41,4 +43,4 @@ export const validateRequest = (req: Request): boolean => {
   }
 };
 
-export default validateRequest;
+export default validateRequestCookie;

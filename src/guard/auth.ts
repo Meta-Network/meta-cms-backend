@@ -1,7 +1,7 @@
 import { Request } from 'express';
 import { Observable } from 'rxjs';
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
-import { validateRequest } from '../validators/request';
+import { validateRequestCookie } from '../validator/request';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -9,6 +9,7 @@ export class AuthGuard implements CanActivate {
     context: ExecutionContext,
   ): boolean | Promise<boolean> | Observable<boolean> {
     const request: Request = context.switchToHttp().getRequest();
-    return validateRequest(request);
+    const [state] = validateRequestCookie(request);
+    return state;
   }
 }
