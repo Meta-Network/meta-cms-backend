@@ -1,15 +1,17 @@
 import { Request } from 'express';
 import { Observable } from 'rxjs';
-import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import { ExecutionContext, Injectable } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { validateRequestCookie } from '../validator/request';
 
 @Injectable()
-export class AuthGuard implements CanActivate {
+export class JWTAuthGuard extends AuthGuard('jwt') {
   canActivate(
     context: ExecutionContext,
   ): boolean | Promise<boolean> | Observable<boolean> {
     const request: Request = context.switchToHttp().getRequest();
     const [state] = validateRequestCookie(request);
-    return state;
+    if (state) return true;
+    return super.canActivate(context);
   }
 }

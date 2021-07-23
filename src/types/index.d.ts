@@ -37,3 +37,7 @@ export type RequestWithJWTPayload = Request<
   RequestBodyWithJWTPayload,
   qs.ParsedQs
 >;
+
+export type RequestWithUser = {
+  user: UCenterJWTPayload;
+} & Request;
