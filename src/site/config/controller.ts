@@ -1,12 +1,12 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get, Param, ParseIntPipe } from '@nestjs/common';
 import { SiteConfigService } from './service';
 
-@Controller('site')
+@Controller('site/config')
 export class SiteConfigController {
   constructor(private readonly service: SiteConfigService) {}
 
-  @Get('config/:id')
-  getSiteInfo(@Param('id') id: string) {
-    return this.service.getSiteConfig(Number(id));
+  @Get(':id')
+  getSiteInfo(@Param('id', ParseIntPipe) id: number) {
+    return this.service.getSiteConfig(id);
   }
 }
