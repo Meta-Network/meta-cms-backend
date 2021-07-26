@@ -1,17 +1,16 @@
+import { Repository } from 'typeorm';
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { SiteInfo } from '../../entities/siteInfo';
 
 @Injectable()
 export class SiteInfoService {
-  getSiteInfo() {
-    return {
-      id: 0,
-      title: 'matataki-site',
-      subtitle: 'subtitles',
-      description: 'this is a site.',
-      keywords: null,
-      author: 'John Doe',
-      icon: null,
-      linkedAccount: '',
-    };
+  constructor(
+    @InjectRepository(SiteInfo)
+    private readonly siteInfoRepository: Repository<SiteInfo>,
+  ) {}
+
+  async getSiteInfo(uid: number): Promise<SiteInfo[]> {
+    return await this.siteInfoRepository.find({ userId: uid });
   }
 }

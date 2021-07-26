@@ -1,4 +1,5 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, ParseIntPipe } from '@nestjs/common';
+import { User } from '../../decorators';
 import { SiteInfoService } from './service';
 
 @Controller('site/info')
@@ -6,7 +7,7 @@ export class SiteInfoController {
   constructor(private readonly service: SiteInfoService) {}
 
   @Get()
-  getSiteInfo() {
-    return this.service.getSiteInfo();
+  getSiteInfo(@User('id', ParseIntPipe) uid: number) {
+    return this.service.getSiteInfo(uid);
   }
 }
