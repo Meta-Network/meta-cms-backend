@@ -35,7 +35,11 @@ const options: ConnectionOptions = {
   entities: [SiteInfo, SiteConfig],
   synchronize: false,
   migrationsTableName: 'be_migrations',
-  migrations: ['src/migrations/**/*.ts'],
+  migrations: [
+    process.env.NODE_ENV === 'migration'
+      ? 'src/migrations/**/*.ts'
+      : 'migrations/**/*.ts',
+  ],
   cli: {
     migrationsDir: 'src/migrations',
   },
