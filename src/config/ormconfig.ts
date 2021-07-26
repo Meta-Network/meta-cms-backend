@@ -1,7 +1,9 @@
 import { readFileSync } from 'fs';
-import { join } from 'path';
 import * as yaml from 'js-yaml';
+import { join } from 'path';
 import { ConnectionOptions } from 'typeorm';
+import { SiteConfig } from '../entities/siteConfig';
+import { SiteInfo } from '../entities/siteInfo';
 
 interface Config {
   db: {
@@ -19,7 +21,7 @@ const YAML_CONFIG_FILENAME =
     : 'config.development.yaml';
 
 const config: Config = yaml.load(
-  readFileSync(join(__dirname, YAML_CONFIG_FILENAME), 'utf8'),
+  readFileSync(join(__dirname, '..', '..', YAML_CONFIG_FILENAME), 'utf8'),
 ) as Config;
 
 const options: ConnectionOptions = {
@@ -33,7 +35,7 @@ const options: ConnectionOptions = {
   username: config.db.username,
   password: config.db.password,
   database: config.db.database,
-  entities: ['src/entities/*.ts'],
+  entities: [SiteInfo, SiteConfig],
   synchronize: false,
   migrationsTableName: 'be_migrations',
   migrations: ['migration/**/*.ts'],
