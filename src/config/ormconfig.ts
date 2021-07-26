@@ -27,9 +27,6 @@ const config: Config = yaml.load(
 const options: ConnectionOptions = {
   type: 'mysql',
   host: config.db.host,
-  ssl: {
-    ca: readFileSync('./rds-ca-2019-root.pem', 'utf8').toString(),
-  },
   port: config.db.port || 3306,
   connectTimeout: 60 * 60 * 1000,
   username: config.db.username,
@@ -38,9 +35,9 @@ const options: ConnectionOptions = {
   entities: [SiteInfo, SiteConfig],
   synchronize: false,
   migrationsTableName: 'be_migrations',
-  migrations: ['migration/**/*.ts'],
+  migrations: ['src/migrations/**/*.ts'],
   cli: {
-    migrationsDir: 'src/migration',
+    migrationsDir: 'src/migrations',
   },
 };
 
