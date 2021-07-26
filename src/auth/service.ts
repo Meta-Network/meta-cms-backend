@@ -21,7 +21,9 @@ export class AuthService {
     const token: string = cookie.ucenter_accessToken;
 
     try {
-      this.jwtService.verify(token);
+      this.jwtService.verify(token, {
+        ignoreExpiration: process.env.NODE_ENV !== 'production',
+      });
     } catch (error) {
       if (error instanceof TokenExpiredError) {
         throw new JWTExpiredException();

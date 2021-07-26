@@ -10,8 +10,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor() {
     super({
       jwtFromRequest: (req: Request) => req.cookies['ucenter_accessToken'],
-      ignoreExpiration: false,
       secretOrKey: PUBLIC_KEYS.DEVELOPMENT,
+      ignoreExpiration: process.env.NODE_ENV !== 'production',
     });
   }
 

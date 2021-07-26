@@ -13,6 +13,7 @@ export class JwtConfigService implements JwtOptionsFactory {
       verifyOptions: {
         issuer: this.configService.get<string>('jwt.verify.issuer'),
         audience: this.configService.get<string>('jwt.verify.audience'),
+        ignoreExpiration: process.env.NODE_ENV !== 'production',
       },
     };
   }
