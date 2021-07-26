@@ -40,7 +40,7 @@ const options: ConnectionOptions = {
   migrationsTableName: 'be_migrations',
   migrations: ['migration/**/*.ts'],
   cli: {
-    migrationsDir: 'migration',
+    migrationsDir: 'src/migration',
   },
 };
 
