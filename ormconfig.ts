@@ -35,6 +35,11 @@ const options: ConnectionOptions = {
   database: config.db.database,
   entities: ['src/entities/*.ts'],
   synchronize: false,
+  migrationsTableName: 'be_migrations',
+  migrations: ['migration/**/*.ts'],
+  cli: {
+    migrationsDir: 'migration',
+  },
 };
 
 export default options;
