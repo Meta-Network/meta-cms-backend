@@ -1,5 +1,13 @@
-import { IsEnum, IsFQDN, IsInt, IsLocale, IsString } from 'class-validator';
+import {
+  IsEnum,
+  IsFQDN,
+  IsInt,
+  IsLocale,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { ApiHideProperty } from '@nestjs/swagger';
 import { AutoDateEntity } from './autoDate.entity';
 import { SiteInfoEntity } from './siteInfo.entity';
 
@@ -33,48 +41,57 @@ export enum CDNType {
 export class SiteConfigEntity extends AutoDateEntity {
   /** Primary key */
   @PrimaryGeneratedColumn({ comment: 'Site config id', unsigned: true })
+  @ApiHideProperty()
   id: number;
 
   /**
    * Site language
    * @type varchar(255)
    * @default 'en-US'
+   * @example 'en-US'
    */
   @Column({ comment: 'Site language', default: 'en-US' })
   @IsLocale()
-  language: string;
+  @IsOptional()
+  language?: string = 'en-US';
 
   /**
    * Site timezone
    * @type varchar(255)
    * @default ''
+   * @example 'UTC+8'
    */
   @Column({ comment: 'Site timezone', default: '' })
   @IsString()
-  timezone: string;
+  @IsOptional()
+  timezone?: string = '';
 
   /**
    * Site theme
    * @type varchar(255)
    * @default ''
+   * @example 'landscape'
    */
   @Column({ comment: 'Site theme', default: '' })
   @IsString()
-  theme: string;
+  @IsOptional()
+  theme?: string = '';
 
   /**
    * Site domain
    * @type varchar(255)
    * @default ''
+   * @example 'https://example.com'
    */
   @Column({ comment: 'Site domain', default: '' })
   @IsFQDN()
-  domain: string;
+  @IsOptional()
+  domain?: string = '';
 
   /**
    * Site store type
    * @type enum
-   * @default 'GIT'
+   * @default null
    */
   @Column({
     comment: 'Site store type',
@@ -84,7 +101,9 @@ export class SiteConfigEntity extends AutoDateEntity {
     default: null,
   })
   @IsEnum(StoreType)
-  storeType: StoreType | null;
+  @IsOptional()
+  @ApiHideProperty()
+  storeType?: StoreType | null = null;
 
   /**
    * Site store provider id
@@ -93,7 +112,9 @@ export class SiteConfigEntity extends AutoDateEntity {
    */
   @Column({ comment: 'Site store provider id', nullable: true, default: null })
   @IsInt()
-  storeProviderId: number | null;
+  @IsOptional()
+  @ApiHideProperty()
+  storeProviderId?: number | null = null;
 
   /**
    * Site cicd type
@@ -108,7 +129,9 @@ export class SiteConfigEntity extends AutoDateEntity {
     default: null,
   })
   @IsEnum(CICDType)
-  cicdType: CICDType | null;
+  @IsOptional()
+  @ApiHideProperty()
+  cicdType?: CICDType | null = null;
 
   /**
    * Site cicd provider id
@@ -117,7 +140,9 @@ export class SiteConfigEntity extends AutoDateEntity {
    */
   @Column({ comment: 'Site cicd provider id', nullable: true, default: null })
   @IsInt()
-  cicdProviderId: number | null;
+  @IsOptional()
+  @ApiHideProperty()
+  cicdProviderId?: number | null = null;
 
   /**
    * Site publisher type
@@ -132,7 +157,9 @@ export class SiteConfigEntity extends AutoDateEntity {
     default: null,
   })
   @IsEnum(PublisherType)
-  publisherType: PublisherType | null;
+  @IsOptional()
+  @ApiHideProperty()
+  publisherType?: PublisherType | null = null;
 
   /**
    * Site publisher provider id
@@ -145,7 +172,9 @@ export class SiteConfigEntity extends AutoDateEntity {
     default: null,
   })
   @IsInt()
-  publisherProviderId: number | null;
+  @IsOptional()
+  @ApiHideProperty()
+  publisherProviderId?: number | null = null;
 
   /**
    * Site cdn type
@@ -160,7 +189,9 @@ export class SiteConfigEntity extends AutoDateEntity {
     default: null,
   })
   @IsEnum(CDNType)
-  cdnType: CDNType | null;
+  @IsOptional()
+  @ApiHideProperty()
+  cdnType?: CDNType | null = null;
 
   /**
    * Site cdn provider id
@@ -169,8 +200,11 @@ export class SiteConfigEntity extends AutoDateEntity {
    */
   @Column({ comment: 'Site cdn provider id', nullable: true, default: null })
   @IsInt()
-  cdnProviderId: number | null;
+  @IsOptional()
+  @ApiHideProperty()
+  cdnProviderId?: number | null = null;
 
-  @ManyToOne(() => SiteInfoEntity, (info) => info.config)
+  @ManyToOne(() => SiteInfoEntity, (info) => info.configs)
+  @ApiHideProperty()
   siteInfo: SiteInfoEntity;
 }

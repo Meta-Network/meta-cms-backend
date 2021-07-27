@@ -7,6 +7,7 @@ import {
   IsUrl,
 } from 'class-validator';
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { ApiHideProperty } from '@nestjs/swagger';
 import { AutoDateEntity } from './autoDate.entity';
 import { SiteConfigEntity } from './siteConfig.entity';
 
@@ -14,17 +15,20 @@ import { SiteConfigEntity } from './siteConfig.entity';
 export class SiteInfoEntity extends AutoDateEntity {
   /** Primary key */
   @PrimaryGeneratedColumn({ unsigned: true, comment: 'Primary key' })
+  @ApiHideProperty()
   id: number;
 
-  /** UCenter user id, required */
+  /** UCenter user id */
   @Column({ comment: 'UCenter user id' })
   @IsInt()
   @IsNotEmpty()
+  @ApiHideProperty()
   userId: number;
 
   /**
    * Site title
    * @type varchar(255)
+   * @example 'Example'
    */
   @Column({ comment: 'Site title' })
   @IsString()
@@ -35,36 +39,40 @@ export class SiteInfoEntity extends AutoDateEntity {
    * Site subtitle
    * @type varchar(255)
    * @default ''
+   * @example 'My awesome site'
    */
   @Column({ comment: 'Site subtitle', default: '' })
   @IsString()
   @IsOptional()
-  subtitle: string;
+  subtitle?: string = '';
 
   /**
    * Site description
    * @type text
    * @default ''
+   * @example 'Much respect. So noble.'
    */
   @Column({ comment: 'Site description', type: 'text', default: '' })
   @IsString()
   @IsOptional()
-  description: string;
+  description?: string = '';
 
   /**
    * Site author
    * @type varchar(255)
    * @default ''
+   * @example 'John Doe'
    */
   @Column({ comment: 'Site author', default: '' })
   @IsString()
   @IsOptional()
-  author: string;
+  author?: string = '';
 
   /**
    * Site keywords
    * @type Array<string>
    * @default null
+   * @example ['Doge']
    */
   @Column({
     comment: 'Site keywords',
@@ -75,20 +83,22 @@ export class SiteInfoEntity extends AutoDateEntity {
   @IsArray()
   @IsOptional()
   @IsString({ each: true })
-  keywords: string[] | null;
+  keywords?: string[] | null = null;
 
   /**
    * Site favicon link
    * @type varchar(255)
-   * @default ''
+   * @default null
+   * @example 'https://example.com/favicon.ico'
    */
-  @Column({ comment: 'Site favicon link', default: '' })
+  @Column({ comment: 'Site favicon link', nullable: true, default: null })
   @IsUrl()
   @IsOptional()
-  favicon: string;
+  favicon?: string | null = null;
 
   @OneToMany(() => SiteConfigEntity, (conf) => conf.siteInfo, {
     nullable: true,
   })
-  config: SiteConfigEntity[] | null;
+  @ApiHideProperty()
+  configs?: SiteConfigEntity[] | null = null;
 }
