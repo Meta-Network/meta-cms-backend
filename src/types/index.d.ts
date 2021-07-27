@@ -27,3 +27,9 @@ export interface UCenterJWTPayload extends JwtPayload, UCenterUser {
 export interface RequestWithUser extends Request {
   user: UCenterJWTPayload;
 }
+
+export interface TransformResponse<T = any> {
+  data: T;
+  statusCode: number;
+  message: string;
+}
