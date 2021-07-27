@@ -1,9 +1,7 @@
-import { readFileSync } from 'fs';
-import * as yaml from 'js-yaml';
-import { join } from 'path';
 import { ConnectionOptions } from 'typeorm';
 import { SiteConfigEntity } from '../entities/siteConfig';
 import { SiteInfoEntity } from '../entities/siteInfo';
+import AppConfig from './index';
 
 interface Config {
   db: {
@@ -15,14 +13,7 @@ interface Config {
   };
 }
 
-const YAML_CONFIG_FILENAME =
-  process.env.NODE_ENV === 'production'
-    ? 'config.production.yaml'
-    : 'config.development.yaml';
-
-const config: Config = yaml.load(
-  readFileSync(join(__dirname, '..', '..', YAML_CONFIG_FILENAME), 'utf8'),
-) as Config;
+const config = AppConfig() as Config;
 
 const options: ConnectionOptions = {
   type: 'mysql',
