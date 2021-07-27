@@ -4347,6 +4347,11 @@ nest-winston@^1.5.0:
     cli-color "^2.0.0"
     fast-safe-stringify "^2.0.7"
 
+nestjs-typeorm-paginate@^2.6.0:
+  version "2.6.0"
+  resolved "https://registry.yarnpkg.com/nestjs-typeorm-paginate/-/nestjs-typeorm-paginate-2.6.0.tgz#07ef24bc7bf240fafce64c769e565f13d43c456f"
+  integrity sha512-MsSbpANJaAWeg/OIB75VtU9xvfMKSCz+JFf5y8rQQteS4OZPjQgw1QA1uFIrKyL+z5d06L9jqliqhUdCt1ZOHQ==
+
 next-tick@1, next-tick@^1.1.0:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/next-tick/-/next-tick-1.1.0.tgz#1836ee30ad56d67ef281b22bd199f709449b35eb"
@@ -5569,7 +5574,7 @@ ts-loader@^9.2.3:
     micromatch "^4.0.0"
     semver "^7.3.4"
 
-ts-node@^10.1.0:
+ts-node@^10.0.0:
   version "10.1.0"
   resolved "https://registry.yarnpkg.com/ts-node/-/ts-node-10.1.0.tgz#e656d8ad3b61106938a867f69c39a8ba6efc966e"
   integrity sha512-6szn3+J9WyG2hE+5W8e0ruZrzyk1uFLYye6IGMBadnOzDh8aP7t8CbFpsfCiEx2+wMixAhjFt7lOZC4+l+WbEA==

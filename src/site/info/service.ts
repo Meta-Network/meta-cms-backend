@@ -1,25 +1,38 @@
+import {
+  IPaginationOptions,
+  paginate,
+  Pagination,
+} from 'nestjs-typeorm-paginate';
 import { DeleteResult, Repository } from 'typeorm';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { SiteInfo } from '../../entities/siteInfo';
+import { SiteInfoEntity } from '../../entities/siteInfo';
 
 @Injectable()
 export class SiteInfoService {
   constructor(
-    @InjectRepository(SiteInfo)
-    private readonly siteInfoRepository: Repository<SiteInfo>,
+    @InjectRepository(SiteInfoEntity)
+    private readonly siteInfoRepository: Repository<SiteInfoEntity>,
   ) {}
 
-  async getSiteInfo(uid: number): Promise<SiteInfo[]> {
-    return await this.siteInfoRepository.find({ userId: uid });
+  async getSiteInfo(
+    options: IPaginationOptions,
+    uid: number,
+  ): Promise<Pagination<SiteInfoEntity>> {
+    return await paginate<SiteInfoEntity>(this.siteInfoRepository, options, {
+      userId: uid,
+    });
   }
 
-  async createSiteInfo(info: SiteInfo): Promise<SiteInfo> {
+  async createSiteInfo(info: SiteInfoEntity): Promise<SiteInfoEntity> {
     const siteInfo = this.siteInfoRepository.create(info);
     return await this.siteInfoRepository.save(siteInfo);
   }
 
-  async updateSiteInfo(sid: number, info: SiteInfo): Promise<SiteInfo> {
+  async updateSiteInfo(
+    sid: number,
+    info: SiteInfoEntity,
+  ): Promise<SiteInfoEntity> {
     const oldInfo = await this.siteInfoRepository.findOne(sid);
     const newInfo = this.siteInfoRepository.merge(oldInfo, info);
     return await this.siteInfoRepository.save(newInfo);
