@@ -1,6 +1,6 @@
 import { ConnectionOptions } from 'typeorm';
-import { SiteConfigEntity } from '../entities/siteConfig';
-import { SiteInfoEntity } from '../entities/siteInfo';
+import { SiteConfigEntity } from '../entities/siteConfig.entity';
+import { SiteInfoEntity } from '../entities/siteInfo.entity';
 import AppConfig from './index';
 
 interface Config {

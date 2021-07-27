@@ -1,7 +1,7 @@
 import { IsEnum, IsFQDN, IsInt, IsLocale, IsString } from 'class-validator';
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
-import { AutoDateEntity } from './autoDate';
-import { SiteInfoEntity } from './siteInfo';
+import { AutoDateEntity } from './autoDate.entity';
+import { SiteInfoEntity } from './siteInfo.entity';
 
 export enum StoreType {
   LOCAL = 'LOCAL',

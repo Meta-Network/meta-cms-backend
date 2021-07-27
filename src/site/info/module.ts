@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { SiteInfoEntity } from '../../entities/siteInfo';
+import { SiteInfoEntity } from '../../entities/siteInfo.entity';
 import { SiteInfoController } from './controller';
 import { SiteInfoService } from './service';
 

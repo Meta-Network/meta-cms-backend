@@ -6,7 +6,7 @@ import {
 import { DeleteResult, Repository } from 'typeorm';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { SiteInfoEntity } from '../../entities/siteInfo';
+import { SiteInfoEntity } from '../../entities/siteInfo.entity';
 
 @Injectable()
 export class SiteInfoService {

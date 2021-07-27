@@ -7,8 +7,8 @@ import {
   IsUrl,
 } from 'class-validator';
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
-import { AutoDateEntity } from './autoDate';
-import { SiteConfigEntity } from './siteConfig';
+import { AutoDateEntity } from './autoDate.entity';
+import { SiteConfigEntity } from './siteConfig.entity';
 
 @Entity()
 export class SiteInfoEntity extends AutoDateEntity {

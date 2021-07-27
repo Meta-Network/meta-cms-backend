@@ -12,7 +12,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { User } from '../../decorators';
-import { SiteInfoEntity } from '../../entities/siteInfo';
+import { SiteInfoEntity } from '../../entities/siteInfo.entity';
 import { validationErrorToBadRequestException } from '../../exceptions';
 import { SiteInfoService } from './service';
 
