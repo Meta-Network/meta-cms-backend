@@ -15,6 +15,7 @@ async function bootstrap() {
     .setTitle(configService.get<string>('app.name'))
     .setDescription(packageJson.description)
     .setVersion(packageJson.version)
+    .addCookieAuth('ucenter_accessToken')
     .build();
   const document = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('api', app, document);

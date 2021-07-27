@@ -11,11 +11,13 @@ import {
   Put,
   Query,
 } from '@nestjs/common';
+import { ApiCookieAuth } from '@nestjs/swagger';
 import { User } from '../../decorators';
 import { SiteInfoEntity } from '../../entities/siteInfo.entity';
 import { validationErrorToBadRequestException } from '../../exceptions';
 import { SiteInfoService } from './service';
 
+@ApiCookieAuth()
 @Controller('site/info')
 export class SiteInfoController {
   constructor(private readonly service: SiteInfoService) {}
