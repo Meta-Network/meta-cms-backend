@@ -5,8 +5,8 @@ import { SiteConfigService } from './service';
 export class SiteConfigController {
   constructor(private readonly service: SiteConfigService) {}
 
-  @Get(':id')
-  getSiteInfo(@Param('id', ParseIntPipe) id: number) {
-    return this.service.getSiteConfig(id);
+  @Get(':siteId')
+  getSiteInfo(@Param('siteId', ParseIntPipe) siteId: number) {
+    return this.service.getSiteConfig(siteId);
   }
 }
