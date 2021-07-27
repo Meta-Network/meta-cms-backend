@@ -1,9 +1,11 @@
 import {
+  BadRequestException,
   ForbiddenException,
   HttpException,
   HttpStatus,
   UnauthorizedException,
 } from '@nestjs/common';
+import { ValidationError } from 'class-validator';
 
 export class JWTException extends ForbiddenException {
   constructor(message: string) {
@@ -49,3 +51,14 @@ export class RequirdHttpHeadersNotFoundException extends HttpException {
     );
   }
 }
+
+export const validationErrorToBadRequestException = (
+  errors: unknown[],
+): BadRequestException => {
+  if (errors && errors[0] instanceof ValidationError) {
+    const error = errors[0];
+    return new BadRequestException(
+      `Bad Request: ${Object.values(error.constraints)[0]}`,
+    );
+  }
+};

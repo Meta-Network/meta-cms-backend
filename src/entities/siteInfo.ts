@@ -1,4 +1,11 @@
-import { IsArray, IsInt, IsNotEmpty, IsString, IsUrl } from 'class-validator';
+import {
+  IsArray,
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsUrl,
+} from 'class-validator';
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { AutoDate } from './autoDate';
 import { SiteConfig } from './siteConfig';
@@ -31,6 +38,7 @@ export class SiteInfo extends AutoDate {
    */
   @Column({ comment: 'Site subtitle', default: '' })
   @IsString()
+  @IsOptional()
   subtitle: string;
 
   /**
@@ -40,6 +48,7 @@ export class SiteInfo extends AutoDate {
    */
   @Column({ comment: 'Site description', type: 'text', default: '' })
   @IsString()
+  @IsOptional()
   description: string;
 
   /**
@@ -49,6 +58,7 @@ export class SiteInfo extends AutoDate {
    */
   @Column({ comment: 'Site author', default: '' })
   @IsString()
+  @IsOptional()
   author: string;
 
   /**
@@ -63,6 +73,7 @@ export class SiteInfo extends AutoDate {
     default: null,
   })
   @IsArray()
+  @IsOptional()
   @IsString({ each: true })
   keywords: string[] | null;
 
@@ -73,6 +84,7 @@ export class SiteInfo extends AutoDate {
    */
   @Column({ comment: 'Site favicon link', default: '' })
   @IsUrl()
+  @IsOptional()
   favicon: string;
 
   @OneToMany(() => SiteConfig, (conf) => conf.siteInfo, { nullable: true })
