@@ -7,11 +7,11 @@ import {
   IsUrl,
 } from 'class-validator';
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
-import { AutoDate } from './autoDate';
-import { SiteConfig } from './siteConfig';
+import { AutoDateEntity } from './autoDate';
+import { SiteConfigEntity } from './siteConfig';
 
 @Entity()
-export class SiteInfo extends AutoDate {
+export class SiteInfoEntity extends AutoDateEntity {
   /** Primary key */
   @PrimaryGeneratedColumn({ unsigned: true, comment: 'Primary key' })
   id: number;
@@ -87,6 +87,8 @@ export class SiteInfo extends AutoDate {
   @IsOptional()
   favicon: string;
 
-  @OneToMany(() => SiteConfig, (conf) => conf.siteInfo, { nullable: true })
-  config: SiteConfig[] | null;
+  @OneToMany(() => SiteConfigEntity, (conf) => conf.siteInfo, {
+    nullable: true,
+  })
+  config: SiteConfigEntity[] | null;
 }

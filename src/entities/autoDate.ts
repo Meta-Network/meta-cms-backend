@@ -1,6 +1,6 @@
 import { CreateDateColumn, UpdateDateColumn } from 'typeorm';
 
-export abstract class AutoDate {
+export abstract class AutoDateEntity {
   @CreateDateColumn()
   readonly createdAt: Date;
 

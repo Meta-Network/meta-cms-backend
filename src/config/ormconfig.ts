@@ -2,8 +2,8 @@ import { readFileSync } from 'fs';
 import * as yaml from 'js-yaml';
 import { join } from 'path';
 import { ConnectionOptions } from 'typeorm';
-import { SiteConfig } from '../entities/siteConfig';
-import { SiteInfo } from '../entities/siteInfo';
+import { SiteConfigEntity } from '../entities/siteConfig';
+import { SiteInfoEntity } from '../entities/siteInfo';
 
 interface Config {
   db: {
@@ -32,7 +32,7 @@ const options: ConnectionOptions = {
   username: config.db.username,
   password: config.db.password,
   database: config.db.database,
-  entities: [SiteInfo, SiteConfig],
+  entities: [SiteInfoEntity, SiteConfigEntity],
   synchronize: false,
   migrationsTableName: 'be_migrations',
   migrations: [

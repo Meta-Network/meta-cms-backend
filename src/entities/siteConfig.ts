@@ -1,7 +1,7 @@
 import { IsEnum, IsFQDN, IsInt, IsLocale, IsString } from 'class-validator';
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
-import { AutoDate } from './autoDate';
-import { SiteInfo } from './siteInfo';
+import { AutoDateEntity } from './autoDate';
+import { SiteInfoEntity } from './siteInfo';
 
 export enum StoreType {
   LOCAL = 'LOCAL',
@@ -30,7 +30,7 @@ export enum CDNType {
 }
 
 @Entity()
-export class SiteConfig extends AutoDate {
+export class SiteConfigEntity extends AutoDateEntity {
   /** Primary key */
   @PrimaryGeneratedColumn({ comment: 'Site config id', unsigned: true })
   id: number;
@@ -171,6 +171,6 @@ export class SiteConfig extends AutoDate {
   @IsInt()
   cdnProviderId: number | null;
 
-  @ManyToOne(() => SiteInfo, (info) => info.config)
-  siteInfo: SiteInfo;
+  @ManyToOne(() => SiteInfoEntity, (info) => info.config)
+  siteInfo: SiteInfoEntity;
 }
