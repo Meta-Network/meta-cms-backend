@@ -3,6 +3,7 @@ import {
   ForbiddenException,
   HttpException,
   HttpStatus,
+  NotAcceptableException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { ValidationError } from 'class-validator';
@@ -48,6 +49,18 @@ export class RequirdHttpHeadersNotFoundException extends HttpException {
     super(
       'Bad Request: required http headers not found',
       HttpStatus.BAD_REQUEST,
+    );
+  }
+}
+
+export class RequestNotAcceptableException extends NotAcceptableException {
+  constructor() {
+    super(
+      {
+        statusCode: HttpStatus.NOT_ACCEPTABLE,
+        message: 'Not Acceptable: this request is not allowed',
+      },
+      'Not Acceptable',
     );
   }
 }
