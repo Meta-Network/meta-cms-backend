@@ -2794,10 +2794,10 @@ fork-ts-checker-webpack-plugin@6.2.12:
     semver "^7.3.2"
     tapable "^1.0.0"
 
-form-cors@^1.0.1:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/form-cors/-/form-cors-1.0.1.tgz#3e53e8b20bd54fc8648b573f39b9cce16da6f3c0"
-  integrity sha512-VHrJjZozxygElCX9R4of1nwMg3QDC1IhcUEWmrwSTydTODlAKc4awlYSyidIHLvkBvyNECvyuNAy8ILQ9VMdHw==
+form-cors@^1.0.2:
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/form-cors/-/form-cors-1.0.2.tgz#32be08c6f7c645972b8d3a60a9671662042ce1e7"
+  integrity sha512-j+BfoRx9mtAdeW5KsFJq/0c0okJvsHSC25YaQu+eXIhh7O5AyGMSgP+FLR/Im8B5A0ajLT5lrOcbHmq4igZ/LQ==
 
 form-data@^3.0.0:
   version "3.0.1"

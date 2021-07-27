@@ -1,5 +1,5 @@
 import * as cookieParser from 'cookie-parser';
-import * as formCors from 'form-cors';
+import formCors from 'form-cors';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
