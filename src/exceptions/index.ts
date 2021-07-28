@@ -1,12 +1,13 @@
+import { ValidationError } from 'class-validator';
 import {
   BadRequestException,
   ForbiddenException,
-  HttpException,
   HttpStatus,
   NotAcceptableException,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { ValidationError } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class JWTException extends ForbiddenException {
   constructor(message: string) {
@@ -15,9 +16,13 @@ export class JWTException extends ForbiddenException {
         statusCode: HttpStatus.FORBIDDEN,
         message: `Forbidden: JWTException: ${message}`,
       },
-      'JWTException',
+      'Forbidden',
     );
   }
+  @ApiProperty({ example: HttpStatus.FORBIDDEN })
+  readonly statusCode: string;
+  @ApiProperty({ example: 'Forbidden: JWTException' })
+  readonly message: string;
 }
 
 export class JWTAudNotMatchException extends UnauthorizedException {
@@ -27,9 +32,13 @@ export class JWTAudNotMatchException extends UnauthorizedException {
         statusCode: HttpStatus.UNAUTHORIZED,
         message: 'Unauthorized: jwt audience not match',
       },
-      'JWTAudNotMatchException',
+      'Unauthorized',
     );
   }
+  @ApiProperty({ example: HttpStatus.UNAUTHORIZED })
+  readonly statusCode: string;
+  @ApiProperty({ example: 'Unauthorized: jwt audience not match' })
+  readonly message: string;
 }
 
 export class JWTExpiredException extends UnauthorizedException {
@@ -39,18 +48,29 @@ export class JWTExpiredException extends UnauthorizedException {
         statusCode: HttpStatus.UNAUTHORIZED,
         message: 'Unauthorized: jwt expired',
       },
-      'JWTExpiredException',
+      'Unauthorized',
     );
   }
+  @ApiProperty({ example: HttpStatus.UNAUTHORIZED })
+  readonly statusCode: string;
+  @ApiProperty({ example: 'Unauthorized: jwt expired' })
+  readonly message: string;
 }
 
-export class RequirdHttpHeadersNotFoundException extends HttpException {
+export class RequirdHttpHeadersNotFoundException extends BadRequestException {
   constructor() {
     super(
-      'Bad Request: required http headers not found',
-      HttpStatus.BAD_REQUEST,
+      {
+        statusCode: HttpStatus.BAD_REQUEST,
+        message: 'Bad Request: required http headers not found',
+      },
+      'Bad Request',
     );
   }
+  @ApiProperty({ example: HttpStatus.BAD_REQUEST })
+  readonly statusCode: string;
+  @ApiProperty({ example: 'Bad Request: required http headers not found' })
+  readonly message: string;
 }
 
 export class RequestNotAcceptableException extends NotAcceptableException {
@@ -63,6 +83,10 @@ export class RequestNotAcceptableException extends NotAcceptableException {
       'Not Acceptable',
     );
   }
+  @ApiProperty({ example: HttpStatus.NOT_ACCEPTABLE })
+  readonly statusCode: string;
+  @ApiProperty({ example: 'Not Acceptable: this request is not allowed' })
+  readonly message: string;
 }
 
 export class AccessDeniedException extends ForbiddenException {
@@ -70,11 +94,47 @@ export class AccessDeniedException extends ForbiddenException {
     super(
       {
         statusCode: HttpStatus.FORBIDDEN,
-        message: `Forbidden: access denied`,
+        message: 'Forbidden: access denied',
       },
       'Forbidden',
     );
   }
+  @ApiProperty({ example: HttpStatus.FORBIDDEN })
+  readonly statusCode: string;
+  @ApiProperty({ example: 'Forbidden: access denied' })
+  readonly message: string;
+}
+
+export class ValidationException extends BadRequestException {
+  constructor(message = 'validation error') {
+    super(
+      {
+        statusCode: HttpStatus.BAD_REQUEST,
+        message: `Bad Request: ${message}`,
+      },
+      'Bad Request',
+    );
+  }
+  @ApiProperty({ example: HttpStatus.BAD_REQUEST })
+  readonly statusCode: string;
+  @ApiProperty({ example: 'Bad Request: validation error' })
+  readonly message: string;
+}
+
+export class DataNotFoundException extends NotFoundException {
+  constructor() {
+    super(
+      {
+        statusCode: HttpStatus.NOT_FOUND,
+        message: 'Not Found: data not found',
+      },
+      'Not Found',
+    );
+  }
+  @ApiProperty({ example: HttpStatus.NOT_FOUND })
+  readonly statusCode: string;
+  @ApiProperty({ example: 'Not Found: data not found' })
+  readonly message: string;
 }
 
 export const validationErrorToBadRequestException = (
@@ -82,9 +142,7 @@ export const validationErrorToBadRequestException = (
 ): BadRequestException => {
   if (errors && errors[0] instanceof ValidationError) {
     const error = errors[0];
-    return new BadRequestException(
-      `Bad Request: ${Object.values(error.constraints)[0]}`,
-    );
+    return new ValidationException(Object.values(error.constraints)[0]);
   }
   if (errors instanceof Error) {
     throw errors;

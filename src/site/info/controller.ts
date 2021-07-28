@@ -13,15 +13,23 @@ import {
   Query,
 } from '@nestjs/common';
 import {
+  ApiBadRequestResponse,
   ApiCookieAuth,
   ApiCreatedResponse,
+  ApiForbiddenResponse,
+  ApiNotFoundResponse,
   ApiOkResponse,
   ApiProperty,
   ApiTags,
 } from '@nestjs/swagger';
 import { User } from '../../decorators';
 import { SiteInfoEntity } from '../../entities/siteInfo.entity';
-import { validationErrorToBadRequestException } from '../../exceptions';
+import {
+  AccessDeniedException,
+  DataNotFoundException,
+  validationErrorToBadRequestException,
+  ValidationException,
+} from '../../exceptions';
 import {
   PaginationResponse,
   TransformResponse,
@@ -74,6 +82,11 @@ export class SiteInfoController {
   }
 
   @ApiCreatedResponse({ type: SiteInfoResponse })
+  @ApiBadRequestResponse({
+    type: ValidationException,
+    description:
+      'When the fields in the request body does not pass type validation',
+  })
   @Post()
   async createSiteInfo(
     @Body() createDto: SiteInfoEntity,
@@ -92,6 +105,19 @@ export class SiteInfoController {
   }
 
   @ApiOkResponse({ type: SiteInfoResponse })
+  @ApiBadRequestResponse({
+    type: ValidationException,
+    description:
+      'When the fields in the request body does not pass type validation',
+  })
+  @ApiNotFoundResponse({
+    type: DataNotFoundException,
+    description: 'When request site id in database was not found',
+  })
+  @ApiForbiddenResponse({
+    type: AccessDeniedException,
+    description: 'When request user id does not match',
+  })
   @Put(':siteId')
   async updateSiteInfo(
     @User('id', ParseIntPipe) uid: number,
@@ -108,6 +134,14 @@ export class SiteInfoController {
   }
 
   @ApiOkResponse({ type: SiteInfoDeleteResponse })
+  @ApiNotFoundResponse({
+    type: DataNotFoundException,
+    description: 'When request site id in database was not found',
+  })
+  @ApiForbiddenResponse({
+    type: AccessDeniedException,
+    description: 'When request user id does not match',
+  })
   @Delete(':siteId')
   async deleteSiteInfo(
     @User('id', ParseIntPipe) uid: number,
