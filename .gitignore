@@ -4,6 +4,7 @@
 # ENV File
 .env.*
 config.*
+!config.example.*
 
 # Caches
 .eslintcache
