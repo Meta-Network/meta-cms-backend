@@ -18,7 +18,9 @@ async function bootstrap() {
     .addCookieAuth('ucenter_accessToken')
     .build();
   const document = SwaggerModule.createDocument(app, swaggerConfig);
-  SwaggerModule.setup('api', app, document);
+  SwaggerModule.setup('api', app, document, {
+    customCss: '.swagger-ui tr { display: block; padding: 10px 0; }',
+  });
 
   app.use(cookieParser());
   app.use(
