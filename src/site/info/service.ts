@@ -4,9 +4,10 @@ import {
   Pagination,
 } from 'nestjs-typeorm-paginate';
 import { DeleteResult, Repository } from 'typeorm';
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { SiteInfoEntity } from '../../entities/siteInfo.entity';
+import { AccessDeniedException } from '../../exceptions';
 
 @Injectable()
 export class SiteInfoService {
@@ -30,15 +31,22 @@ export class SiteInfoService {
   }
 
   async updateSiteInfo(
+    uid: number,
     sid: number,
     info: SiteInfoEntity,
   ): Promise<SiteInfoEntity> {
     const oldInfo = await this.siteInfoRepository.findOne(sid);
+    if (!oldInfo || !oldInfo.userId) throw new NotFoundException();
+    if (oldInfo.userId !== uid) throw new AccessDeniedException();
+    console.log('uid', uid, 'sid', sid, 'oldInfo', oldInfo, 'info', info);
     const newInfo = this.siteInfoRepository.merge(oldInfo, info);
     return await this.siteInfoRepository.save(newInfo);
   }
 
-  async deleteSiteInfo(sid: number): Promise<DeleteResult> {
+  async deleteSiteInfo(uid: number, sid: number): Promise<DeleteResult> {
+    const oldInfo = await this.siteInfoRepository.findOne(sid);
+    if (!oldInfo || !oldInfo.userId) throw new NotFoundException();
+    if (oldInfo.userId !== uid) throw new AccessDeniedException();
     return await this.siteInfoRepository.delete(sid);
   }
 }

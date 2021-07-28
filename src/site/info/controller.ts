@@ -94,13 +94,14 @@ export class SiteInfoController {
   @ApiOkResponse({ type: SiteInfoResponse })
   @Put(':siteId')
   async updateSiteInfo(
+    @User('id', ParseIntPipe) uid: number,
     @Body() updateDto: SiteInfoEntity,
     @Param('siteId', ParseIntPipe) siteId: number,
   ) {
     const siteInfo = Object.assign(new SiteInfoEntity(), updateDto);
     try {
       await validateOrReject(siteInfo, { skipMissingProperties: true });
-      return await this.service.updateSiteInfo(siteId, siteInfo);
+      return await this.service.updateSiteInfo(uid, siteId, siteInfo);
     } catch (errors) {
       throw validationErrorToBadRequestException(errors);
     }
@@ -108,7 +109,10 @@ export class SiteInfoController {
 
   @ApiOkResponse({ type: SiteInfoDeleteResponse })
   @Delete(':siteId')
-  async deleteSiteInfo(@Param('siteId', ParseIntPipe) siteId: number) {
-    return await this.service.deleteSiteInfo(siteId);
+  async deleteSiteInfo(
+    @User('id', ParseIntPipe) uid: number,
+    @Param('siteId', ParseIntPipe) siteId: number,
+  ) {
+    return await this.service.deleteSiteInfo(uid, siteId);
   }
 }

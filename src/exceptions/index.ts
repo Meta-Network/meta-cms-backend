@@ -65,6 +65,18 @@ export class RequestNotAcceptableException extends NotAcceptableException {
   }
 }
 
+export class AccessDeniedException extends ForbiddenException {
+  constructor() {
+    super(
+      {
+        statusCode: HttpStatus.FORBIDDEN,
+        message: `Forbidden: access denied`,
+      },
+      'Forbidden',
+    );
+  }
+}
+
 export const validationErrorToBadRequestException = (
   errors: unknown[],
 ): BadRequestException => {
@@ -73,5 +85,8 @@ export const validationErrorToBadRequestException = (
     return new BadRequestException(
       `Bad Request: ${Object.values(error.constraints)[0]}`,
     );
+  }
+  if (errors instanceof Error) {
+    throw errors;
   }
 };
