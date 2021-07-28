@@ -1,7 +1,8 @@
 import { Controller, Get, Param, ParseIntPipe } from '@nestjs/common';
-import { ApiCookieAuth } from '@nestjs/swagger';
+import { ApiCookieAuth, ApiTags } from '@nestjs/swagger';
 import { SiteConfigService } from './service';
 
+@ApiTags('site')
 @ApiCookieAuth()
 @Controller('site/config')
 export class SiteConfigController {

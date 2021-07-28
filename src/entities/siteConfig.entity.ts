@@ -7,7 +7,7 @@ import {
   IsString,
 } from 'class-validator';
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
-import { ApiHideProperty } from '@nestjs/swagger';
+import { ApiHideProperty, ApiResponseProperty } from '@nestjs/swagger';
 import { AutoDateEntity } from './autoDate.entity';
 import { SiteInfoEntity } from './siteInfo.entity';
 
@@ -42,7 +42,8 @@ export class SiteConfigEntity extends AutoDateEntity {
   /** Primary key */
   @PrimaryGeneratedColumn({ comment: 'Site config id', unsigned: true })
   @ApiHideProperty()
-  id: number;
+  @ApiResponseProperty({ example: 1 })
+  readonly id: number;
 
   /**
    * Site language
@@ -103,6 +104,7 @@ export class SiteConfigEntity extends AutoDateEntity {
   @IsEnum(StoreType)
   @IsOptional()
   @ApiHideProperty()
+  @ApiResponseProperty({ example: null })
   storeType?: StoreType | null = null;
 
   /**
@@ -114,6 +116,7 @@ export class SiteConfigEntity extends AutoDateEntity {
   @IsInt()
   @IsOptional()
   @ApiHideProperty()
+  @ApiResponseProperty({ example: null })
   storeProviderId?: number | null = null;
 
   /**
@@ -131,6 +134,7 @@ export class SiteConfigEntity extends AutoDateEntity {
   @IsEnum(CICDType)
   @IsOptional()
   @ApiHideProperty()
+  @ApiResponseProperty({ example: null })
   cicdType?: CICDType | null = null;
 
   /**
@@ -142,6 +146,7 @@ export class SiteConfigEntity extends AutoDateEntity {
   @IsInt()
   @IsOptional()
   @ApiHideProperty()
+  @ApiResponseProperty({ example: null })
   cicdProviderId?: number | null = null;
 
   /**
@@ -159,6 +164,7 @@ export class SiteConfigEntity extends AutoDateEntity {
   @IsEnum(PublisherType)
   @IsOptional()
   @ApiHideProperty()
+  @ApiResponseProperty({ example: null })
   publisherType?: PublisherType | null = null;
 
   /**
@@ -174,6 +180,7 @@ export class SiteConfigEntity extends AutoDateEntity {
   @IsInt()
   @IsOptional()
   @ApiHideProperty()
+  @ApiResponseProperty({ example: null })
   publisherProviderId?: number | null = null;
 
   /**
@@ -191,6 +198,7 @@ export class SiteConfigEntity extends AutoDateEntity {
   @IsEnum(CDNType)
   @IsOptional()
   @ApiHideProperty()
+  @ApiResponseProperty({ example: null })
   cdnType?: CDNType | null = null;
 
   /**
@@ -202,9 +210,10 @@ export class SiteConfigEntity extends AutoDateEntity {
   @IsInt()
   @IsOptional()
   @ApiHideProperty()
+  @ApiResponseProperty({ example: null })
   cdnProviderId?: number | null = null;
 
   @ManyToOne(() => SiteInfoEntity, (info) => info.configs)
   @ApiHideProperty()
-  siteInfo: SiteInfoEntity;
+  readonly siteInfo: SiteInfoEntity;
 }

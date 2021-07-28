@@ -7,7 +7,11 @@ import {
   IsUrl,
 } from 'class-validator';
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
-import { ApiHideProperty } from '@nestjs/swagger';
+import {
+  ApiHideProperty,
+  ApiProperty,
+  ApiResponseProperty,
+} from '@nestjs/swagger';
 import { AutoDateEntity } from './autoDate.entity';
 import { SiteConfigEntity } from './siteConfig.entity';
 
@@ -16,13 +20,15 @@ export class SiteInfoEntity extends AutoDateEntity {
   /** Primary key */
   @PrimaryGeneratedColumn({ unsigned: true, comment: 'Primary key' })
   @ApiHideProperty()
-  id: number;
+  @ApiResponseProperty({ example: 1 })
+  readonly id: number;
 
   /** UCenter user id */
   @Column({ comment: 'UCenter user id' })
   @IsInt()
   @IsNotEmpty()
   @ApiHideProperty()
+  @ApiResponseProperty({ example: 1 })
   userId: number;
 
   /**
@@ -83,6 +89,13 @@ export class SiteInfoEntity extends AutoDateEntity {
   @IsArray()
   @IsOptional()
   @IsString({ each: true })
+  @ApiProperty({
+    description: 'Site keywords',
+    type: String,
+    isArray: true,
+    default: null,
+    example: ['Doge'],
+  })
   keywords?: string[] | null = null;
 
   /**
@@ -100,5 +113,6 @@ export class SiteInfoEntity extends AutoDateEntity {
     nullable: true,
   })
   @ApiHideProperty()
-  configs?: SiteConfigEntity[] | null = null;
+  @ApiResponseProperty({ type: SiteConfigEntity, example: null })
+  readonly configs?: SiteConfigEntity[] | null = null;
 }

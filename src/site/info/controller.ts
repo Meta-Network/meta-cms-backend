@@ -1,4 +1,5 @@
 import { validateOrReject } from 'class-validator';
+import { DeleteResult } from 'typeorm';
 import {
   Body,
   Controller,
@@ -11,17 +12,49 @@ import {
   Put,
   Query,
 } from '@nestjs/common';
-import { ApiCookieAuth } from '@nestjs/swagger';
+import {
+  ApiCookieAuth,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiProperty,
+  ApiTags,
+} from '@nestjs/swagger';
 import { User } from '../../decorators';
 import { SiteInfoEntity } from '../../entities/siteInfo.entity';
 import { validationErrorToBadRequestException } from '../../exceptions';
+import {
+  PaginationResponse,
+  TransformResponse,
+} from '../../utils/responseClass';
 import { SiteInfoService } from './service';
 
+class SiteInfoPagination extends PaginationResponse<SiteInfoEntity> {
+  @ApiProperty({ type: SiteInfoEntity, isArray: true })
+  readonly items: SiteInfoEntity[];
+}
+
+class SiteInfoResponse extends TransformResponse<SiteInfoEntity> {
+  @ApiProperty({ type: SiteInfoEntity })
+  readonly data: SiteInfoEntity;
+}
+
+class SiteInfoWithPaginationResponse extends TransformResponse<SiteInfoPagination> {
+  @ApiProperty({ type: SiteInfoPagination })
+  readonly data: SiteInfoPagination;
+}
+
+class SiteInfoDeleteResponse extends TransformResponse<DeleteResult> {
+  @ApiProperty({ type: DeleteResult })
+  readonly data: DeleteResult;
+}
+
+@ApiTags('site')
 @ApiCookieAuth()
 @Controller('site/info')
 export class SiteInfoController {
   constructor(private readonly service: SiteInfoService) {}
 
+  @ApiOkResponse({ type: SiteInfoWithPaginationResponse })
   @Get()
   async getSiteInfo(
     @User('id', ParseIntPipe) uid: number,
@@ -40,6 +73,7 @@ export class SiteInfoController {
     );
   }
 
+  @ApiCreatedResponse({ type: SiteInfoResponse })
   @Post()
   async createSiteInfo(
     @Body() createDto: SiteInfoEntity,
@@ -57,6 +91,7 @@ export class SiteInfoController {
     }
   }
 
+  @ApiOkResponse({ type: SiteInfoResponse })
   @Put(':siteId')
   async updateSiteInfo(
     @Body() updateDto: SiteInfoEntity,
@@ -71,6 +106,7 @@ export class SiteInfoController {
     }
   }
 
+  @ApiOkResponse({ type: SiteInfoDeleteResponse })
   @Delete(':siteId')
   async deleteSiteInfo(@Param('siteId', ParseIntPipe) siteId: number) {
     return await this.service.deleteSiteInfo(siteId);
