@@ -38,7 +38,6 @@ export class SiteInfoService {
     const oldInfo = await this.siteInfoRepository.findOne(sid);
     if (!oldInfo || !oldInfo.userId) throw new DataNotFoundException();
     if (oldInfo.userId !== uid) throw new AccessDeniedException();
-    console.log('uid', uid, 'sid', sid, 'oldInfo', oldInfo, 'info', info);
     const newInfo = this.siteInfoRepository.merge(oldInfo, info);
     return await this.siteInfoRepository.save(newInfo);
   }

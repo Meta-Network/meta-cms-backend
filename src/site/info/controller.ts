@@ -8,8 +8,8 @@ import {
   Get,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
-  Put,
   Query,
 } from '@nestjs/common';
 import {
@@ -20,6 +20,7 @@ import {
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiProperty,
+  ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
 import { User } from '../../decorators';
@@ -63,6 +64,8 @@ export class SiteInfoController {
   constructor(private readonly service: SiteInfoService) {}
 
   @ApiOkResponse({ type: SiteInfoWithPaginationResponse })
+  @ApiQuery({ name: 'page', type: Number, example: 1 })
+  @ApiQuery({ name: 'limit', type: Number, example: 10 })
   @Get()
   async getSiteInfo(
     @User('id', ParseIntPipe) uid: number,
@@ -89,8 +92,8 @@ export class SiteInfoController {
   })
   @Post()
   async createSiteInfo(
-    @Body() createDto: SiteInfoEntity,
     @User('id', ParseIntPipe) uid: number,
+    @Body() createDto: SiteInfoEntity,
   ) {
     const siteInfo = Object.assign(new SiteInfoEntity(), {
       ...createDto,
@@ -118,7 +121,7 @@ export class SiteInfoController {
     type: AccessDeniedException,
     description: 'When request user id does not match',
   })
-  @Put(':siteId')
+  @Patch(':siteId')
   async updateSiteInfo(
     @User('id', ParseIntPipe) uid: number,
     @Body() updateDto: SiteInfoEntity,
