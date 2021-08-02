@@ -82,7 +82,7 @@ export class SiteConfigEntity extends AutoDateEntity {
    * Site domain
    * @type varchar(255)
    * @default ''
-   * @example 'https://example.com'
+   * @example 'www.example.com'
    */
   @Column({ comment: 'Site domain', default: '' })
   @IsFQDN()
@@ -215,5 +215,5 @@ export class SiteConfigEntity extends AutoDateEntity {
 
   @ManyToOne(() => SiteInfoEntity, (info) => info.configs)
   @ApiHideProperty()
-  readonly siteInfo: SiteInfoEntity;
+  siteInfo: SiteInfoEntity;
 }
