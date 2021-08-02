@@ -1,6 +1,7 @@
 import { ValidationError } from 'class-validator';
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   HttpStatus,
   NotAcceptableException,
@@ -134,6 +135,22 @@ export class DataNotFoundException extends NotFoundException {
   @ApiProperty({ example: HttpStatus.NOT_FOUND })
   readonly statusCode: string;
   @ApiProperty({ example: 'Not Found: data not found' })
+  readonly message: string;
+}
+
+export class ResourceIsInUseException extends ConflictException {
+  constructor() {
+    super(
+      {
+        statusCode: HttpStatus.CONFLICT,
+        message: 'Conflict: the requested resource is in use',
+      },
+      'Conflict',
+    );
+  }
+  @ApiProperty({ example: HttpStatus.CONFLICT })
+  readonly statusCode: string;
+  @ApiProperty({ example: 'Conflict: the requested resource is in use' })
   readonly message: string;
 }
 
