@@ -8,6 +8,7 @@ import {
   Get,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
   Query,
 } from '@nestjs/common';
@@ -117,10 +118,47 @@ export class SiteConfigController {
     @Query('siteId', ParseIntPipe) siteId: number,
     @Body() createDto: SiteConfigEntity,
   ) {
-    const siteConfig = Object.assign(new SiteConfigEntity(), { ...createDto });
+    const siteConfig = Object.assign(new SiteConfigEntity(), createDto);
     try {
       await validateOrReject(siteConfig);
       return await this.service.createSiteConfig(uid, siteId, siteConfig);
+    } catch (errors) {
+      throw validationErrorToBadRequestException(errors);
+    }
+  }
+
+  @ApiOkResponse({ type: SiteConfigResponse })
+  @ApiBadRequestResponse({
+    type: ValidationException,
+    description:
+      'When the fields in the request body does not pass type validation',
+  })
+  @ApiNotFoundResponse({
+    type: DataNotFoundException,
+    description: 'When request config id in database was not found',
+  })
+  @ApiForbiddenResponse({
+    type: AccessDeniedException,
+    description:
+      'When request user id or site id does not match site info `userId` or `siteInfo.id`',
+  })
+  @ApiQuery({ name: 'siteId', type: Number, example: 1 })
+  @Patch(':configId')
+  async updateSiteConfig(
+    @User('id', ParseIntPipe) uid: number,
+    @Param('configId', ParseIntPipe) configId: number,
+    @Query('siteId', ParseIntPipe) siteId: number,
+    @Body() updateDto: SiteConfigEntity,
+  ) {
+    const siteConfig = Object.assign(new SiteConfigEntity(), updateDto);
+    try {
+      await validateOrReject(siteConfig, { skipMissingProperties: true });
+      return await this.service.updateSiteConfig(
+        uid,
+        siteId,
+        configId,
+        updateDto,
+      );
     } catch (errors) {
       throw validationErrorToBadRequestException(errors);
     }

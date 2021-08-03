@@ -53,6 +53,27 @@ export class SiteConfigService {
     return result;
   }
 
+  async updateSiteConfig(
+    uid: number,
+    sid: number,
+    cid: number,
+    config: SiteConfigEntity,
+  ): Promise<SiteConfigEntity> {
+    const oldConf = await this.siteConfigRepository.findOne(
+      {
+        id: cid,
+      },
+      { relations: ['siteInfo'] },
+    );
+    if (!oldConf || !oldConf.siteInfo) throw new DataNotFoundException();
+    if (oldConf.siteInfo.id !== sid || oldConf.siteInfo.userId !== uid)
+      throw new AccessDeniedException();
+    const newConf = this.siteConfigRepository.merge(oldConf, config);
+    const result = await this.siteConfigRepository.save(newConf);
+    if (result.siteInfo) delete result.siteInfo;
+    return result;
+  }
+
   async deleteSiteConfig(uid: number, cid: number): Promise<DeleteResult> {
     const config = await this.siteConfigRepository.findOne(
       {
