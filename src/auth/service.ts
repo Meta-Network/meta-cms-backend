@@ -15,10 +15,10 @@ export class AuthService {
 
   validateJWT(req: Request) {
     const cookie = req.cookies;
-    if (!cookie || !cookie.ucenter_accessToken) {
+    if (!cookie || !cookie.ucenter_access_token) {
       throw new RequirdHttpHeadersNotFoundException();
     }
-    const token: string = cookie.ucenter_accessToken;
+    const token: string = cookie.ucenter_access_token;
 
     try {
       this.jwtService.verify(token, {

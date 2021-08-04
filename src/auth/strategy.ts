@@ -9,7 +9,7 @@ import { UCenterJWTPayload } from '../types';
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor() {
     super({
-      jwtFromRequest: (req: Request) => req.cookies['ucenter_accessToken'],
+      jwtFromRequest: (req: Request) => req.cookies['ucenter_access_token'],
       secretOrKey: PUBLIC_KEYS.DEVELOPMENT,
       ignoreExpiration: process.env.NODE_ENV !== 'production',
     });
