@@ -5,7 +5,6 @@ import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app/module';
 import { RequestNotAcceptableException } from './exceptions';
-import packageJson = require('../package.json');
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -13,8 +12,8 @@ async function bootstrap() {
 
   const swaggerConfig = new DocumentBuilder()
     .setTitle(configService.get<string>('app.name'))
-    .setDescription(packageJson.description)
-    .setVersion(packageJson.version)
+    .setDescription('CMS API testing branch')
+    .setVersion(process.env.npm_package_version || '0.0.1')
     .addCookieAuth('ucenter_accessToken')
     .build();
   const document = SwaggerModule.createDocument(app, swaggerConfig);
