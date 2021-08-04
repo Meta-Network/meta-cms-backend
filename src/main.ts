@@ -9,12 +9,13 @@ import { RequestNotAcceptableException } from './exceptions';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get<ConfigService>(ConfigService);
+  app.enableCors();
 
   const swaggerConfig = new DocumentBuilder()
     .setTitle(configService.get<string>('app.name'))
     .setDescription('CMS API testing branch')
     .setVersion(process.env.npm_package_version || '0.0.1')
-    .addCookieAuth('ucenter_accessToken')
+    .addCookieAuth('ucenter_access_token')
     .build();
   const document = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('api', app, document, {
