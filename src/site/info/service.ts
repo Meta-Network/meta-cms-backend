@@ -21,7 +21,9 @@ export class SiteInfoService {
     uid: number,
   ): Promise<Pagination<SiteInfoEntity>> {
     return await paginate<SiteInfoEntity>(this.siteInfoRepository, options, {
-      userId: uid,
+      where: {
+        userId: uid,
+      },
     });
   }
 
