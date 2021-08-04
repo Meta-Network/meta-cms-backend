@@ -1,4 +1,5 @@
 import { validateOrReject } from 'class-validator';
+import { IPaginationOptions } from 'nestjs-typeorm-paginate';
 import { DeleteResult } from 'typeorm';
 import {
   Body,
@@ -7,6 +8,7 @@ import {
   Delete,
   Get,
   Param,
+  ParseBoolPipe,
   ParseIntPipe,
   Patch,
   Post,
@@ -25,6 +27,7 @@ import {
 } from '@nestjs/swagger';
 import { User } from '../../decorators';
 import { SiteInfoEntity } from '../../entities/siteInfo.entity';
+import { SiteInfoWithConfigCountEntity } from '../../entities/siteInfoWithConfigCount.entity';
 import {
   AccessDeniedException,
   DataNotFoundException,
@@ -42,6 +45,11 @@ class SiteInfoPagination extends PaginationResponse<SiteInfoEntity> {
   readonly items: SiteInfoEntity[];
 }
 
+class SiteInfoWithConfigCountPagination extends PaginationResponse<SiteInfoWithConfigCountEntity> {
+  @ApiProperty({ type: SiteInfoWithConfigCountEntity, isArray: true })
+  readonly items: SiteInfoWithConfigCountEntity[];
+}
+
 class SiteInfoResponse extends TransformResponse<SiteInfoEntity> {
   @ApiProperty({ type: SiteInfoEntity })
   readonly data: SiteInfoEntity;
@@ -50,6 +58,11 @@ class SiteInfoResponse extends TransformResponse<SiteInfoEntity> {
 class SiteInfoWithPaginationResponse extends TransformResponse<SiteInfoPagination> {
   @ApiProperty({ type: SiteInfoPagination })
   readonly data: SiteInfoPagination;
+}
+
+class SiteInfoWithConfigCountPaginationResponse extends TransformResponse<SiteInfoWithConfigCountPagination> {
+  @ApiProperty({ type: SiteInfoWithConfigCountPagination })
+  readonly data: SiteInfoWithConfigCountPagination;
 }
 
 class SiteInfoDeleteResponse extends TransformResponse<DeleteResult> {
@@ -64,24 +77,32 @@ export class SiteInfoController {
   constructor(private readonly service: SiteInfoService) {}
 
   @ApiOkResponse({ type: SiteInfoWithPaginationResponse })
+  @ApiOkResponse({
+    type: SiteInfoWithConfigCountPaginationResponse,
+    description: 'When request query param with `countConfig=true`',
+  })
   @ApiQuery({ name: 'page', type: Number, example: 1 })
   @ApiQuery({ name: 'limit', type: Number, example: 10 })
   @Get()
   async getSiteInfo(
     @User('id', ParseIntPipe) uid: number,
+    @Query('countConfig', new DefaultValuePipe(false), ParseBoolPipe)
+    countConfig = false,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page = 1,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit = 10,
   ) {
     limit = limit > 100 ? 100 : limit;
+    const option: IPaginationOptions = {
+      page,
+      limit,
+      route: '/site/info',
+    };
 
-    return await this.service.getSiteInfo(
-      {
-        page,
-        limit,
-        route: '/site/info',
-      },
-      uid,
-    );
+    if (countConfig) {
+      return await this.service.getSiteInfoAndCountConfig(option, uid);
+    }
+
+    return await this.service.getSiteInfo(option, uid);
   }
 
   @ApiCreatedResponse({ type: SiteInfoResponse })

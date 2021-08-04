@@ -7,6 +7,7 @@ import { DeleteResult, Repository } from 'typeorm';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { SiteInfoEntity } from '../../entities/siteInfo.entity';
+import { SiteInfoWithConfigCountEntity } from '../../entities/siteInfoWithConfigCount.entity';
 import { AccessDeniedException, DataNotFoundException } from '../../exceptions';
 
 @Injectable()
@@ -25,6 +26,20 @@ export class SiteInfoService {
         userId: uid,
       },
     });
+  }
+
+  async getSiteInfoAndCountConfig(
+    options: IPaginationOptions,
+    uid: number,
+  ): Promise<Pagination<SiteInfoWithConfigCountEntity>> {
+    const queryBuilder = this.siteInfoRepository.createQueryBuilder('siteInfo');
+    queryBuilder
+      .where('siteInfo.userId = :uid', { uid })
+      .loadRelationCountAndMap('siteInfo.configCount', 'siteInfo.configs');
+    return (await paginate<SiteInfoEntity>(
+      queryBuilder,
+      options,
+    )) as Pagination<SiteInfoWithConfigCountEntity>;
   }
 
   async createSiteInfo(info: SiteInfoEntity): Promise<SiteInfoEntity> {

@@ -114,5 +114,5 @@ export class SiteInfoEntity extends AutoDateEntity {
   })
   @ApiHideProperty()
   @ApiResponseProperty({ type: SiteConfigEntity, example: null })
-  readonly configs?: SiteConfigEntity[] | null = null;
+  readonly configs?: SiteConfigEntity[] | null;
 }
