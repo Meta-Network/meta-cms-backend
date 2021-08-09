@@ -1,4 +1,3 @@
-import { validateOrReject } from 'class-validator';
 import { DeleteResult } from 'typeorm';
 import {
   Body,
@@ -30,14 +29,13 @@ import {
   AccessDeniedException,
   DataNotFoundException,
   ResourceIsInUseException,
-  validationErrorToBadRequestException,
   ValidationException,
 } from '../../exceptions';
 import {
   PaginationResponse,
   TransformResponse,
 } from '../../utils/responseClass';
-import { SiteConfigService } from './service';
+import { SiteConfigLogicService } from './logicService';
 
 class SiteConfigPagination extends PaginationResponse<SiteConfigEntity> {
   @ApiProperty({ type: SiteConfigEntity, isArray: true })
@@ -63,7 +61,7 @@ class SiteConfigDeleteResponse extends TransformResponse<DeleteResult> {
 @ApiCookieAuth()
 @Controller('site/config')
 export class SiteConfigController {
-  constructor(private readonly service: SiteConfigService) {}
+  constructor(private readonly service: SiteConfigLogicService) {}
 
   @ApiOkResponse({ type: SiteConfigWithPaginationResponse })
   @ApiNotFoundResponse({
@@ -84,17 +82,7 @@ export class SiteConfigController {
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page = 1,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit = 10,
   ) {
-    limit = limit > 100 ? 100 : limit;
-
-    return await this.service.getSiteConfig(
-      {
-        page,
-        limit,
-        route: '/site/config',
-      },
-      uid,
-      siteId,
-    );
+    return await this.service.getSiteConfig(uid, siteId, page, limit);
   }
 
   @ApiCreatedResponse({ type: SiteConfigResponse })
@@ -118,13 +106,7 @@ export class SiteConfigController {
     @Query('siteId', ParseIntPipe) siteId: number,
     @Body() createDto: SiteConfigEntity,
   ) {
-    const siteConfig = Object.assign(new SiteConfigEntity(), createDto);
-    try {
-      await validateOrReject(siteConfig);
-      return await this.service.createSiteConfig(uid, siteId, siteConfig);
-    } catch (errors) {
-      throw validationErrorToBadRequestException(errors);
-    }
+    return await this.service.createSiteConfig(uid, siteId, createDto);
   }
 
   @ApiOkResponse({ type: SiteConfigResponse })
@@ -150,18 +132,12 @@ export class SiteConfigController {
     @Query('siteId', ParseIntPipe) siteId: number,
     @Body() updateDto: SiteConfigEntity,
   ) {
-    const siteConfig = Object.assign(new SiteConfigEntity(), updateDto);
-    try {
-      await validateOrReject(siteConfig, { skipMissingProperties: true });
-      return await this.service.updateSiteConfig(
-        uid,
-        siteId,
-        configId,
-        updateDto,
-      );
-    } catch (errors) {
-      throw validationErrorToBadRequestException(errors);
-    }
+    return await this.service.updateSiteConfig(
+      uid,
+      siteId,
+      configId,
+      updateDto,
+    );
   }
 
   @ApiOkResponse({ type: SiteConfigDeleteResponse })
@@ -183,6 +159,6 @@ export class SiteConfigController {
     @User('id', ParseIntPipe) uid: number,
     @Param('configId', ParseIntPipe) configId: number,
   ) {
-    return this.service.deleteSiteConfig(uid, configId);
+    return await this.service.deleteSiteConfig(uid, configId);
   }
 }

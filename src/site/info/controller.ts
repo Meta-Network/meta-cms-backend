@@ -1,5 +1,3 @@
-import { validateOrReject } from 'class-validator';
-import { IPaginationOptions } from 'nestjs-typeorm-paginate';
 import { DeleteResult } from 'typeorm';
 import {
   Body,
@@ -31,14 +29,13 @@ import { SiteInfoWithConfigCountEntity } from '../../entities/siteInfoWithConfig
 import {
   AccessDeniedException,
   DataNotFoundException,
-  validationErrorToBadRequestException,
   ValidationException,
 } from '../../exceptions';
 import {
   PaginationResponse,
   TransformResponse,
 } from '../../utils/responseClass';
-import { SiteInfoService } from './service';
+import { SiteInfoLogicService } from './logicService';
 
 class SiteInfoPagination extends PaginationResponse<SiteInfoEntity> {
   @ApiProperty({ type: SiteInfoEntity, isArray: true })
@@ -74,7 +71,7 @@ class SiteInfoDeleteResponse extends TransformResponse<DeleteResult> {
 @ApiCookieAuth()
 @Controller('site/info')
 export class SiteInfoController {
-  constructor(private readonly service: SiteInfoService) {}
+  constructor(private readonly logicService: SiteInfoLogicService) {}
 
   @ApiOkResponse({ type: SiteInfoWithPaginationResponse })
   @ApiOkResponse({
@@ -91,18 +88,7 @@ export class SiteInfoController {
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page = 1,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit = 10,
   ) {
-    limit = limit > 100 ? 100 : limit;
-    const option: IPaginationOptions = {
-      page,
-      limit,
-      route: '/site/info',
-    };
-
-    if (countConfig) {
-      return await this.service.getSiteInfoAndCountConfig(option, uid);
-    }
-
-    return await this.service.getSiteInfo(option, uid);
+    return await this.logicService.getSiteInfo(uid, countConfig, page, limit);
   }
 
   @ApiCreatedResponse({ type: SiteInfoResponse })
@@ -116,16 +102,7 @@ export class SiteInfoController {
     @User('id', ParseIntPipe) uid: number,
     @Body() createDto: SiteInfoEntity,
   ) {
-    const siteInfo = Object.assign(new SiteInfoEntity(), {
-      ...createDto,
-      userId: uid,
-    });
-    try {
-      await validateOrReject(siteInfo);
-      return await this.service.createSiteInfo(siteInfo);
-    } catch (errors) {
-      throw validationErrorToBadRequestException(errors);
-    }
+    return await this.logicService.createSiteInfo(uid, createDto);
   }
 
   @ApiOkResponse({ type: SiteInfoResponse })
@@ -148,13 +125,7 @@ export class SiteInfoController {
     @Body() updateDto: SiteInfoEntity,
     @Param('siteId', ParseIntPipe) siteId: number,
   ) {
-    const siteInfo = Object.assign(new SiteInfoEntity(), updateDto);
-    try {
-      await validateOrReject(siteInfo, { skipMissingProperties: true });
-      return await this.service.updateSiteInfo(uid, siteId, siteInfo);
-    } catch (errors) {
-      throw validationErrorToBadRequestException(errors);
-    }
+    return await this.logicService.updateSiteInfo(uid, siteId, updateDto);
   }
 
   @ApiOkResponse({ type: SiteInfoDeleteResponse })
@@ -171,6 +142,6 @@ export class SiteInfoController {
     @User('id', ParseIntPipe) uid: number,
     @Param('siteId', ParseIntPipe) siteId: number,
   ) {
-    return await this.service.deleteSiteInfo(uid, siteId);
+    return await this.logicService.deleteSiteInfo(uid, siteId);
   }
 }
