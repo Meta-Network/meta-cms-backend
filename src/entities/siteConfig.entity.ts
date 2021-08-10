@@ -8,34 +8,9 @@ import {
 } from 'class-validator';
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { ApiHideProperty, ApiResponseProperty } from '@nestjs/swagger';
+import { CDNType, CICDType, PublisherType, StorageType } from '../types/enum';
 import { AutoDateEntity } from './autoDate.entity';
 import { SiteInfoEntity } from './siteInfo.entity';
-
-export enum StoreType {
-  LOCAL = 'LOCAL',
-  GIT = 'GIT',
-  IPFS = 'IPFS',
-  OSS = 'OSS', // Object Storage Service
-}
-
-export enum CICDType {
-  GITHUB = 'GITHUB',
-  GITLAB = 'GITLAB',
-  JENKINS = 'JENKINS',
-  AZDO = 'AZDO', // Azure DevOps
-  CIRCLE = 'CIRCLE',
-}
-
-export enum PublisherType {
-  GITHUB = 'GITHUB',
-  GITLAB = 'GITLAB',
-  CLOUDFLARE = 'CLOUDFLARE',
-  VERCEL = 'VERCEL',
-}
-
-export enum CDNType {
-  CLOUDFLARE = 'CLOUDFLARE',
-}
 
 @Entity()
 export class SiteConfigEntity extends AutoDateEntity {
@@ -97,15 +72,15 @@ export class SiteConfigEntity extends AutoDateEntity {
   @Column({
     comment: 'Site store type',
     type: 'enum',
-    enum: StoreType,
+    enum: StorageType,
     nullable: true,
     default: null,
   })
-  @IsEnum(StoreType)
+  @IsEnum(StorageType)
   @IsOptional()
   @ApiHideProperty()
   @ApiResponseProperty({ example: null })
-  storeType?: StoreType | null = null;
+  storeType?: StorageType | null = null;
 
   /**
    * Site store provider id
