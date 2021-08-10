@@ -1,4 +1,5 @@
 import { ConnectionOptions } from 'typeorm';
+import { GitHubStorageProviderEntity } from '../entities/provider/storage/github.entity';
 import { SiteConfigEntity } from '../entities/siteConfig.entity';
 import { SiteInfoEntity } from '../entities/siteInfo.entity';
 import { ThemeTemplateEntity } from '../entities/themeTemplate.entity';
@@ -24,7 +25,12 @@ const options: ConnectionOptions = {
   username: config.db.username,
   password: config.db.password,
   database: config.db.database,
-  entities: [SiteInfoEntity, SiteConfigEntity, ThemeTemplateEntity],
+  entities: [
+    SiteInfoEntity,
+    SiteConfigEntity,
+    ThemeTemplateEntity,
+    GitHubStorageProviderEntity,
+  ],
   synchronize: false,
   migrationsTableName: 'be_migrations',
   migrations: [
