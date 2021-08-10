@@ -6,23 +6,17 @@ import {
   IsString,
   IsUrl,
 } from 'class-validator';
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, OneToMany } from 'typeorm';
 import {
   ApiHideProperty,
   ApiProperty,
   ApiResponseProperty,
 } from '@nestjs/swagger';
-import { AutoDateEntity } from './autoDate.entity';
+import { BaseEntity } from './base.entity';
 import { SiteConfigEntity } from './siteConfig.entity';
 
 @Entity()
-export class SiteInfoEntity extends AutoDateEntity {
-  /** Primary key */
-  @PrimaryGeneratedColumn({ unsigned: true, comment: 'Primary key' })
-  @ApiHideProperty()
-  @ApiResponseProperty({ example: 1 })
-  readonly id: number;
-
+export class SiteInfoEntity extends BaseEntity {
   /** UCenter user id */
   @Column({ comment: 'UCenter user id' })
   @IsInt()
@@ -58,7 +52,7 @@ export class SiteInfoEntity extends AutoDateEntity {
    * @default ''
    * @example 'Much respect. So noble.'
    */
-  @Column({ comment: 'Site description', type: 'text', default: '' })
+  @Column({ comment: 'Site description', type: 'text' })
   @IsString()
   @IsOptional()
   description?: string = '';

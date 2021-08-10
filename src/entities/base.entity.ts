@@ -1,7 +1,17 @@
-import { CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import {
+  CreateDateColumn,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 import { ApiHideProperty, ApiResponseProperty } from '@nestjs/swagger';
 
-export abstract class AutoDateEntity {
+export abstract class BaseEntity {
+  /** Primary key */
+  @PrimaryGeneratedColumn({ unsigned: true })
+  @ApiHideProperty()
+  @ApiResponseProperty({ example: 1 })
+  readonly id: number;
+
   @CreateDateColumn()
   @ApiHideProperty()
   @ApiResponseProperty({ example: '2021-07-27T11:39:39.150Z' })

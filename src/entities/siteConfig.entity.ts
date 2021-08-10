@@ -6,20 +6,14 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator';
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, ManyToOne } from 'typeorm';
 import { ApiHideProperty, ApiResponseProperty } from '@nestjs/swagger';
 import { CDNType, CICDType, PublisherType, StorageType } from '../types/enum';
-import { AutoDateEntity } from './autoDate.entity';
+import { BaseEntity } from './base.entity';
 import { SiteInfoEntity } from './siteInfo.entity';
 
 @Entity()
-export class SiteConfigEntity extends AutoDateEntity {
-  /** Primary key */
-  @PrimaryGeneratedColumn({ comment: 'Site config id', unsigned: true })
-  @ApiHideProperty()
-  @ApiResponseProperty({ example: 1 })
-  readonly id: number;
-
+export class SiteConfigEntity extends BaseEntity {
   /**
    * Site language
    * @type varchar(255)

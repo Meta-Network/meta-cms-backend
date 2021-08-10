@@ -5,19 +5,12 @@ import {
   IsString,
   IsUrl,
 } from 'class-validator';
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
-import { ApiHideProperty, ApiResponseProperty } from '@nestjs/swagger';
+import { Column, Entity } from 'typeorm';
 import { TemplateType } from '../types/enum';
-import { AutoDateEntity } from './autoDate.entity';
+import { BaseEntity } from './base.entity';
 
 @Entity()
-export class ThemeTemplateEntity extends AutoDateEntity {
-  /** Primary key */
-  @PrimaryGeneratedColumn({ comment: 'Template id', unsigned: true })
-  @ApiHideProperty()
-  @ApiResponseProperty({ example: 1 })
-  readonly id: number;
-
+export class ThemeTemplateEntity extends BaseEntity {
   /**
    * Template name
    * @type varchar(255)
