@@ -10,6 +10,7 @@ import config from '../configs';
 import { TypeORMConfigService } from '../configs/typeorm';
 import { WinstonConfigService } from '../configs/winston';
 import { TransformResponseInterceptor } from '../interceptors/transform';
+import { GitHubStorageModule } from '../provider/storage/github/module';
 import { SiteConfigModule } from '../site/config/module';
 import { SiteInfoModule } from '../site/info/module';
 import { ThemeTemplateModule } from '../theme/template/module';
@@ -34,6 +35,7 @@ import { AppService } from './service';
     SiteInfoModule,
     SiteConfigModule,
     ThemeTemplateModule,
+    GitHubStorageModule,
   ],
   controllers: [AppController],
   providers: [
