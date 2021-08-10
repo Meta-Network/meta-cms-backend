@@ -1,6 +1,7 @@
 import { ConnectionOptions } from 'typeorm';
 import { SiteConfigEntity } from '../entities/siteConfig.entity';
 import { SiteInfoEntity } from '../entities/siteInfo.entity';
+import { ThemeTemplateEntity } from '../entities/themeTemplate.entity';
 import AppConfig from './index';
 
 interface Config {
@@ -23,7 +24,7 @@ const options: ConnectionOptions = {
   username: config.db.username,
   password: config.db.password,
   database: config.db.database,
-  entities: [SiteInfoEntity, SiteConfigEntity],
+  entities: [SiteInfoEntity, SiteConfigEntity, ThemeTemplateEntity],
   synchronize: false,
   migrationsTableName: 'be_migrations',
   migrations: [
