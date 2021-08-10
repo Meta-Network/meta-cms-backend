@@ -2,7 +2,7 @@ import { IPaginationLinks, IPaginationMeta } from 'nestjs-typeorm-paginate';
 import { ApiProperty } from '@nestjs/swagger';
 
 export abstract class TransformResponse<T> {
-  abstract get data(): T;
+  abstract get data(): T | T[];
   @ApiProperty({ description: 'Response status code', example: 200 })
   readonly statusCode: number;
   @ApiProperty({

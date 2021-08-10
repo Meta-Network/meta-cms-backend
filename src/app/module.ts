@@ -12,6 +12,7 @@ import { WinstonConfigService } from '../config/winston';
 import { TransformResponseInterceptor } from '../interceptors/transform';
 import { SiteConfigModule } from '../site/config/module';
 import { SiteInfoModule } from '../site/info/module';
+import { ThemeTemplateModule } from '../theme/template/module';
 import { AppController } from './controller';
 import { AppService } from './service';
 
@@ -32,6 +33,7 @@ import { AppService } from './service';
     AuthModule,
     SiteInfoModule,
     SiteConfigModule,
+    ThemeTemplateModule,
   ],
   controllers: [AppController],
   providers: [
