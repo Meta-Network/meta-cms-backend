@@ -43,15 +43,15 @@ export class SiteConfigEntity extends AutoDateEntity {
   timezone?: string = '';
 
   /**
-   * Site theme
-   * @type varchar(255)
-   * @default ''
-   * @example 'landscape'
+   * Site theme template id
+   * @type number
+   * @default null
+   * @example 1
    */
-  @Column({ comment: 'Site theme', default: '' })
-  @IsString()
+  @Column({ comment: 'Site theme template id', nullable: true, default: null })
+  @IsInt()
   @IsOptional()
-  theme?: string = '';
+  templateId?: number | null = null;
 
   /**
    * Site domain
