@@ -46,6 +46,15 @@ export class ThemeTemplateEntity extends BaseEntity {
   repoUrl: string;
 
   /**
+   * Template repo branch name
+   * @example 'master'
+   */
+  @Column({ comment: 'Template repo branch name' })
+  @IsString()
+  @IsNotEmpty()
+  branchName: string;
+
+  /**
    * Preview image
    * @type varchar(255)
    * @default null
