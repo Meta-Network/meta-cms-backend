@@ -14,8 +14,6 @@ import { GitHubStorageModule } from '../provider/storage/github/module';
 import { SiteConfigModule } from '../site/config/module';
 import { SiteInfoModule } from '../site/info/module';
 import { ThemeTemplateModule } from '../theme/template/module';
-import { AppController } from './controller';
-import { AppService } from './service';
 
 @Module({
   imports: [
@@ -37,9 +35,7 @@ import { AppService } from './service';
     ThemeTemplateModule,
     GitHubStorageModule,
   ],
-  controllers: [AppController],
   providers: [
-    AppService,
     {
       provide: APP_GUARD,
       inject: [JwtService],
