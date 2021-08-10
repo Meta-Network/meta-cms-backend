@@ -8,6 +8,7 @@ import { SiteInfoWithConfigCountEntity } from '../../entities/siteInfoWithConfig
 import {
   AccessDeniedException,
   DataNotFoundException,
+  ResourceIsInUseException,
   validationErrorToBadRequestException,
 } from '../../exceptions';
 import { SiteInfoBaseService } from './baseService';
@@ -80,9 +81,12 @@ export class SiteInfoLogicService {
   }
 
   async deleteSiteInfo(uid: number, sid: number): Promise<DeleteResult> {
-    const oldInfo = await this.siteInfoRepository.findOne(sid);
+    const oldInfo = await this.siteInfoRepository.findOne(sid, {
+      relations: ['configs'],
+    });
     if (!oldInfo || !oldInfo.userId) throw new DataNotFoundException();
     if (oldInfo.userId !== uid) throw new AccessDeniedException();
+    if (oldInfo.configs.length) throw new ResourceIsInUseException();
 
     return await this.siteInfoBaseService.delete(sid);
   }

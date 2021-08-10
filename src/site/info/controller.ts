@@ -14,6 +14,7 @@ import {
 } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
+  ApiConflictResponse,
   ApiCookieAuth,
   ApiCreatedResponse,
   ApiForbiddenResponse,
@@ -29,6 +30,7 @@ import { SiteInfoWithConfigCountEntity } from '../../entities/siteInfoWithConfig
 import {
   AccessDeniedException,
   DataNotFoundException,
+  ResourceIsInUseException,
   ValidationException,
 } from '../../exceptions';
 import {
@@ -129,6 +131,10 @@ export class SiteInfoController {
   }
 
   @ApiOkResponse({ type: SiteInfoDeleteResponse })
+  @ApiConflictResponse({
+    type: ResourceIsInUseException,
+    description: 'When request site has config relations',
+  })
   @ApiNotFoundResponse({
     type: DataNotFoundException,
     description: 'When request site id in database was not found',
