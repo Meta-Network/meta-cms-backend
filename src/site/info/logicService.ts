@@ -1,6 +1,6 @@
 import { validateOrReject } from 'class-validator';
 import { IPaginationOptions, Pagination } from 'nestjs-typeorm-paginate';
-import { DeleteResult, Repository } from 'typeorm';
+import { DeleteResult, FindOneOptions, Repository } from 'typeorm';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { SiteInfoEntity } from '../../entities/siteInfo.entity';
@@ -66,9 +66,7 @@ export class SiteInfoLogicService {
     info: SiteInfoEntity,
   ): Promise<SiteInfoEntity> {
     try {
-      const oldInfo = await this.siteInfoRepository.findOne(sid);
-      if (!oldInfo || !oldInfo.userId) throw new DataNotFoundException();
-      if (oldInfo.userId !== uid) throw new AccessDeniedException();
+      const oldInfo = await this.validateSiteInfoUserId(sid, uid);
 
       const tmpInfo = Object.assign(new SiteInfoEntity(), info);
       await validateOrReject(tmpInfo, { skipMissingProperties: true });
@@ -81,13 +79,22 @@ export class SiteInfoLogicService {
   }
 
   async deleteSiteInfo(uid: number, sid: number): Promise<DeleteResult> {
-    const oldInfo = await this.siteInfoRepository.findOne(sid, {
+    const info = await this.validateSiteInfoUserId(sid, uid, {
       relations: ['configs'],
     });
-    if (!oldInfo || !oldInfo.userId) throw new DataNotFoundException();
-    if (oldInfo.userId !== uid) throw new AccessDeniedException();
-    if (oldInfo.configs.length) throw new ResourceIsInUseException();
+    if (info.configs.length) throw new ResourceIsInUseException();
 
     return await this.siteInfoBaseService.delete(sid);
+  }
+
+  async validateSiteInfoUserId(
+    sid: number,
+    uid: number,
+    options?: FindOneOptions<SiteInfoEntity>,
+  ): Promise<SiteInfoEntity> {
+    const info = await this.siteInfoRepository.findOne(sid, options);
+    if (!info || !info.userId) throw new DataNotFoundException();
+    if (info.userId !== uid) throw new AccessDeniedException();
+    return info;
   }
 }

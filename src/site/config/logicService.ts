@@ -1,10 +1,9 @@
 import { validateOrReject } from 'class-validator';
 import { IPaginationOptions, Pagination } from 'nestjs-typeorm-paginate';
-import { DeleteResult, Repository } from 'typeorm';
+import { DeleteResult, FindOneOptions, Repository } from 'typeorm';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { SiteConfigEntity } from '../../entities/siteConfig.entity';
-import { SiteInfoEntity } from '../../entities/siteInfo.entity';
 import {
   AccessDeniedException,
   DataNotFoundException,
@@ -12,16 +11,16 @@ import {
   validationErrorToBadRequestException,
 } from '../../exceptions';
 import { checkConfigIsDeletable } from '../../utils/validation';
+import { SiteInfoLogicService } from '../info/logicService';
 import { SiteConfigBaseService } from './baseService';
 
 @Injectable()
 export class SiteConfigLogicService {
   constructor(
-    @InjectRepository(SiteInfoEntity)
-    private readonly siteInfoRepository: Repository<SiteInfoEntity>,
     @InjectRepository(SiteConfigEntity)
     private readonly siteConfigRepository: Repository<SiteConfigEntity>,
     private readonly siteConfigBaseService: SiteConfigBaseService,
+    private readonly siteInfoLogicService: SiteInfoLogicService,
   ) {}
 
   async getSiteConfig(
@@ -30,9 +29,7 @@ export class SiteConfigLogicService {
     page: number,
     limit: number,
   ): Promise<Pagination<SiteConfigEntity>> {
-    const info = await this.siteInfoRepository.findOne(sid);
-    if (!info) throw new DataNotFoundException();
-    if (info.userId !== uid) throw new AccessDeniedException();
+    await this.siteInfoLogicService.validateSiteInfoUserId(sid, uid);
 
     limit = limit > 100 ? 100 : limit;
     const options: IPaginationOptions = {
@@ -50,9 +47,10 @@ export class SiteConfigLogicService {
     config: SiteConfigEntity,
   ): Promise<SiteConfigEntity> {
     try {
-      const info = await this.siteInfoRepository.findOne(sid);
-      if (!info) throw new DataNotFoundException();
-      if (info.userId !== uid) throw new AccessDeniedException();
+      const info = await this.siteInfoLogicService.validateSiteInfoUserId(
+        sid,
+        uid,
+      );
 
       const tmpConfig = Object.assign(new SiteConfigEntity(), config);
       await validateOrReject(tmpConfig);
@@ -74,15 +72,8 @@ export class SiteConfigLogicService {
     config: SiteConfigEntity,
   ): Promise<SiteConfigEntity> {
     try {
-      const oldConf = await this.siteConfigRepository.findOne(
-        {
-          id: cid,
-        },
-        { relations: ['siteInfo'] },
-      );
-      if (!oldConf || !oldConf.siteInfo) throw new DataNotFoundException();
-      if (oldConf.siteInfo.id !== sid || oldConf.siteInfo.userId !== uid)
-        throw new AccessDeniedException();
+      const oldConf = await this.validateSiteConfigUserId(cid, uid);
+      if (oldConf.siteInfo.id !== sid) throw new AccessDeniedException();
 
       const tmpConf = Object.assign(new SiteConfigEntity(), config);
       await validateOrReject(tmpConf, { skipMissingProperties: true });
@@ -98,16 +89,20 @@ export class SiteConfigLogicService {
   }
 
   async deleteSiteConfig(uid: number, cid: number): Promise<DeleteResult> {
-    const config = await this.siteConfigRepository.findOne(
-      {
-        id: cid,
-      },
-      { relations: ['siteInfo'] },
-    );
-    if (!config || !config.siteInfo) throw new DataNotFoundException();
-    if (config.siteInfo.userId !== uid) throw new AccessDeniedException();
+    const config = await this.validateSiteConfigUserId(cid, uid);
     if (!checkConfigIsDeletable(config)) throw new ResourceIsInUseException();
 
     return await this.siteConfigBaseService.delete(cid);
+  }
+
+  async validateSiteConfigUserId(
+    cid: number,
+    uid: number,
+    options: FindOneOptions<SiteConfigEntity> = { relations: ['siteInfo'] },
+  ): Promise<SiteConfigEntity> {
+    const config = await this.siteConfigRepository.findOne(cid, options);
+    if (!config || !config.siteInfo) throw new DataNotFoundException();
+    if (config.siteInfo.userId !== uid) throw new AccessDeniedException();
+    return config;
   }
 }
