@@ -3,7 +3,7 @@ import {
   paginate,
   Pagination,
 } from 'nestjs-typeorm-paginate';
-import { DeleteResult, Repository } from 'typeorm';
+import { DeleteResult, FindOneOptions, Repository } from 'typeorm';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { SiteConfigEntity } from '../../entities/siteConfig.entity';
@@ -26,12 +26,23 @@ export class SiteConfigBaseService {
     );
   }
 
+  async readOne(
+    cid: number,
+    options: FindOneOptions<SiteConfigEntity>,
+  ): Promise<SiteConfigEntity> {
+    return await this.siteConfigRepository.findOne(cid, options);
+  }
+
   async create(config: SiteConfigEntity): Promise<SiteConfigEntity> {
     const siteConfig = this.siteConfigRepository.create(config);
     return await this.siteConfigRepository.save(siteConfig);
   }
 
-  async update(config: SiteConfigEntity): Promise<SiteConfigEntity> {
+  async update(
+    oldC: SiteConfigEntity,
+    newC: SiteConfigEntity,
+  ): Promise<SiteConfigEntity> {
+    const config = this.siteConfigRepository.merge(oldC, newC);
     return await this.siteConfigRepository.save(config);
   }
 

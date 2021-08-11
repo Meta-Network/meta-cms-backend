@@ -1,8 +1,7 @@
 import { validateOrReject } from 'class-validator';
 import { IPaginationOptions, Pagination } from 'nestjs-typeorm-paginate';
-import { DeleteResult, FindOneOptions, Repository } from 'typeorm';
+import { DeleteResult, FindOneOptions } from 'typeorm';
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { SiteConfigEntity } from '../../entities/siteConfig.entity';
 import {
   AccessDeniedException,
@@ -18,8 +17,6 @@ import { SiteConfigBaseService } from './baseService';
 @Injectable()
 export class SiteConfigLogicService {
   constructor(
-    @InjectRepository(SiteConfigEntity)
-    private readonly siteConfigRepository: Repository<SiteConfigEntity>,
     private readonly siteConfigBaseService: SiteConfigBaseService,
     private readonly siteInfoLogicService: SiteInfoLogicService,
   ) {}
@@ -80,8 +77,7 @@ export class SiteConfigLogicService {
       const tmpConf = Object.assign(new SiteConfigEntity(), config);
       await validateOrReject(tmpConf, { skipMissingProperties: true });
 
-      const newConf = this.siteConfigRepository.merge(oldConf, tmpConf);
-      const result = await this.siteConfigBaseService.update(newConf);
+      const result = await this.siteConfigBaseService.update(oldConf, tmpConf);
 
       if (result.siteInfo) delete result.siteInfo;
       return result;
@@ -102,7 +98,7 @@ export class SiteConfigLogicService {
     uid: number,
     options: FindOneOptions<SiteConfigEntity> = { relations: ['siteInfo'] },
   ): Promise<SiteConfigEntity> {
-    const config = await this.siteConfigRepository.findOne(cid, options);
+    const config = await this.siteConfigBaseService.readOne(cid, options);
     if (!config) throw new DataNotFoundException('site config not found');
     if (!config.siteInfo) throw new RelationNotFoundException();
     if (config.siteInfo.userId !== uid)

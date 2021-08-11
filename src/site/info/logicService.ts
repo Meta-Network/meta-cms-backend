@@ -1,8 +1,7 @@
 import { validateOrReject } from 'class-validator';
 import { IPaginationOptions, Pagination } from 'nestjs-typeorm-paginate';
-import { DeleteResult, FindOneOptions, Repository } from 'typeorm';
+import { DeleteResult, FindOneOptions } from 'typeorm';
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { SiteInfoEntity } from '../../entities/siteInfo.entity';
 import { SiteInfoWithConfigCountEntity } from '../../entities/siteInfoWithConfigCount.entity';
 import {
@@ -15,11 +14,7 @@ import { SiteInfoBaseService } from './baseService';
 
 @Injectable()
 export class SiteInfoLogicService {
-  constructor(
-    @InjectRepository(SiteInfoEntity)
-    private readonly siteInfoRepository: Repository<SiteInfoEntity>,
-    private readonly siteInfoBaseService: SiteInfoBaseService,
-  ) {}
+  constructor(private readonly siteInfoBaseService: SiteInfoBaseService) {}
 
   async getSiteInfo(
     uid: number,
@@ -71,8 +66,7 @@ export class SiteInfoLogicService {
       const tmpInfo = Object.assign(new SiteInfoEntity(), info);
       await validateOrReject(tmpInfo, { skipMissingProperties: true });
 
-      const newInfo = this.siteInfoRepository.merge(oldInfo, tmpInfo);
-      return await this.siteInfoBaseService.update(newInfo);
+      return await this.siteInfoBaseService.update(oldInfo, tmpInfo);
     } catch (errors) {
       throw validationErrorToBadRequestException(errors);
     }
@@ -92,7 +86,7 @@ export class SiteInfoLogicService {
     uid: number,
     options?: FindOneOptions<SiteInfoEntity>,
   ): Promise<SiteInfoEntity> {
-    const info = await this.siteInfoRepository.findOne(sid, options);
+    const info = await this.siteInfoBaseService.readOne(sid, options);
     if (!info || !info.userId)
       throw new DataNotFoundException('site info not found');
     if (info.userId !== uid)

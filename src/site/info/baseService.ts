@@ -3,7 +3,7 @@ import {
   paginate,
   Pagination,
 } from 'nestjs-typeorm-paginate';
-import { DeleteResult, Repository } from 'typeorm';
+import { DeleteResult, FindOneOptions, Repository } from 'typeorm';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { SiteInfoEntity } from '../../entities/siteInfo.entity';
@@ -27,6 +27,13 @@ export class SiteInfoBaseService {
     });
   }
 
+  async readOne(
+    sid: number,
+    options: FindOneOptions<SiteInfoEntity>,
+  ): Promise<SiteInfoEntity> {
+    return await this.siteInfoRepository.findOne(sid, options);
+  }
+
   async readAndCountConfig(
     options: IPaginationOptions,
     uid: number,
@@ -46,7 +53,11 @@ export class SiteInfoBaseService {
     return await this.siteInfoRepository.save(siteInfo);
   }
 
-  async update(info: SiteInfoEntity): Promise<SiteInfoEntity> {
+  async update(
+    oldI: SiteInfoEntity,
+    newI: SiteInfoEntity,
+  ): Promise<SiteInfoEntity> {
+    const info = this.siteInfoRepository.merge(oldI, newI);
     return await this.siteInfoRepository.save(info);
   }
 
