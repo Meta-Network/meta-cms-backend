@@ -28,6 +28,7 @@ import { SiteConfigEntity } from '../../entities/siteConfig.entity';
 import {
   AccessDeniedException,
   DataNotFoundException,
+  RelationNotFoundException,
   ResourceIsInUseException,
   ValidationException,
 } from '../../exceptions';
@@ -149,6 +150,10 @@ export class SiteConfigController {
   @ApiNotFoundResponse({
     type: DataNotFoundException,
     description: 'When request config id in database was not found',
+  })
+  @ApiNotFoundResponse({
+    type: RelationNotFoundException,
+    description: 'When config relation was not found',
   })
   @ApiForbiddenResponse({
     type: AccessDeniedException,

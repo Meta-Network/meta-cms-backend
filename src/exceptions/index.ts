@@ -91,11 +91,11 @@ export class RequestNotAcceptableException extends NotAcceptableException {
 }
 
 export class AccessDeniedException extends ForbiddenException {
-  constructor() {
+  constructor(msg = 'access denied') {
     super(
       {
         statusCode: HttpStatus.FORBIDDEN,
-        message: 'Forbidden: access denied',
+        message: `Forbidden: ${msg}`,
       },
       'Forbidden',
     );
@@ -107,11 +107,11 @@ export class AccessDeniedException extends ForbiddenException {
 }
 
 export class ValidationException extends BadRequestException {
-  constructor(message = 'validation error') {
+  constructor(msg = 'validation error') {
     super(
       {
         statusCode: HttpStatus.BAD_REQUEST,
-        message: `Bad Request: ${message}`,
+        message: `Bad Request: ${msg}`,
       },
       'Bad Request',
     );
@@ -123,11 +123,11 @@ export class ValidationException extends BadRequestException {
 }
 
 export class DataNotFoundException extends NotFoundException {
-  constructor() {
+  constructor(msg = 'data not found') {
     super(
       {
         statusCode: HttpStatus.NOT_FOUND,
-        message: 'Not Found: data not found',
+        message: `Not Found: ${msg}`,
       },
       'Not Found',
     );
@@ -138,12 +138,28 @@ export class DataNotFoundException extends NotFoundException {
   readonly message: string;
 }
 
+export class RelationNotFoundException extends NotFoundException {
+  constructor(msg = 'relation not found') {
+    super(
+      {
+        statusCode: HttpStatus.NOT_FOUND,
+        message: `Not Found: ${msg}`,
+      },
+      'Not Found',
+    );
+  }
+  @ApiProperty({ example: HttpStatus.NOT_FOUND })
+  readonly statusCode: string;
+  @ApiProperty({ example: 'Not Found: relation not found' })
+  readonly message: string;
+}
+
 export class ResourceIsInUseException extends ConflictException {
-  constructor() {
+  constructor(msg = 'the requested resource is in use') {
     super(
       {
         statusCode: HttpStatus.CONFLICT,
-        message: 'Conflict: the requested resource is in use',
+        message: `Conflict: ${msg}`,
       },
       'Conflict',
     );

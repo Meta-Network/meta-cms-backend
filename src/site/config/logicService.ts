@@ -7,6 +7,7 @@ import { SiteConfigEntity } from '../../entities/siteConfig.entity';
 import {
   AccessDeniedException,
   DataNotFoundException,
+  RelationNotFoundException,
   ResourceIsInUseException,
   validationErrorToBadRequestException,
 } from '../../exceptions';
@@ -73,7 +74,8 @@ export class SiteConfigLogicService {
   ): Promise<SiteConfigEntity> {
     try {
       const oldConf = await this.validateSiteConfigUserId(cid, uid);
-      if (oldConf.siteInfo.id !== sid) throw new AccessDeniedException();
+      if (oldConf.siteInfo.id !== sid)
+        throw new AccessDeniedException('access denied, site id inconsistent');
 
       const tmpConf = Object.assign(new SiteConfigEntity(), config);
       await validateOrReject(tmpConf, { skipMissingProperties: true });
@@ -101,8 +103,10 @@ export class SiteConfigLogicService {
     options: FindOneOptions<SiteConfigEntity> = { relations: ['siteInfo'] },
   ): Promise<SiteConfigEntity> {
     const config = await this.siteConfigRepository.findOne(cid, options);
-    if (!config || !config.siteInfo) throw new DataNotFoundException();
-    if (config.siteInfo.userId !== uid) throw new AccessDeniedException();
+    if (!config) throw new DataNotFoundException('site config not found');
+    if (!config.siteInfo) throw new RelationNotFoundException();
+    if (config.siteInfo.userId !== uid)
+      throw new AccessDeniedException('access denied, user id inconsistent');
     return config;
   }
 }

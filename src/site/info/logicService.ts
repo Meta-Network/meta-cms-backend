@@ -93,8 +93,10 @@ export class SiteInfoLogicService {
     options?: FindOneOptions<SiteInfoEntity>,
   ): Promise<SiteInfoEntity> {
     const info = await this.siteInfoRepository.findOne(sid, options);
-    if (!info || !info.userId) throw new DataNotFoundException();
-    if (info.userId !== uid) throw new AccessDeniedException();
+    if (!info || !info.userId)
+      throw new DataNotFoundException('site info not found');
+    if (info.userId !== uid)
+      throw new AccessDeniedException('access denied, user id inconsistent');
     return info;
   }
 }
