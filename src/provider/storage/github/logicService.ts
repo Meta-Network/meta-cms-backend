@@ -26,8 +26,10 @@ export class GitHubStorageLogicService {
       cid,
       uid,
     );
-    if (config.storeType !== StorageType.GITHUB || !config.storeProviderId)
-      throw new DataNotFoundException('storage type or provider id not found');
+    if (config.storeType !== StorageType.GITHUB)
+      throw new DataNotFoundException('storage type not found');
+    if (!config.storeProviderId)
+      throw new DataNotFoundException('storage provider id not found');
 
     return await this.baseService.read(config.storeProviderId);
   }
@@ -79,10 +81,10 @@ export class GitHubStorageLogicService {
         cid,
         uid,
       );
-      if (config.storeType !== StorageType.GITHUB || !config.storeProviderId)
-        throw new DataNotFoundException(
-          'storage type or provider id not found',
-        );
+      if (config.storeType !== StorageType.GITHUB)
+        throw new DataNotFoundException('storage type not found');
+      if (!config.storeProviderId)
+        throw new DataNotFoundException('storage provider id not found');
 
       const oldStorage = await this.baseService.read(config.storeProviderId);
       if (!oldStorage)
@@ -105,8 +107,10 @@ export class GitHubStorageLogicService {
       cid,
       uid,
     );
-    if (config.storeType !== StorageType.GITHUB || !config.storeProviderId)
-      throw new DataNotFoundException('storage type or provider id not found');
+    if (config.storeType !== StorageType.GITHUB)
+      throw new DataNotFoundException('storage type not found');
+    if (!config.storeProviderId)
+      throw new DataNotFoundException('storage provider id not found');
 
     // remove siteConfig's storageType and providerId
     await this.configLogicService.updateSiteConfig(
