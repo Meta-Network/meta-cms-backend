@@ -170,6 +170,22 @@ export class ResourceIsInUseException extends ConflictException {
   readonly message: string;
 }
 
+export class DataAlreadyExistsException extends ConflictException {
+  constructor(msg = 'data already exists') {
+    super(
+      {
+        statusCode: HttpStatus.CONFLICT,
+        message: `Conflict: ${msg}`,
+      },
+      'Conflict',
+    );
+  }
+  @ApiProperty({ example: HttpStatus.CONFLICT })
+  readonly statusCode: string;
+  @ApiProperty({ example: 'Conflict: data already exists' })
+  readonly message: string;
+}
+
 export const validationErrorToBadRequestException = (
   errors: unknown[],
 ): BadRequestException => {

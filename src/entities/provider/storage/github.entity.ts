@@ -64,6 +64,6 @@ export class GitHubStorageProviderEntity extends BaseEntity {
    */
   @Column({ comment: 'Use git provider', type: 'bool', default: true })
   @IsBoolean()
-  @IsNotEmpty()
+  @IsOptional()
   useGitProvider?: boolean = true;
 }

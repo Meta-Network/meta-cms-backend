@@ -22,8 +22,10 @@ export class GitHubStorageBaseService {
   }
 
   async update(
-    storage: GitHubStorageProviderEntity,
+    oldS: GitHubStorageProviderEntity,
+    newS: GitHubStorageProviderEntity,
   ): Promise<GitHubStorageProviderEntity> {
+    const storage = this.storageRepository.merge(oldS, newS);
     return await this.storageRepository.save(storage);
   }
 
