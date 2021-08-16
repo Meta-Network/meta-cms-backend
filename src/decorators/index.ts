@@ -1,5 +1,5 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
-import { RemoveIndex, RequestWithUser, UCenterJWTPayload } from '../types';
+import { RemoveIndex, RequestWithUser, UCenterJWTPayload } from 'src/types';
 
 export const User = createParamDecorator(
   (data: keyof RemoveIndex<UCenterJWTPayload>, ctx: ExecutionContext) => {

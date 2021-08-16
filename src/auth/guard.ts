@@ -1,7 +1,7 @@
 import { Request } from 'express';
 import { ExecutionContext, Injectable } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { AuthService } from './service';
+import { AuthService } from 'src/auth/service';
 
 @Injectable()
 export class JWTAuthGuard extends AuthGuard('jwt') {

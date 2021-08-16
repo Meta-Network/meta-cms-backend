@@ -7,7 +7,7 @@ import {
   JWTException,
   JWTExpiredException,
   RequirdHttpHeadersNotFoundException,
-} from '../exceptions';
+} from 'src/exceptions';
 
 @Injectable()
 export class AuthService {

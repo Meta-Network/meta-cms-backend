@@ -1,8 +1,8 @@
 import { Repository } from 'typeorm';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ThemeTemplateEntity } from '../../entities/themeTemplate.entity';
-import { TemplateQueryType, TemplateType } from '../../types/enum';
+import { ThemeTemplateEntity } from 'src/entities/themeTemplate.entity';
+import { TemplateQueryType, TemplateType } from 'src/types/enum';
 
 @Injectable()
 export class TemplateLogicService {

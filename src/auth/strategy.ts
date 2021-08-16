@@ -3,7 +3,7 @@ import { Strategy } from 'passport-jwt';
 import { PUBLIC_KEYS } from '@meta-network/auth-sdk';
 import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
-import { UCenterJWTPayload } from '../types';
+import { UCenterJWTPayload } from 'src/types';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {

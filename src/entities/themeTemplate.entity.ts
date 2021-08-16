@@ -6,8 +6,8 @@ import {
   IsUrl,
 } from 'class-validator';
 import { Column, Entity } from 'typeorm';
-import { TemplateType } from '../types/enum';
-import { BaseEntity } from './base.entity';
+import { TemplateType } from 'src/types/enum';
+import { BaseEntity } from 'src/entities/base.entity';
 
 @Entity()
 export class ThemeTemplateEntity extends BaseEntity {

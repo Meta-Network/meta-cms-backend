@@ -6,8 +6,8 @@ import {
 import { DeleteResult, FindOneOptions, Repository } from 'typeorm';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { SiteInfoEntity } from '../../entities/siteInfo.entity';
-import { SiteInfoWithConfigCountEntity } from '../../entities/siteInfoWithConfigCount.entity';
+import { SiteInfoEntity } from 'src/entities/siteInfo.entity';
+import { SiteInfoWithConfigCountEntity } from 'src/entities/siteInfoWithConfigCount.entity';
 
 @Injectable()
 export class SiteInfoBaseService {

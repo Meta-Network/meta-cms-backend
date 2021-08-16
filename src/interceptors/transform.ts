@@ -7,7 +7,7 @@ import {
   Injectable,
   NestInterceptor,
 } from '@nestjs/common';
-import { TransformResponse } from '../types';
+import { TransformResponse } from 'src/types';
 
 @Injectable()
 export class TransformResponseInterceptor<T>

@@ -20,17 +20,17 @@ import {
   ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
-import { User } from '../../../decorators';
-import { GitHubStorageProviderEntity } from '../../../entities/provider/storage/github.entity';
+import { User } from 'src/decorators';
+import { GitHubStorageProviderEntity } from 'src/entities/provider/storage/github.entity';
 import {
   AccessDeniedException,
   DataAlreadyExistsException,
   DataNotFoundException,
   RelationNotFoundException,
   ValidationException,
-} from '../../../exceptions';
-import { TransformResponse } from '../../../utils/responseClass';
-import { GitHubStorageLogicService } from './logicService';
+} from 'src/exceptions';
+import { TransformResponse } from 'src/utils/responseClass';
+import { GitHubStorageLogicService } from 'src/provider/storage/github/logicService';
 
 class GitHubStorageResponse extends TransformResponse<GitHubStorageProviderEntity> {
   @ApiProperty({ type: GitHubStorageProviderEntity })

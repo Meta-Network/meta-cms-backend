@@ -12,8 +12,8 @@ import {
   ApiProperty,
   ApiResponseProperty,
 } from '@nestjs/swagger';
-import { BaseEntity } from './base.entity';
-import { SiteConfigEntity } from './siteConfig.entity';
+import { BaseEntity } from 'src/entities/base.entity';
+import { SiteConfigEntity } from 'src/entities/siteConfig.entity';
 
 @Entity()
 export class SiteInfoEntity extends BaseEntity {

@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ThemeTemplateEntity } from '../../entities/themeTemplate.entity';
-import { TemplateController } from './controller';
-import { TemplateLogicService } from './logicService';
+import { ThemeTemplateEntity } from 'src/entities/themeTemplate.entity';
+import { TemplateController } from 'src/theme/template/controller';
+import { TemplateLogicService } from 'src/theme/template/logicService';
 
 @Module({
   imports: [TypeOrmModule.forFeature([ThemeTemplateEntity])],

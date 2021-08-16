@@ -6,7 +6,7 @@ import {
 import { DeleteResult, FindOneOptions, Repository } from 'typeorm';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { SiteConfigEntity } from '../../entities/siteConfig.entity';
+import { SiteConfigEntity } from 'src/entities/siteConfig.entity';
 
 @Injectable()
 export class SiteConfigBaseService {

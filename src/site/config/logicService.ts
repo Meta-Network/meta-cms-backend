@@ -2,17 +2,17 @@ import { validateOrReject } from 'class-validator';
 import { IPaginationOptions, Pagination } from 'nestjs-typeorm-paginate';
 import { DeleteResult, FindOneOptions } from 'typeorm';
 import { Injectable } from '@nestjs/common';
-import { SiteConfigEntity } from '../../entities/siteConfig.entity';
+import { SiteConfigEntity } from 'src/entities/siteConfig.entity';
 import {
   AccessDeniedException,
   DataNotFoundException,
   RelationNotFoundException,
   ResourceIsInUseException,
   validationErrorToBadRequestException,
-} from '../../exceptions';
-import { checkConfigIsDeletable } from '../../utils/validation';
-import { SiteInfoLogicService } from '../info/logicService';
-import { SiteConfigBaseService } from './baseService';
+} from 'src/exceptions';
+import { checkConfigIsDeletable } from 'src/utils/validation';
+import { SiteInfoLogicService } from 'src/site/info/logicService';
+import { SiteConfigBaseService } from 'src/site/config/baseService';
 
 @Injectable()
 export class SiteConfigLogicService {
