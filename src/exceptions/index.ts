@@ -1,4 +1,3 @@
-import { ValidationError } from 'class-validator';
 import {
   BadRequestException,
   ConflictException,
@@ -9,6 +8,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { ApiProperty } from '@nestjs/swagger';
+import { ValidationError } from 'class-validator';
 
 export class JWTException extends ForbiddenException {
   constructor(message: string) {

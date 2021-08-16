@@ -1,3 +1,4 @@
+import { ApiHideProperty, ApiResponseProperty } from '@nestjs/swagger';
 import {
   IsEnum,
   IsFQDN,
@@ -6,11 +7,10 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator';
-import { Column, Entity, ManyToOne } from 'typeorm';
-import { ApiHideProperty, ApiResponseProperty } from '@nestjs/swagger';
-import { CDNType, CICDType, PublisherType, StorageType } from 'src/types/enum';
 import { BaseEntity } from 'src/entities/base.entity';
 import { SiteInfoEntity } from 'src/entities/siteInfo.entity';
+import { CDNType, CICDType, PublisherType, StorageType } from 'src/types/enum';
+import { Column, Entity, ManyToOne } from 'typeorm';
 
 @Entity()
 export class SiteConfigEntity extends BaseEntity {

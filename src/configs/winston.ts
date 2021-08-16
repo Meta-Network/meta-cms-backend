@@ -1,10 +1,10 @@
+import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import {
   WinstonModuleOptions,
   WinstonModuleOptionsFactory,
 } from 'nest-winston';
 import * as winston from 'winston';
-import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 
 const { combine, timestamp, printf, metadata, label } = winston.format;
 const logFormat = printf((info) => {

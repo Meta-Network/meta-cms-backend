@@ -1,4 +1,3 @@
-import { DeleteResult } from 'typeorm';
 import {
   Body,
   Controller,
@@ -20,6 +19,7 @@ import {
   ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
+import { GitHubStorageLogicService } from 'src/api/provider/storage/github/logicService';
 import { User } from 'src/decorators';
 import { GitHubStorageProviderEntity } from 'src/entities/provider/storage/github.entity';
 import {
@@ -30,7 +30,7 @@ import {
   ValidationException,
 } from 'src/exceptions';
 import { TransformResponse } from 'src/utils/responseClass';
-import { GitHubStorageLogicService } from 'src/api/provider/storage/github/logicService';
+import { DeleteResult } from 'typeorm';
 
 class GitHubStorageResponse extends TransformResponse<GitHubStorageProviderEntity> {
   @ApiProperty({ type: GitHubStorageProviderEntity })

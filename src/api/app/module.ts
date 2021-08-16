@@ -1,19 +1,19 @@
-import { WinstonModule } from 'nest-winston';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { WinstonModule } from 'nest-winston';
+import { GitHubStorageModule } from 'src/api/provider/storage/github/module';
+import { SiteConfigModule } from 'src/api/site/config/module';
+import { SiteInfoModule } from 'src/api/site/info/module';
+import { ThemeTemplateModule } from 'src/api/theme/template/module';
 import { JWTAuthGuard } from 'src/auth/guard';
 import { AuthModule } from 'src/auth/module';
 import { configBuilder } from 'src/configs';
 import { TypeORMConfigService } from 'src/configs/typeorm';
 import { WinstonConfigService } from 'src/configs/winston';
 import { TransformResponseInterceptor } from 'src/interceptors/transform';
-import { GitHubStorageModule } from 'src/api/provider/storage/github/module';
-import { SiteConfigModule } from 'src/api/site/config/module';
-import { SiteInfoModule } from 'src/api/site/info/module';
-import { ThemeTemplateModule } from 'src/api/theme/template/module';
 
 @Module({
   imports: [

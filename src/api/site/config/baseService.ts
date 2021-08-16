@@ -1,12 +1,12 @@
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import {
   IPaginationOptions,
   paginate,
   Pagination,
 } from 'nestjs-typeorm-paginate';
-import { DeleteResult, FindOneOptions, Repository } from 'typeorm';
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { SiteConfigEntity } from 'src/entities/siteConfig.entity';
+import { DeleteResult, FindOneOptions, Repository } from 'typeorm';
 
 @Injectable()
 export class SiteConfigBaseService {

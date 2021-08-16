@@ -1,6 +1,6 @@
-import { Request } from 'express';
 import { ExecutionContext, Injectable } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { Request } from 'express';
 import { AuthService } from 'src/auth/service';
 
 @Injectable()

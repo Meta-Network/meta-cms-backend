@@ -1,4 +1,9 @@
 import {
+  ApiHideProperty,
+  ApiProperty,
+  ApiResponseProperty,
+} from '@nestjs/swagger';
+import {
   IsArray,
   IsInt,
   IsNotEmpty,
@@ -6,14 +11,9 @@ import {
   IsString,
   IsUrl,
 } from 'class-validator';
-import { Column, Entity, OneToMany } from 'typeorm';
-import {
-  ApiHideProperty,
-  ApiProperty,
-  ApiResponseProperty,
-} from '@nestjs/swagger';
 import { BaseEntity } from 'src/entities/base.entity';
 import { SiteConfigEntity } from 'src/entities/siteConfig.entity';
+import { Column, Entity, OneToMany } from 'typeorm';
 
 @Entity()
 export class SiteInfoEntity extends BaseEntity {

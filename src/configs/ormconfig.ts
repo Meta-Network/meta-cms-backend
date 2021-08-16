@@ -1,9 +1,9 @@
-import { ConnectionOptions } from 'typeorm';
+import { configBuilder } from 'src/configs/index';
 import { GitHubStorageProviderEntity } from 'src/entities/provider/storage/github.entity';
 import { SiteConfigEntity } from 'src/entities/siteConfig.entity';
 import { SiteInfoEntity } from 'src/entities/siteInfo.entity';
 import { ThemeTemplateEntity } from 'src/entities/themeTemplate.entity';
-import { configBuilder } from 'src/configs/index';
+import { ConnectionOptions } from 'typeorm';
 
 interface Config {
   db: {

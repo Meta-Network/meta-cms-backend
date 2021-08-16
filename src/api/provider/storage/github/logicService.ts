@@ -1,15 +1,15 @@
-import { validateOrReject } from 'class-validator';
-import { DeleteResult } from 'typeorm';
 import { Injectable } from '@nestjs/common';
+import { validateOrReject } from 'class-validator';
+import { GitHubStorageBaseService } from 'src/api/provider/storage/github/baseService';
+import { SiteConfigLogicService } from 'src/api/site/config/logicService';
 import { GitHubStorageProviderEntity } from 'src/entities/provider/storage/github.entity';
 import {
   DataAlreadyExistsException,
   DataNotFoundException,
   validationErrorToBadRequestException,
 } from 'src/exceptions';
-import { SiteConfigLogicService } from 'src/api/site/config/logicService';
 import { StorageType } from 'src/types/enum';
-import { GitHubStorageBaseService } from 'src/api/provider/storage/github/baseService';
+import { DeleteResult } from 'typeorm';
 
 @Injectable()
 export class GitHubStorageLogicService {

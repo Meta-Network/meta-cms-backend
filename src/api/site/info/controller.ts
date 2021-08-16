@@ -1,4 +1,3 @@
-import { DeleteResult } from 'typeorm';
 import {
   Body,
   Controller,
@@ -24,6 +23,7 @@ import {
   ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
+import { SiteInfoLogicService } from 'src/api/site/info/logicService';
 import { User } from 'src/decorators';
 import { SiteInfoEntity } from 'src/entities/siteInfo.entity';
 import { SiteInfoWithConfigCountEntity } from 'src/entities/siteInfoWithConfigCount.entity';
@@ -34,7 +34,7 @@ import {
   ValidationException,
 } from 'src/exceptions';
 import { PaginationResponse, TransformResponse } from 'src/utils/responseClass';
-import { SiteInfoLogicService } from 'src/api/site/info/logicService';
+import { DeleteResult } from 'typeorm';
 
 class SiteInfoPagination extends PaginationResponse<SiteInfoEntity> {
   @ApiProperty({ type: SiteInfoEntity, isArray: true })

@@ -5,9 +5,9 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator';
-import { Column, Entity } from 'typeorm';
-import { DataProcessType } from 'src/types/enum';
 import { BaseEntity } from 'src/entities/base.entity';
+import { DataProcessType } from 'src/types/enum';
+import { Column, Entity } from 'typeorm';
 
 @Entity()
 export class GitHubStorageProviderEntity extends BaseEntity {

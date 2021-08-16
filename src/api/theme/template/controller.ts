@@ -12,11 +12,11 @@ import {
   ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
-import { ValidationException } from 'src/exceptions';
+import { TemplateLogicService } from 'src/api/theme/template/logicService';
 import { ThemeTemplateEntity } from 'src/entities/themeTemplate.entity';
+import { ValidationException } from 'src/exceptions';
 import { TemplateQueryType } from 'src/types/enum';
 import { TransformResponse } from 'src/utils/responseClass';
-import { TemplateLogicService } from 'src/api/theme/template/logicService';
 
 class TemplateListResponse extends TransformResponse<ThemeTemplateEntity> {
   @ApiProperty({ type: ThemeTemplateEntity, isArray: true })

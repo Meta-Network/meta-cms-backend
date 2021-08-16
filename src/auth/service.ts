@@ -1,7 +1,7 @@
-import { Request } from 'express';
-import { JsonWebTokenError, TokenExpiredError } from 'jsonwebtoken';
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { Request } from 'express';
+import { JsonWebTokenError, TokenExpiredError } from 'jsonwebtoken';
 import {
   JWTAudNotMatchException,
   JWTException,

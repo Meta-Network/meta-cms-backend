@@ -1,6 +1,6 @@
 import { readFileSync } from 'fs';
-import { join } from 'path';
 import * as yaml from 'js-yaml';
+import { join } from 'path';
 
 const YAML_CONFIG_FILENAME =
   process.env.NODE_ENV === 'production'

@@ -1,5 +1,5 @@
-import { IPaginationLinks, IPaginationMeta } from 'nestjs-typeorm-paginate';
 import { ApiProperty } from '@nestjs/swagger';
+import { IPaginationLinks, IPaginationMeta } from 'nestjs-typeorm-paginate';
 
 export abstract class TransformResponse<T> {
   abstract get data(): T | T[];

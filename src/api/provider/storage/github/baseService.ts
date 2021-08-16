@@ -1,7 +1,7 @@
-import { DeleteResult, Repository } from 'typeorm';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { GitHubStorageProviderEntity } from 'src/entities/provider/storage/github.entity';
+import { DeleteResult, Repository } from 'typeorm';
 
 @Injectable()
 export class GitHubStorageBaseService {
