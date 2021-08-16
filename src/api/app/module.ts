@@ -6,7 +6,7 @@ import { JwtService } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { JWTAuthGuard } from 'src/auth/guard';
 import { AuthModule } from 'src/auth/module';
-import config from 'src/configs';
+import { configBuilder } from 'src/configs';
 import { TypeORMConfigService } from 'src/configs/typeorm';
 import { WinstonConfigService } from 'src/configs/winston';
 import { TransformResponseInterceptor } from 'src/interceptors/transform';
@@ -19,7 +19,7 @@ import { ThemeTemplateModule } from 'src/api/theme/template/module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [config],
+      load: [configBuilder],
     }),
     WinstonModule.forRootAsync({
       inject: [ConfigService],

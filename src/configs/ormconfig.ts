@@ -3,7 +3,7 @@ import { GitHubStorageProviderEntity } from 'src/entities/provider/storage/githu
 import { SiteConfigEntity } from 'src/entities/siteConfig.entity';
 import { SiteInfoEntity } from 'src/entities/siteInfo.entity';
 import { ThemeTemplateEntity } from 'src/entities/themeTemplate.entity';
-import AppConfig from 'src/configs/index';
+import { configBuilder } from 'src/configs/index';
 
 interface Config {
   db: {
@@ -15,7 +15,7 @@ interface Config {
   };
 }
 
-const config = AppConfig() as Config;
+const config = configBuilder() as Config;
 
 const options: ConnectionOptions = {
   type: 'mysql',
