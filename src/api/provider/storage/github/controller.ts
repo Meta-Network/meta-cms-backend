@@ -30,7 +30,7 @@ import {
   ValidationException,
 } from 'src/exceptions';
 import { TransformResponse } from 'src/utils/responseClass';
-import { GitHubStorageLogicService } from 'src/provider/storage/github/logicService';
+import { GitHubStorageLogicService } from 'src/api/provider/storage/github/logicService';
 
 class GitHubStorageResponse extends TransformResponse<GitHubStorageProviderEntity> {
   @ApiProperty({ type: GitHubStorageProviderEntity })

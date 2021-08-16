@@ -10,7 +10,7 @@ import {
   ResourceIsInUseException,
   validationErrorToBadRequestException,
 } from 'src/exceptions';
-import { SiteInfoBaseService } from 'src/site/info/baseService';
+import { SiteInfoBaseService } from 'src/api/site/info/baseService';
 
 @Injectable()
 export class SiteInfoLogicService {

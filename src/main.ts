@@ -3,7 +3,7 @@ import formCors from 'form-cors';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { AppModule } from 'src/app/module';
+import { AppModule } from 'src/api/app/module';
 import { RequestNotAcceptableException } from 'src/exceptions';
 
 async function bootstrap() {

@@ -7,9 +7,9 @@ import {
   DataNotFoundException,
   validationErrorToBadRequestException,
 } from 'src/exceptions';
-import { SiteConfigLogicService } from 'src/site/config/logicService';
+import { SiteConfigLogicService } from 'src/api/site/config/logicService';
 import { StorageType } from 'src/types/enum';
-import { GitHubStorageBaseService } from 'src/provider/storage/github/baseService';
+import { GitHubStorageBaseService } from 'src/api/provider/storage/github/baseService';
 
 @Injectable()
 export class GitHubStorageLogicService {

@@ -11,8 +11,8 @@ import {
   validationErrorToBadRequestException,
 } from 'src/exceptions';
 import { checkConfigIsDeletable } from 'src/utils/validation';
-import { SiteInfoLogicService } from 'src/site/info/logicService';
-import { SiteConfigBaseService } from 'src/site/config/baseService';
+import { SiteInfoLogicService } from 'src/api/site/info/logicService';
+import { SiteConfigBaseService } from 'src/api/site/config/baseService';
 
 @Injectable()
 export class SiteConfigLogicService {

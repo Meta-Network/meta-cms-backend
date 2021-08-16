@@ -33,7 +33,7 @@ import {
   ValidationException,
 } from 'src/exceptions';
 import { PaginationResponse, TransformResponse } from 'src/utils/responseClass';
-import { SiteConfigLogicService } from 'src/site/config/logicService';
+import { SiteConfigLogicService } from 'src/api/site/config/logicService';
 
 class SiteConfigPagination extends PaginationResponse<SiteConfigEntity> {
   @ApiProperty({ type: SiteConfigEntity, isArray: true })
