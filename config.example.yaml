@@ -12,3 +12,9 @@ jwt:
   verify:
     issuer:
     audience:
+
+swagger:
+  enable: true
+
+microservice:
+  port:
