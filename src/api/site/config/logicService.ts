@@ -77,7 +77,7 @@ export class SiteConfigLogicService {
       const tmpConf = Object.assign(new SiteConfigEntity(), config);
       await validateOrReject(tmpConf, { skipMissingProperties: true });
 
-      const result = await this.siteConfigBaseService.update(oldConf, tmpConf);
+      const result = await this.siteConfigBaseService.update(oldConf, config);
 
       if (result.siteInfo) delete result.siteInfo;
       return result;
@@ -103,6 +103,16 @@ export class SiteConfigLogicService {
     if (!config.siteInfo) throw new RelationNotFoundException();
     if (config.siteInfo.userId !== uid)
       throw new AccessDeniedException('access denied, user id inconsistent');
+    return config;
+  }
+
+  /**
+   * For internal use only
+   */
+  async getSiteConfigById(cid: number): Promise<SiteConfigEntity> {
+    const config = await this.siteConfigBaseService.readOne(cid, {
+      relations: ['siteInfo'],
+    });
     return config;
   }
 }

@@ -96,7 +96,7 @@ export class GitHubStorageLogicService {
       );
       await validateOrReject(tmpStorage, { skipMissingProperties: true });
 
-      return await this.baseService.update(oldStorage, tmpStorage);
+      return await this.baseService.update(oldStorage, storage);
     } catch (error) {
       throw validationErrorToBadRequestException(error);
     }

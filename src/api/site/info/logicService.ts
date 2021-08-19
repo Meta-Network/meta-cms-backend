@@ -66,7 +66,7 @@ export class SiteInfoLogicService {
       const tmpInfo = Object.assign(new SiteInfoEntity(), info);
       await validateOrReject(tmpInfo, { skipMissingProperties: true });
 
-      return await this.siteInfoBaseService.update(oldInfo, tmpInfo);
+      return await this.siteInfoBaseService.update(oldInfo, info);
     } catch (errors) {
       throw validationErrorToBadRequestException(errors);
     }
