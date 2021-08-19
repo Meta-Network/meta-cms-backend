@@ -18,6 +18,8 @@ enum GitServiceEnum {
   GITHUB = 'GITHUB',
   GITEE = 'GITEE',
 }
+export type GitServiceType = GitServiceEnum;
+export const GitServiceType = GitServiceEnum;
 
 enum StorageEnum {}
 export type StorageType = GitServiceEnum | StorageEnum;
@@ -45,3 +47,9 @@ enum CDNEnum {
 }
 export type CDNType = CDNEnum;
 export const CDNType = { ...CDNEnum };
+
+enum GitTaskMethod {
+  CREATE_REPO_FROM_TEMPLATE = 'CREATE_REPO_FROM_TEMPLATE',
+}
+export type TaskMethod = GitTaskMethod;
+export const TaskMethod = { ...GitTaskMethod };
