@@ -11,7 +11,7 @@ import { RequestNotAcceptableException } from 'src/exceptions';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get<ConfigService>(ConfigService);
-  const appPort = configService.get<number>('app.port', 3000);
+  const appPort = +configService.get<number>('app.port', 3000);
   const enableSwagger = configService.get<boolean>('swagger.enable');
 
   if (enableSwagger) {
@@ -38,7 +38,7 @@ async function bootstrap() {
   app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.TCP,
     options: {
-      port: configService.get<number>('microservice.port', appPort + 1000),
+      port: +configService.get<number>('microservice.port', appPort + 1000),
     },
   });
 

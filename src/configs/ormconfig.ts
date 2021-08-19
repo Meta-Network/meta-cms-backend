@@ -20,7 +20,7 @@ const config = configBuilder() as Config;
 const options: ConnectionOptions = {
   type: 'mysql',
   host: config.db.host,
-  port: config.db.port || 3306,
+  port: +config.db.port || 3306,
   connectTimeout: 60 * 60 * 1000,
   username: config.db.username,
   password: config.db.password,
