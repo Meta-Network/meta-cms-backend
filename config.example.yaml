@@ -8,6 +8,10 @@ db:
   password:
   database:
 
+redis:
+  host:
+  port:
+
 jwt:
   verify:
     issuer:
