@@ -1,7 +1,7 @@
 import { BullModule } from '@nestjs/bull';
 import { Module } from '@nestjs/common';
-import { BullQueueType } from 'src/constants';
 
+import { BullQueueType } from '../../constants';
 import { SiteConfigModule } from '../site/config/module';
 import { ThemeTemplateModule } from '../theme/template/module';
 import { TaskController } from './controller';

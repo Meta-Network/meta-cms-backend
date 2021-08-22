@@ -5,8 +5,9 @@ import {
   paginate,
   Pagination,
 } from 'nestjs-typeorm-paginate';
-import { SiteConfigEntity } from 'src/entities/siteConfig.entity';
 import { DeleteResult, FindOneOptions, Repository } from 'typeorm';
+
+import { SiteConfigEntity } from '../../../entities/siteConfig.entity';
 
 @Injectable()
 export class SiteConfigBaseService {

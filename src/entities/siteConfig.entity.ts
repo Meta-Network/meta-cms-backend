@@ -7,10 +7,11 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator';
-import { BaseEntity } from 'src/entities/base.entity';
-import { SiteInfoEntity } from 'src/entities/siteInfo.entity';
-import { CDNType, CICDType, PublisherType, StorageType } from 'src/types/enum';
 import { Column, Entity, ManyToOne } from 'typeorm';
+
+import { CDNType, CICDType, PublisherType, StorageType } from '../types/enum';
+import { BaseEntity } from './base.entity';
+import { SiteInfoEntity } from './siteInfo.entity';
 
 @Entity()
 export class SiteConfigEntity extends BaseEntity {

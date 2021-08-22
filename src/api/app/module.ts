@@ -6,18 +6,19 @@ import { JwtService } from '@nestjs/jwt';
 import { ScheduleModule } from '@nestjs/schedule';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { WinstonModule } from 'nest-winston';
-import { GitHubStorageModule } from 'src/api/provider/storage/github/module';
-import { SiteConfigModule } from 'src/api/site/config/module';
-import { SiteInfoModule } from 'src/api/site/info/module';
-import { TasksModule } from 'src/api/task/module';
-import { ThemeTemplateModule } from 'src/api/theme/template/module';
-import { UCenterJWTAuthGuard } from 'src/auth/ucenter/guard';
-import { UCenterAuthModule } from 'src/auth/ucenter/module';
-import { configBuilder } from 'src/configs';
-import { BullConfigService } from 'src/configs/bull';
-import { TypeORMConfigService } from 'src/configs/typeorm';
-import { WinstonConfigService } from 'src/configs/winston';
-import { TransformResponseInterceptor } from 'src/interceptors/transform';
+
+import { UCenterJWTAuthGuard } from '../../auth/ucenter/guard';
+import { UCenterAuthModule } from '../../auth/ucenter/module';
+import { configBuilder } from '../../configs';
+import { BullConfigService } from '../../configs/bull';
+import { TypeORMConfigService } from '../../configs/typeorm';
+import { WinstonConfigService } from '../../configs/winston';
+import { TransformResponseInterceptor } from '../../interceptors/transform';
+import { GitHubStorageModule } from '../provider/storage/github/module';
+import { SiteConfigModule } from '../site/config/module';
+import { SiteInfoModule } from '../site/info/module';
+import { TasksModule } from '../task/module';
+import { ThemeTemplateModule } from '../theme/template/module';
 
 @Module({
   imports: [

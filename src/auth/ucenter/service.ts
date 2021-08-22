@@ -2,12 +2,13 @@ import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
 import { JsonWebTokenError, TokenExpiredError } from 'jsonwebtoken';
+
 import {
   JWTAudNotMatchException,
   JWTException,
   JWTExpiredException,
   RequirdHttpHeadersNotFoundException,
-} from 'src/exceptions';
+} from '../../exceptions';
 
 @Injectable()
 export class UCenterAuthService {

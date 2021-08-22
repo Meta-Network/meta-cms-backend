@@ -22,21 +22,22 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
-import { GitHubStorageLogicService } from 'src/api/provider/storage/github/logicService';
-import { TasksService } from 'src/api/task/service';
-import { BullProcessorType } from 'src/constants';
-import { User } from 'src/decorators';
-import { GitHubStorageProviderEntity } from 'src/entities/provider/storage/github.entity';
+import { DeleteResult } from 'typeorm';
+
+import { BullProcessorType } from '../../../../constants';
+import { User } from '../../../../decorators';
+import { GitHubStorageProviderEntity } from '../../../../entities/provider/storage/github.entity';
 import {
   AccessDeniedException,
   DataAlreadyExistsException,
   DataNotFoundException,
   RelationNotFoundException,
   ValidationException,
-} from 'src/exceptions';
-import { UCenterJWTPayload } from 'src/types';
-import { TransformResponse } from 'src/utils/responseClass';
-import { DeleteResult } from 'typeorm';
+} from '../../../../exceptions';
+import { UCenterJWTPayload } from '../../../../types';
+import { TransformResponse } from '../../../../utils/responseClass';
+import { GitHubStorageLogicService } from '../../../provider/storage/github/logicService';
+import { TasksService } from '../../../task/service';
 
 class GitHubStorageResponse extends TransformResponse<GitHubStorageProviderEntity> {
   @ApiProperty({ type: GitHubStorageProviderEntity })

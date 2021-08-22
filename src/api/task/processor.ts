@@ -12,7 +12,8 @@ import {
 import { Inject, LoggerService } from '@nestjs/common';
 import { Job } from 'bull';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
-import { BullProcessorType, BullQueueType } from 'src/constants';
+
+import { BullProcessorType, BullQueueType } from '../../constants';
 
 @Processor(BullQueueType.WORKER_GIT)
 export class GitWorkerProcessor {

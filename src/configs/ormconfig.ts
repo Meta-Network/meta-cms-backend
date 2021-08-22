@@ -1,9 +1,10 @@
-import { configBuilder } from 'src/configs/index';
-import { GitHubStorageProviderEntity } from 'src/entities/provider/storage/github.entity';
-import { SiteConfigEntity } from 'src/entities/siteConfig.entity';
-import { SiteInfoEntity } from 'src/entities/siteInfo.entity';
-import { ThemeTemplateEntity } from 'src/entities/themeTemplate.entity';
 import { ConnectionOptions } from 'typeorm';
+
+import { GitHubStorageProviderEntity } from '../entities/provider/storage/github.entity';
+import { SiteConfigEntity } from '../entities/siteConfig.entity';
+import { SiteInfoEntity } from '../entities/siteInfo.entity';
+import { ThemeTemplateEntity } from '../entities/themeTemplate.entity';
+import { configBuilder } from './index';
 
 interface Config {
   db: {

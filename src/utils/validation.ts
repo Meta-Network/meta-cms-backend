@@ -1,5 +1,6 @@
 import { IsArray, isEmpty, IsIn, validateSync } from 'class-validator';
-import { SiteConfigEntity } from 'src/entities/siteConfig.entity';
+
+import { SiteConfigEntity } from '../entities/siteConfig.entity';
 
 class ResultListClass {
   constructor(list: boolean[]) {

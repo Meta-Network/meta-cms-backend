@@ -11,9 +11,10 @@ import {
   IsString,
   IsUrl,
 } from 'class-validator';
-import { BaseEntity } from 'src/entities/base.entity';
-import { SiteConfigEntity } from 'src/entities/siteConfig.entity';
 import { Column, Entity, OneToMany } from 'typeorm';
+
+import { BaseEntity } from './base.entity';
+import { SiteConfigEntity } from './siteConfig.entity';
 
 @Entity()
 export class SiteInfoEntity extends BaseEntity {

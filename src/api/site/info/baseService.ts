@@ -5,9 +5,10 @@ import {
   paginate,
   Pagination,
 } from 'nestjs-typeorm-paginate';
-import { SiteInfoEntity } from 'src/entities/siteInfo.entity';
-import { SiteInfoWithConfigCountEntity } from 'src/entities/siteInfoWithConfigCount.entity';
 import { DeleteResult, FindOneOptions, Repository } from 'typeorm';
+
+import { SiteInfoEntity } from '../../../entities/siteInfo.entity';
+import { SiteInfoWithConfigCountEntity } from '../../../entities/siteInfoWithConfigCount.entity';
 
 @Injectable()
 export class SiteInfoBaseService {

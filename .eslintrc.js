@@ -28,12 +28,5 @@ module.exports = {
     'simple-import-sort/exports': 'error',
     'import/first': 'error',
     'import/no-duplicates': 'error'
-  },
-  'settings': {
-    'import/resolver': {
-      'node': {
-        'paths': ['./']
-      }
-    },
-  },
+  }
 };

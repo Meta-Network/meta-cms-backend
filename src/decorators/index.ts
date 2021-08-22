@@ -3,8 +3,9 @@ import {
   ExecutionContext,
   SetMetadata,
 } from '@nestjs/common';
-import { NestMetadataType } from 'src/constants';
-import { RemoveIndex, RequestWithUser, UCenterJWTPayload } from 'src/types';
+
+import { NestMetadataType } from '../constants';
+import { RemoveIndex, RequestWithUser, UCenterJWTPayload } from '../types';
 
 export const User = createParamDecorator(
   (data: keyof RemoveIndex<UCenterJWTPayload>, ctx: ExecutionContext) => {

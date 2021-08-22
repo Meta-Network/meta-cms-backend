@@ -5,9 +5,10 @@ import {
   IsString,
   IsUrl,
 } from 'class-validator';
-import { BaseEntity } from 'src/entities/base.entity';
-import { TemplateType } from 'src/types/enum';
 import { Column, Entity } from 'typeorm';
+
+import { TemplateType } from '../types/enum';
+import { BaseEntity } from './base.entity';
 
 @Entity()
 export class ThemeTemplateEntity extends BaseEntity {

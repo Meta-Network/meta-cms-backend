@@ -1,7 +1,8 @@
 import { Controller, Get, Param, Patch, Post, Req } from '@nestjs/common';
 import { Request } from 'express';
-import { SkipUCenterAuth } from 'src/decorators';
-import { TaskConfig } from 'src/types/worker';
+
+import { SkipUCenterAuth } from '../../decorators';
+import { TaskConfig } from '../../types/worker';
 
 @Controller('task')
 export class TaskController {

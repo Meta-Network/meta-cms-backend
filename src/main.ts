@@ -5,8 +5,9 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
 import formCors from 'form-cors';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
-import { AppModule } from 'src/api/app/module';
-import { RequestNotAcceptableException } from 'src/exceptions';
+
+import { AppModule } from './api/app/module';
+import { RequestNotAcceptableException } from './exceptions';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);

@@ -3,10 +3,12 @@ import { Inject, Injectable, LoggerService } from '@nestjs/common';
 import { Interval } from '@nestjs/schedule';
 import { Queue } from 'bull';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
-import { BullProcessorType, BullQueueType } from 'src/constants';
-import { GitHubStorageProviderEntity } from 'src/entities/provider/storage/github.entity';
-import { UCenterJWTPayload } from 'src/types';
-import { GitServiceType, TaskMethod } from 'src/types/enum';
+import { v4 as uuid } from 'uuid';
+
+import { BullProcessorType, BullQueueType } from '../../constants';
+import { GitHubStorageProviderEntity } from '../../entities/provider/storage/github.entity';
+import { UCenterJWTPayload } from '../../types';
+import { GitServiceType, TaskMethod } from '../../types/enum';
 import {
   CMSSiteConfig,
   CMSSiteInfo,
@@ -15,9 +17,7 @@ import {
   TaskInfo,
   TemplateInfo,
   UCenterUserInfo,
-} from 'src/types/worker';
-import { v4 as uuid } from 'uuid';
-
+} from '../../types/worker';
 import { SiteConfigLogicService } from '../site/config/logicService';
 import { TemplateLogicService } from '../theme/template/logicService';
 

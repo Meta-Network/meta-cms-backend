@@ -1,10 +1,11 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { SiteConfigBaseService } from 'src/api/site/config/baseService';
-import { SiteConfigController } from 'src/api/site/config/controller';
-import { SiteConfigLogicService } from 'src/api/site/config/logicService';
-import { SiteInfoModule } from 'src/api/site/info/module';
-import { SiteConfigEntity } from 'src/entities/siteConfig.entity';
+
+import { SiteConfigEntity } from '../../../entities/siteConfig.entity';
+import { SiteConfigBaseService } from '../../site/config/baseService';
+import { SiteConfigController } from '../../site/config/controller';
+import { SiteConfigLogicService } from '../../site/config/logicService';
+import { SiteInfoModule } from '../../site/info/module';
 
 @Module({
   imports: [TypeOrmModule.forFeature([SiteConfigEntity]), SiteInfoModule],

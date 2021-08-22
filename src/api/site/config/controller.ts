@@ -22,18 +22,22 @@ import {
   ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
-import { SiteConfigLogicService } from 'src/api/site/config/logicService';
-import { User } from 'src/decorators';
-import { SiteConfigEntity } from 'src/entities/siteConfig.entity';
+import { DeleteResult } from 'typeorm';
+
+import { User } from '../../../decorators';
+import { SiteConfigEntity } from '../../../entities/siteConfig.entity';
 import {
   AccessDeniedException,
   DataNotFoundException,
   RelationNotFoundException,
   ResourceIsInUseException,
   ValidationException,
-} from 'src/exceptions';
-import { PaginationResponse, TransformResponse } from 'src/utils/responseClass';
-import { DeleteResult } from 'typeorm';
+} from '../../../exceptions';
+import {
+  PaginationResponse,
+  TransformResponse,
+} from '../../../utils/responseClass';
+import { SiteConfigLogicService } from '../../site/config/logicService';
 
 class SiteConfigPagination extends PaginationResponse<SiteConfigEntity> {
   @ApiProperty({ type: SiteConfigEntity, isArray: true })

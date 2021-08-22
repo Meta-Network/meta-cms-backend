@@ -2,8 +2,8 @@ import { ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';
 import { Request } from 'express';
-import { NestMetadataType } from 'src/constants';
 
+import { NestMetadataType } from '../../constants';
 import { UCenterAuthService } from './service';
 
 @Injectable()

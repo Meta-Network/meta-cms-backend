@@ -1,16 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import { validateOrReject } from 'class-validator';
 import { IPaginationOptions, Pagination } from 'nestjs-typeorm-paginate';
-import { SiteInfoBaseService } from 'src/api/site/info/baseService';
-import { SiteInfoEntity } from 'src/entities/siteInfo.entity';
-import { SiteInfoWithConfigCountEntity } from 'src/entities/siteInfoWithConfigCount.entity';
+import { DeleteResult, FindOneOptions } from 'typeorm';
+
+import { SiteInfoEntity } from '../../../entities/siteInfo.entity';
+import { SiteInfoWithConfigCountEntity } from '../../../entities/siteInfoWithConfigCount.entity';
 import {
   AccessDeniedException,
   DataNotFoundException,
   ResourceIsInUseException,
   validationErrorToBadRequestException,
-} from 'src/exceptions';
-import { DeleteResult, FindOneOptions } from 'typeorm';
+} from '../../../exceptions';
+import { SiteInfoBaseService } from '../../site/info/baseService';
 
 @Injectable()
 export class SiteInfoLogicService {

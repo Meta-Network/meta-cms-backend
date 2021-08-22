@@ -1,9 +1,10 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { SiteInfoBaseService } from 'src/api/site/info/baseService';
-import { SiteInfoController } from 'src/api/site/info/controller';
-import { SiteInfoLogicService } from 'src/api/site/info/logicService';
-import { SiteInfoEntity } from 'src/entities/siteInfo.entity';
+
+import { SiteInfoEntity } from '../../../entities/siteInfo.entity';
+import { SiteInfoBaseService } from '../../site/info/baseService';
+import { SiteInfoController } from '../../site/info/controller';
+import { SiteInfoLogicService } from '../../site/info/logicService';
 
 @Module({
   imports: [TypeOrmModule.forFeature([SiteInfoEntity])],
