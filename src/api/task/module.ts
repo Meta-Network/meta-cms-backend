@@ -4,6 +4,7 @@ import { BullQueueType } from 'src/constants';
 
 import { SiteConfigModule } from '../site/config/module';
 import { ThemeTemplateModule } from '../theme/template/module';
+import { TaskController } from './controller';
 import { GitWorkerProcessor } from './processor';
 import { TasksService } from './service';
 
@@ -15,6 +16,7 @@ import { TasksService } from './service';
     SiteConfigModule,
     ThemeTemplateModule,
   ],
+  controllers: [TaskController],
   providers: [TasksService, GitWorkerProcessor],
   exports: [TasksService],
 })

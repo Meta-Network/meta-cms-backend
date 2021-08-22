@@ -40,6 +40,7 @@ export type GitInfo = {
 export type TaskInfo = {
   taskId: string;
   taskMethod: TaskMethod;
+  createAt?: number;
 };
 
 export type TaskConfig = TaskInfo &
