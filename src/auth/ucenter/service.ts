@@ -10,7 +10,7 @@ import {
 } from 'src/exceptions';
 
 @Injectable()
-export class AuthService {
+export class UCenterAuthService {
   constructor(private readonly jwtService: JwtService) {}
 
   validateJWT(req: Request) {

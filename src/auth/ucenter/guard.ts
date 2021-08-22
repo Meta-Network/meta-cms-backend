@@ -1,11 +1,12 @@
 import { ExecutionContext, Injectable } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Request } from 'express';
-import { AuthService } from 'src/auth/service';
+
+import { UCenterAuthService } from './service';
 
 @Injectable()
-export class JWTAuthGuard extends AuthGuard('jwt') {
-  constructor(private readonly authService: AuthService) {
+export class UCenterJWTAuthGuard extends AuthGuard('jwt') {
+  constructor(private readonly authService: UCenterAuthService) {
     super();
   }
 

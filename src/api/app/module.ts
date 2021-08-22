@@ -11,8 +11,8 @@ import { SiteConfigModule } from 'src/api/site/config/module';
 import { SiteInfoModule } from 'src/api/site/info/module';
 import { TasksModule } from 'src/api/task/module';
 import { ThemeTemplateModule } from 'src/api/theme/template/module';
-import { JWTAuthGuard } from 'src/auth/guard';
-import { AuthModule } from 'src/auth/module';
+import { UCenterJWTAuthGuard } from 'src/auth/ucenter/guard';
+import { UCenterAuthModule } from 'src/auth/ucenter/module';
 import { configBuilder } from 'src/configs';
 import { BullConfigService } from 'src/configs/bull';
 import { TypeORMConfigService } from 'src/configs/typeorm';
@@ -38,7 +38,7 @@ import { TransformResponseInterceptor } from 'src/interceptors/transform';
       useClass: BullConfigService,
     }),
     ScheduleModule.forRoot(),
-    AuthModule,
+    UCenterAuthModule,
     SiteInfoModule,
     SiteConfigModule,
     ThemeTemplateModule,
@@ -49,7 +49,7 @@ import { TransformResponseInterceptor } from 'src/interceptors/transform';
     {
       provide: APP_GUARD,
       inject: [JwtService],
-      useClass: JWTAuthGuard,
+      useClass: UCenterJWTAuthGuard,
     },
     {
       provide: APP_INTERCEPTOR,

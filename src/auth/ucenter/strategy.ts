@@ -6,7 +6,7 @@ import { Strategy } from 'passport-jwt';
 import { UCenterJWTPayload } from 'src/types';
 
 @Injectable()
-export class JwtStrategy extends PassportStrategy(Strategy) {
+export class UCenterJwtStrategy extends PassportStrategy(Strategy) {
   constructor() {
     super({
       jwtFromRequest: (req: Request) => req.cookies['ucenter_access_token'],
