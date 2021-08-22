@@ -1,4 +1,9 @@
-import { createParamDecorator, ExecutionContext } from '@nestjs/common';
+import {
+  createParamDecorator,
+  ExecutionContext,
+  SetMetadata,
+} from '@nestjs/common';
+import { NestMetadataType } from 'src/constants';
 import { RemoveIndex, RequestWithUser, UCenterJWTPayload } from 'src/types';
 
 export const User = createParamDecorator(
@@ -8,3 +13,6 @@ export const User = createParamDecorator(
     return data ? user[data] : user;
   },
 );
+
+export const SkipUCenterAuth = (skip: boolean) =>
+  SetMetadata(NestMetadataType.SkipUCenterAuth, skip);
