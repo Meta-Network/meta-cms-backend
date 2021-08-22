@@ -4,7 +4,7 @@ import {
   WinstonModuleOptions,
   WinstonModuleOptionsFactory,
 } from 'nest-winston';
-import * as winston from 'winston';
+import winston from 'winston';
 
 const defaultLogFormat = (appName: string) =>
   winston.format.combine(
