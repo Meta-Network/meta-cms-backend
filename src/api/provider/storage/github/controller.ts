@@ -3,6 +3,8 @@ import {
   Controller,
   Delete,
   Get,
+  Inject,
+  LoggerService,
   ParseIntPipe,
   Patch,
   Post,
@@ -19,7 +21,10 @@ import {
   ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
+import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { GitHubStorageLogicService } from 'src/api/provider/storage/github/logicService';
+import { TasksService } from 'src/api/task/service';
+import { BullProcessorType } from 'src/constants';
 import { User } from 'src/decorators';
 import { GitHubStorageProviderEntity } from 'src/entities/provider/storage/github.entity';
 import {
@@ -29,6 +34,7 @@ import {
   RelationNotFoundException,
   ValidationException,
 } from 'src/exceptions';
+import { UCenterJWTPayload } from 'src/types';
 import { TransformResponse } from 'src/utils/responseClass';
 import { DeleteResult } from 'typeorm';
 
@@ -45,7 +51,12 @@ class GitHubStorageDeleteResponse extends TransformResponse<DeleteResult> {
 @ApiTags('storage')
 @Controller('storage/github')
 export class GitHubStorageController {
-  constructor(private readonly logicService: GitHubStorageLogicService) {}
+  constructor(
+    @Inject(WINSTON_MODULE_NEST_PROVIDER)
+    private readonly logger: LoggerService,
+    private readonly logicService: GitHubStorageLogicService,
+    private readonly taskService: TasksService,
+  ) {}
 
   @ApiOkResponse({ type: GitHubStorageResponse })
   @ApiNotFoundResponse({
@@ -64,7 +75,12 @@ export class GitHubStorageController {
     type: AccessDeniedException,
     description: 'When request `userId` not match',
   })
-  @ApiQuery({ name: 'configId', type: Number, example: 1 })
+  @ApiQuery({
+    name: 'configId',
+    type: Number,
+    example: 1,
+    description: 'Site config id',
+  })
   @Get()
   async getStorageConfig(
     @User('id', ParseIntPipe) uid: number,
@@ -95,18 +111,32 @@ export class GitHubStorageController {
     description:
       'When the fields in the request body does not pass type validation',
   })
-  @ApiQuery({ name: 'configId', type: Number, example: 1 })
+  @ApiQuery({
+    name: 'configId',
+    type: Number,
+    example: 1,
+    description: 'Site config id',
+  })
   @Post()
   async createStorageConfig(
-    @User('id', ParseIntPipe) uid: number,
+    @User() user: UCenterJWTPayload,
     @Query('configId', ParseIntPipe) configId: number,
     @Body() createDto: GitHubStorageProviderEntity,
   ) {
-    return await this.logicService.createStorageConfig(
-      uid,
+    const result = await this.logicService.createStorageConfig(
+      user.id,
       configId,
       createDto,
     );
+
+    await this.taskService.addGitWorkerQueue(
+      BullProcessorType.CREATE_SITE,
+      configId,
+      user,
+      result,
+    );
+
+    return result;
   }
 
   @ApiOkResponse({ type: GitHubStorageResponse })
@@ -135,18 +165,33 @@ export class GitHubStorageController {
     description:
       'When the fields in the request body does not pass type validation',
   })
-  @ApiQuery({ name: 'configId', type: Number, example: 1 })
+  @ApiQuery({
+    name: 'configId',
+    type: Number,
+    example: 1,
+    description: 'Site config id',
+  })
   @Patch()
   async updateStorageConfig(
-    @User('id', ParseIntPipe) uid: number,
+    @User() user: UCenterJWTPayload,
     @Query('configId', ParseIntPipe) configId: number,
     @Body() updateDto: GitHubStorageProviderEntity,
   ) {
-    return await this.logicService.updateStorageConfig(
-      uid,
+    const result = await this.logicService.updateStorageConfig(
+      user.id,
       configId,
       updateDto,
     );
+
+    // Update config should run Hexo worker
+    // await this.addGitWorkerQueue(
+    //   BullProcessorType.UPDATE_SITE,
+    //   configId,
+    //   user,
+    //   result,
+    // );
+
+    return result;
   }
 
   @ApiOkResponse({ type: GitHubStorageDeleteResponse })
@@ -170,7 +215,12 @@ export class GitHubStorageController {
     type: AccessDeniedException,
     description: 'When request `userId` not match',
   })
-  @ApiQuery({ name: 'configId', type: Number, example: 1 })
+  @ApiQuery({
+    name: 'configId',
+    type: Number,
+    example: 1,
+    description: 'Site config id',
+  })
   @Delete()
   async deleteStorageConfig(
     @User('id', ParseIntPipe) uid: number,
