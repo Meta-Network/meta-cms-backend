@@ -1,14 +1,13 @@
 import { InjectQueue } from '@nestjs/bull';
 import { Inject, Injectable, LoggerService } from '@nestjs/common';
-import { Interval } from '@nestjs/schedule';
 import { Queue } from 'bull';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { v4 as uuid } from 'uuid';
 
-import { BullProcessorType, BullQueueType } from '../../constants';
-import { GitHubStorageProviderEntity } from '../../entities/provider/storage/github.entity';
-import { UCenterJWTPayload } from '../../types';
-import { GitServiceType, TaskMethod } from '../../types/enum';
+import { BullProcessorType, BullQueueType } from '../../../constants';
+import { GitHubStorageProviderEntity } from '../../../entities/provider/storage/github.entity';
+import { UCenterJWTPayload } from '../../../types';
+import { GitServiceType, TaskMethod } from '../../../types/enum';
 import {
   CMSSiteConfig,
   CMSSiteInfo,
@@ -17,12 +16,12 @@ import {
   TaskInfo,
   TemplateInfo,
   UCenterUserInfo,
-} from '../../types/worker';
-import { SiteConfigLogicService } from '../site/config/logicService';
-import { TemplateLogicService } from '../theme/template/logicService';
+} from '../../../types/worker';
+import { SiteConfigLogicService } from '../../site/config/logicService';
+import { TemplateLogicService } from '../../theme/template/logicService';
 
 @Injectable()
-export class TasksService {
+export class GitWorkerTasksService {
   constructor(
     @Inject(WINSTON_MODULE_NEST_PROVIDER)
     private readonly logger: LoggerService,
@@ -33,21 +32,21 @@ export class TasksService {
   ) {}
 
   private async addTaskQueue(type: BullProcessorType, cfg: TaskConfig) {
-    const job = await this.gitQueue.add(type, cfg);
+    const job = await this.gitQueue.add(type, cfg, { jobId: cfg.taskId });
     this.logger.verbose(
-      `Successfully add task queue, jobId: ${job.id}, taskId: ${job.data.taskId}`,
-      TasksService.name,
+      `Successfully add task queue, taskId: ${job.data.taskId}`,
+      GitWorkerTasksService.name,
     );
   }
 
-  @Interval(30000)
-  protected async processTaskQueue(): Promise<void> {
-    const _waiting = await this.gitQueue.getJobs(['waiting']);
-    this.logger.verbose(
-      `Current have ${_waiting.length} waiting jobs`,
-      TasksService.name,
-    );
-  }
+  // @Interval(30000)
+  // protected async processTaskQueue(): Promise<void> {
+  //   const _waiting = await this.gitQueue.getJobs(['waiting']);
+  //   this.logger.verbose(
+  //     `Current have ${_waiting.length} waiting jobs`,
+  //     GitWorkerTasksService.name,
+  //   );
+  // }
 
   async addGitWorkerQueue(
     type: BullProcessorType,
@@ -123,7 +122,7 @@ export class TasksService {
 
     this.logger.verbose(
       `[addGitWorkerQueue] Add git worker queue task ${taskConfig.taskId} method ${taskConfig.taskMethod}`,
-      TasksService.name,
+      GitWorkerTasksService.name,
     );
     await this.addTaskQueue(type, taskConfig);
   }

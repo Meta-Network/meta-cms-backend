@@ -37,7 +37,7 @@ import {
 import { UCenterJWTPayload } from '../../../../types';
 import { TransformResponse } from '../../../../utils/responseClass';
 import { GitHubStorageLogicService } from '../../../provider/storage/github/logicService';
-import { TasksService } from '../../../task/service';
+import { GitWorkerTasksService } from '../../../task/git/service';
 
 class GitHubStorageResponse extends TransformResponse<GitHubStorageProviderEntity> {
   @ApiProperty({ type: GitHubStorageProviderEntity })
@@ -56,7 +56,7 @@ export class GitHubStorageController {
     @Inject(WINSTON_MODULE_NEST_PROVIDER)
     private readonly logger: LoggerService,
     private readonly logicService: GitHubStorageLogicService,
-    private readonly taskService: TasksService,
+    private readonly taskService: GitWorkerTasksService,
   ) {}
 
   @ApiOkResponse({ type: GitHubStorageResponse })

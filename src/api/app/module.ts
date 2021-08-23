@@ -14,9 +14,8 @@ import { BullConfigService } from '../../configs/bull';
 import { TypeORMConfigService } from '../../configs/typeorm';
 import { WinstonConfigService } from '../../configs/winston';
 import { TransformResponseInterceptor } from '../../interceptors/transform';
-import { GitHubStorageModule } from '../provider/storage/github/module';
-import { SiteConfigModule } from '../site/config/module';
-import { SiteInfoModule } from '../site/info/module';
+import { StorageModule } from '../provider/storage/module';
+import { SiteModule } from '../site/module';
 import { TasksModule } from '../task/module';
 import { ThemeTemplateModule } from '../theme/template/module';
 
@@ -40,10 +39,9 @@ import { ThemeTemplateModule } from '../theme/template/module';
     }),
     ScheduleModule.forRoot(),
     UCenterAuthModule,
-    SiteInfoModule,
-    SiteConfigModule,
     ThemeTemplateModule,
-    GitHubStorageModule,
+    SiteModule,
+    StorageModule,
     TasksModule,
   ],
   providers: [
