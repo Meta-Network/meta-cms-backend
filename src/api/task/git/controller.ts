@@ -1,26 +1,54 @@
-import { Controller, Get, Param, Patch } from '@nestjs/common';
+import { InjectQueue } from '@nestjs/bull';
+import {
+  Body,
+  Controller,
+  Get,
+  Inject,
+  LoggerService,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+} from '@nestjs/common';
+import { Queue } from 'bull';
+import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
+import { BullQueueType } from '../../../constants';
 import { BasicAuth, SkipUCenterAuth } from '../../../decorators';
+import { DataNotFoundException } from '../../../exceptions';
 import { TaskConfig } from '../../../types/worker';
 
-@Controller('task')
+@Controller('task/git')
 export class GitWorkerTaskController {
-  @Get(':jobId')
+  constructor(
+    @InjectQueue(BullQueueType.WORKER_GIT)
+    private readonly gitQueue: Queue<TaskConfig>,
+    @Inject(WINSTON_MODULE_NEST_PROVIDER)
+    private readonly logger: LoggerService,
+  ) {}
+
+  @Get(':name')
   @SkipUCenterAuth(true)
-  findOne(
-    @BasicAuth() auth: string,
-    @Param('jobId') jobId: string,
-  ): TaskConfig | void {
-    // return {};
-    console.log(auth);
+  async findOneTask(
+    @BasicAuth(ParseUUIDPipe) auth: string,
+    @Param('name') name: string,
+  ): Promise<TaskConfig> {
+    const job = await this.gitQueue.getJob(auth);
+    this.logger.verbose(
+      `Worker ${name} get task ${job.name}...`,
+      GitWorkerTaskController.name,
+    );
+    if (job) return job.data;
+    this.logger.error(`Job data not found`, GitWorkerTaskController.name);
+    throw new DataNotFoundException('Not Found: job data not found');
   }
 
-  @Patch(':jobId')
-  updateOne(
+  @Patch(':name')
+  async updateOne(
     @BasicAuth() auth: string,
-    @Param('jobId') jobId: string,
-  ): TaskConfig | void {
+    @Param('name') name: string,
+    @Body() body: any,
+  ): Promise<void> {
     // return {};
-    console.log(auth);
+    console.log('auth:', auth, '\nname:', name, '\nbody:', body);
   }
 }

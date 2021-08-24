@@ -14,21 +14,32 @@ import { Job } from 'bull';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
 import { BullProcessorType, BullQueueType } from '../../../constants';
+import { TaskMethod } from '../../../types/enum';
+import { TaskConfig } from '../../../types/worker';
+import { DockerTasksService } from '../docker/service';
 
 @Processor(BullQueueType.WORKER_GIT)
 export class GitWorkerProcessor {
   constructor(
     @Inject(WINSTON_MODULE_NEST_PROVIDER)
     private readonly logger: LoggerService,
+    private readonly docker: DockerTasksService,
   ) {}
 
   @Process(BullProcessorType.CREATE_SITE)
-  handleCreateSiteProcess(job: Job) {
-    this.logger.verbose(
-      `Processing job ${job.id} of type ${job.name}`,
-      GitWorkerProcessor.name,
-    );
-    // Run docker
+  async handleCreateSiteProcess(job: Job<TaskConfig>) {
+    const { taskMethod } = job.data;
+    if (taskMethod === TaskMethod.CREATE_REPO_FROM_TEMPLATE) {
+      this.logger.verbose(
+        `Processing job ${job.id} of type ${job.name}`,
+        GitWorkerProcessor.name,
+      );
+      // Run docker
+      await this.docker.startDockerContainer(
+        'meta-cms-worker-git',
+        job.data.taskId,
+      );
+    }
   }
 
   @OnQueueWaiting()
