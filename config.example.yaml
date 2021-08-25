@@ -21,4 +21,12 @@ swagger:
   enable: true
 
 microservice:
-  port:
+  server:
+    transport:
+    options:
+      servers:
+  clients:
+    ucenter:
+      transport:
+      options:
+        servers:
