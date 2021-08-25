@@ -7,7 +7,7 @@ import {
 } from 'class-validator';
 import { Column, Entity } from 'typeorm';
 
-import { TemplateType } from '../types/enum';
+import { MetaWorker } from '../types/metaWorker';
 import { BaseEntity } from './base.entity';
 
 @Entity()
@@ -30,11 +30,11 @@ export class ThemeTemplateEntity extends BaseEntity {
   @Column({
     comment: 'Template type',
     type: 'enum',
-    enum: TemplateType,
+    enum: MetaWorker.Enums.TemplateType,
   })
-  @IsEnum(TemplateType)
+  @IsEnum(MetaWorker.Enums.TemplateType)
   @IsNotEmpty()
-  templateType?: TemplateType;
+  templateType?: MetaWorker.Enums.TemplateType;
 
   /**
    * Template repo Url

@@ -7,7 +7,7 @@ import {
 } from 'class-validator';
 import { Column, Entity } from 'typeorm';
 
-import { DataProcessType } from '../../../types/enum';
+import { MetaWorker } from '../../../types/metaWorker';
 import { BaseEntity } from '../../base.entity';
 
 @Entity()
@@ -53,10 +53,14 @@ export class GitHubStorageProviderEntity extends BaseEntity {
    * Repo data type
    * @example 'HEXO'
    */
-  @Column({ comment: 'Repo data type', type: 'enum', enum: DataProcessType })
-  @IsEnum(DataProcessType)
+  @Column({
+    comment: 'Repo data type',
+    type: 'enum',
+    enum: MetaWorker.Enums.DataProcessType,
+  })
+  @IsEnum(MetaWorker.Enums.DataProcessType)
   @IsNotEmpty()
-  dataType: DataProcessType;
+  dataType: MetaWorker.Enums.DataProcessType;
 
   /**
    * Use git provider

@@ -14,8 +14,7 @@ import { Job } from 'bull';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
 import { BullProcessorType, BullQueueType } from '../../../constants';
-import { TaskMethod } from '../../../types/enum';
-import { TaskConfig } from '../../../types/worker';
+import { MetaWorker } from '../../../types/metaWorker';
 import { DockerTasksService } from '../docker/service';
 
 @Processor(BullQueueType.WORKER_GIT)
@@ -27,9 +26,11 @@ export class GitWorkerProcessor {
   ) {}
 
   @Process(BullProcessorType.CREATE_SITE)
-  async handleCreateSiteProcess(job: Job<TaskConfig>) {
+  async handleCreateSiteProcess(
+    job: Job<MetaWorker.Configs.GitWorkerTaskConfig>,
+  ) {
     const { taskMethod } = job.data;
-    if (taskMethod === TaskMethod.CREATE_REPO_FROM_TEMPLATE) {
+    if (taskMethod === MetaWorker.Enums.TaskMethod.CREATE_REPO_FROM_TEMPLATE) {
       this.logger.verbose(
         `Processing job ${job.id} of type ${job.name}`,
         GitWorkerProcessor.name,

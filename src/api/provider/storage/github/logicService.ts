@@ -8,7 +8,7 @@ import {
   DataNotFoundException,
   validationErrorToBadRequestException,
 } from '../../../../exceptions';
-import { StorageType } from '../../../../types/enum';
+import { MetaWorker } from '../../../../types/metaWorker';
 import { GitHubStorageBaseService } from '../../../provider/storage/github/baseService';
 import { SiteConfigLogicService } from '../../../site/config/logicService';
 
@@ -27,7 +27,7 @@ export class GitHubStorageLogicService {
       cid,
       uid,
     );
-    if (config.storeType !== StorageType.GITHUB)
+    if (config.storeType !== MetaWorker.Enums.StorageType.GITHUB)
       throw new DataNotFoundException('storage type not found');
     if (!config.storeProviderId)
       throw new DataNotFoundException('storage provider id not found');
@@ -45,7 +45,10 @@ export class GitHubStorageLogicService {
         cid,
         uid,
       );
-      if (config.storeType === StorageType.GITHUB && config.storeProviderId)
+      if (
+        config.storeType === MetaWorker.Enums.StorageType.GITHUB &&
+        config.storeProviderId
+      )
         throw new DataAlreadyExistsException();
 
       const newStorage = Object.assign(
@@ -61,7 +64,7 @@ export class GitHubStorageLogicService {
         cid,
         {
           ...config,
-          storeType: StorageType.GITHUB,
+          storeType: MetaWorker.Enums.StorageType.GITHUB,
           storeProviderId: result.id,
         },
       );
@@ -82,7 +85,7 @@ export class GitHubStorageLogicService {
         cid,
         uid,
       );
-      if (config.storeType !== StorageType.GITHUB)
+      if (config.storeType !== MetaWorker.Enums.StorageType.GITHUB)
         throw new DataNotFoundException('storage type not found');
       if (!config.storeProviderId)
         throw new DataNotFoundException('storage provider id not found');
@@ -108,7 +111,7 @@ export class GitHubStorageLogicService {
       cid,
       uid,
     );
-    if (config.storeType !== StorageType.GITHUB)
+    if (config.storeType !== MetaWorker.Enums.StorageType.GITHUB)
       throw new DataNotFoundException('storage type not found');
     if (!config.storeProviderId)
       throw new DataNotFoundException('storage provider id not found');

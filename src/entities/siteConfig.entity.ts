@@ -9,7 +9,7 @@ import {
 } from 'class-validator';
 import { Column, Entity, ManyToOne } from 'typeorm';
 
-import { CDNType, CICDType, PublisherType, StorageType } from '../types/enum';
+import { MetaWorker } from '../types/metaWorker';
 import { BaseEntity } from './base.entity';
 import { SiteInfoEntity } from './siteInfo.entity';
 
@@ -67,15 +67,15 @@ export class SiteConfigEntity extends BaseEntity {
   @Column({
     comment: 'Site store type',
     type: 'enum',
-    enum: StorageType,
+    enum: MetaWorker.Enums.StorageType,
     nullable: true,
     default: null,
   })
-  @IsEnum(StorageType)
+  @IsEnum(MetaWorker.Enums.StorageType)
   @IsOptional()
   @ApiHideProperty()
   @ApiResponseProperty({ example: null })
-  storeType?: StorageType | null = null;
+  storeType?: MetaWorker.Enums.StorageType | null = null;
 
   /**
    * Site store provider id
@@ -97,15 +97,15 @@ export class SiteConfigEntity extends BaseEntity {
   @Column({
     comment: 'Site cicd type',
     type: 'enum',
-    enum: CICDType,
+    enum: MetaWorker.Enums.CICDType,
     nullable: true,
     default: null,
   })
-  @IsEnum(CICDType)
+  @IsEnum(MetaWorker.Enums.CICDType)
   @IsOptional()
   @ApiHideProperty()
   @ApiResponseProperty({ example: null })
-  cicdType?: CICDType | null = null;
+  cicdType?: MetaWorker.Enums.CICDType | null = null;
 
   /**
    * Site cicd provider id
@@ -127,15 +127,15 @@ export class SiteConfigEntity extends BaseEntity {
   @Column({
     comment: 'Site publisher type',
     type: 'enum',
-    enum: PublisherType,
+    enum: MetaWorker.Enums.PublisherType,
     nullable: true,
     default: null,
   })
-  @IsEnum(PublisherType)
+  @IsEnum(MetaWorker.Enums.PublisherType)
   @IsOptional()
   @ApiHideProperty()
   @ApiResponseProperty({ example: null })
-  publisherType?: PublisherType | null = null;
+  publisherType?: MetaWorker.Enums.PublisherType | null = null;
 
   /**
    * Site publisher provider id
@@ -161,15 +161,15 @@ export class SiteConfigEntity extends BaseEntity {
   @Column({
     comment: 'Site cdn type',
     type: 'enum',
-    enum: CDNType,
+    enum: MetaWorker.Enums.CDNType,
     nullable: true,
     default: null,
   })
-  @IsEnum(CDNType)
+  @IsEnum(MetaWorker.Enums.CDNType)
   @IsOptional()
   @ApiHideProperty()
   @ApiResponseProperty({ example: null })
-  cdnType?: CDNType | null = null;
+  cdnType?: MetaWorker.Enums.CDNType | null = null;
 
   /**
    * Site cdn provider id

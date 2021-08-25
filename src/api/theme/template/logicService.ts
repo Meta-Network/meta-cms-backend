@@ -3,7 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { ThemeTemplateEntity } from '../../../entities/themeTemplate.entity';
-import { TemplateQueryType, TemplateType } from '../../../types/enum';
+import { TemplateQueryType } from '../../../types/enum';
+import { MetaWorker } from '../../../types/metaWorker';
 
 @Injectable()
 export class TemplateLogicService {
@@ -19,7 +20,7 @@ export class TemplateLogicService {
 
     if (type)
       return await this.templateRepository.find({
-        templateType: TemplateType[type],
+        templateType: MetaWorker.Enums.TemplateType[type],
       });
 
     return await this.templateRepository.find();
