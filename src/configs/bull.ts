@@ -13,6 +13,7 @@ export class BullConfigService implements SharedBullConfigurationFactory {
         host: this.configService.get<string>('redis.host'),
         port: +this.configService.get<number>('redis.port'),
       },
+      limiter: { max: 10, duration: 1000, bounceBack: true },
     };
   }
 }

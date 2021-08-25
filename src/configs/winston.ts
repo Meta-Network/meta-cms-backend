@@ -10,16 +10,19 @@ const defaultLogFormat = (appName: string) =>
   winston.format.combine(
     winston.format.label({ label: appName }),
     winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
-    winston.format.metadata({
-      fillExcept: ['message', 'level', 'timestamp', 'label', 'stack'],
-    }),
+    winston.format.ms(),
+    winston.format.errors({ stack: true }),
+    winston.format.splat(),
   );
 const consoleLogFormat = winston.format.printf((info) => {
-  const { label, timestamp, level, stack, message, ms } = info;
-  const ctx = info.metadata.context;
-  return `\x1B[32m[${label}]  -\x1B[39m ${timestamp}     ${level} \x1B[33m[${ctx}]\x1B[39m ${message}${
-    stack ? ' \x1B[31m' + stack + '\x1B[39m' : ''
-  } \x1B[33m${ms}\x1B[39m`;
+  const { level, timestamp, label, message, metadata } = info;
+  const ctx = metadata.context;
+  const ms = metadata.ms;
+  const stack = metadata.stack;
+  const pid = metadata?.runtime?.pid || '';
+  return `\x1B[32m[${label}] ${pid}  -\x1B[39m ${timestamp}     ${level} \x1B[33m[${ctx}]\x1B[39m ${message} \x1B[33m${ms}\x1B[39m${
+    stack ? '\n\x1B[31m' + stack + '\x1B[39m' : ''
+  } `;
 });
 
 @Injectable()
@@ -34,15 +37,27 @@ export class WinstonConfigService implements WinstonModuleOptionsFactory {
     return {
       level,
       format: defaultLogFormat(appName),
+      defaultMeta: {
+        runtime: {
+          pid: process.pid,
+          platform: process.platform,
+          versions: process.versions,
+        },
+      },
       transports: [
         new winston.transports.Console({
           format: winston.format.combine(
             winston.format.colorize({ all: true }),
             winston.format.timestamp({ format: 'MM/DD/YYYY, hh:mm:ss A' }),
-            winston.format.ms(),
-            winston.format.errors({ stack: true }),
+            winston.format.metadata({
+              fillExcept: ['label', 'timestamp', 'level', 'message'],
+            }),
             consoleLogFormat,
           ),
+          handleExceptions: true,
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          handleRejections: true,
         }),
         new winston.transports.File({
           filename: `${logDir}/${level}-${Date.now()}.log`,
@@ -52,6 +67,10 @@ export class WinstonConfigService implements WinstonModuleOptionsFactory {
           level: 'error',
           filename: `${logDir}/error-${Date.now()}.log`,
           format: winston.format.combine(winston.format.json()),
+          handleExceptions: true,
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          handleRejections: true,
         }),
       ],
       exitOnError: false,
