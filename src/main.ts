@@ -1,6 +1,6 @@
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
-import { MicroserviceOptions, Transport } from '@nestjs/microservices';
+import { MicroserviceOptions, NatsOptions } from '@nestjs/microservices';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
 import formCors from 'form-cors';
@@ -14,6 +14,7 @@ async function bootstrap() {
   const configService = app.get<ConfigService>(ConfigService);
   const appPort = +configService.get<number>('app.port', 3000);
   const enableSwagger = configService.get<boolean>('swagger.enable');
+  const msServerConfig = configService.get<NatsOptions>('microservice.server');
 
   if (enableSwagger) {
     const swaggerConfig = new DocumentBuilder()
@@ -36,12 +37,7 @@ async function bootstrap() {
     }),
   );
   app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
-  app.connectMicroservice<MicroserviceOptions>({
-    transport: Transport.TCP,
-    options: {
-      port: +configService.get<number>('microservice.port', appPort + 1000),
-    },
-  });
+  app.connectMicroservice<MicroserviceOptions>(msServerConfig);
 
   await app.startAllMicroservices();
   await app.listen(appPort);

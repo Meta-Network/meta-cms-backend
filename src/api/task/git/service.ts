@@ -1,11 +1,23 @@
 import { InjectQueue } from '@nestjs/bull';
-import { Inject, Injectable, LoggerService } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  LoggerService,
+  OnApplicationBootstrap,
+} from '@nestjs/common';
+import { ClientProxy } from '@nestjs/microservices';
 import { Queue } from 'bull';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
+import { firstValueFrom } from 'rxjs';
 import { v4 as uuid } from 'uuid';
 
-import { BullProcessorType, BullQueueType } from '../../../constants';
+import {
+  BullProcessorType,
+  BullQueueType,
+  MetaMicroserviceClient,
+} from '../../../constants';
 import { GitHubStorageProviderEntity } from '../../../entities/provider/storage/github.entity';
+import { DataNotFoundException } from '../../../exceptions';
 import { UCenterJWTPayload } from '../../../types';
 import { GitServiceType, TaskMethod } from '../../../types/enum';
 import {
@@ -21,15 +33,22 @@ import { SiteConfigLogicService } from '../../site/config/logicService';
 import { TemplateLogicService } from '../../theme/template/logicService';
 
 @Injectable()
-export class GitWorkerTasksService {
+export class GitWorkerTasksService implements OnApplicationBootstrap {
   constructor(
     @Inject(WINSTON_MODULE_NEST_PROVIDER)
     private readonly logger: LoggerService,
     @InjectQueue(BullQueueType.WORKER_GIT)
     private readonly gitQueue: Queue<TaskConfig>,
+    @Inject(MetaMicroserviceClient.UCenter)
+    private readonly ucenterClient: ClientProxy,
     private readonly siteConfigService: SiteConfigLogicService,
     private readonly templateService: TemplateLogicService,
   ) {}
+
+  async onApplicationBootstrap() {
+    await this.ucenterClient.connect();
+    this.logger.verbose(`Connect UCenter microservice client`);
+  }
 
   private async addTaskQueue(type: BullProcessorType, cfg: TaskConfig) {
     const job = await this.gitQueue.add(type, cfg, { jobId: cfg.taskId });
@@ -55,8 +74,24 @@ export class GitWorkerTasksService {
     provider: GitHubStorageProviderEntity,
   ): Promise<void> {
     const { userName, repoName, branchName, lastCommitHash } = provider;
+
+    const gitTokenFromUCenter = this.ucenterClient.send(
+      'getSocialAuthTokenByUserId',
+      { userId: user.id, platform: 'github' },
+    );
+    const gitToken = await firstValueFrom(gitTokenFromUCenter);
+    if (!gitToken) {
+      this.logger.error(
+        `Send getSocialAuthTokenByUserId not found`,
+        GitWorkerTasksService.name,
+      );
+      throw new DataNotFoundException(
+        'Not Found: send getSocialAuthTokenByUserId not found',
+      );
+    }
+
     const taskGitInfo: GitInfo = {
-      gitToken: 'gho_', // TODO: change!
+      gitToken: gitToken.token,
       gitType: GitServiceType.GITHUB,
       gitUsername: userName,
       gitReponame: repoName,

@@ -10,3 +10,9 @@ export enum BullProcessorType {
 export enum NestMetadataType {
   SkipUCenterAuth = 'SKIP_U_CENTER_AUTH',
 }
+
+export enum MetaMicroserviceClient {
+  UCenter = 'UCENTER_MS_CLIENT',
+  Network = 'NETWORK_MS_CLIENT',
+  CMS = 'CMS_MS_CLIENT',
+}
