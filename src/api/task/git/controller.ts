@@ -49,8 +49,10 @@ export class GitWorkerTaskController {
     @Param('name') name: string,
     @Body() body: any,
   ): Promise<void> {
-    this.logger.verbose(`Worker ${name} report ${body.reason} reason`);
-    // return {};
+    this.logger.verbose(
+      `Worker ${name} report ${body.reason} reason`,
+      GitWorkerTaskController.name,
+    );
     console.log('auth:', auth, '\nname:', name, '\nbody:', body);
   }
 }
