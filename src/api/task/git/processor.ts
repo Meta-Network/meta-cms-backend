@@ -18,7 +18,7 @@ import { MetaWorker } from '../../../types/metaWorker';
 import { DockerTasksService } from '../docker/service';
 
 @Processor(BullQueueType.WORKER_GIT)
-export class GitWorkerProcessor {
+export class GitWorkerTaskProcessor {
   constructor(
     @Inject(WINSTON_MODULE_NEST_PROVIDER)
     private readonly logger: LoggerService,
@@ -33,7 +33,7 @@ export class GitWorkerProcessor {
     if (taskMethod === MetaWorker.Enums.TaskMethod.CREATE_REPO_FROM_TEMPLATE) {
       this.logger.verbose(
         `Processing job ${job.id} of type ${job.name}`,
-        GitWorkerProcessor.name,
+        GitWorkerTaskProcessor.name,
       );
       // Run docker
       await this.docker.startDockerContainer(
@@ -45,14 +45,14 @@ export class GitWorkerProcessor {
 
   @OnQueueWaiting()
   onWaiting(jobId: number | string) {
-    this.logger.verbose(`Job ${jobId} is waiting`, GitWorkerProcessor.name);
+    this.logger.verbose(`Job ${jobId} is waiting`, GitWorkerTaskProcessor.name);
   }
 
   @OnQueueActive()
   onActive(job: Job) {
     this.logger.verbose(
       `Job ${job.id} of type ${job.name} is activated`,
-      GitWorkerProcessor.name,
+      GitWorkerTaskProcessor.name,
     );
   }
 
@@ -60,7 +60,7 @@ export class GitWorkerProcessor {
   onStalled(job: Job) {
     this.logger.verbose(
       `Job ${job.id} of type ${job.name} is stalled`,
-      GitWorkerProcessor.name,
+      GitWorkerTaskProcessor.name,
     );
   }
 
@@ -68,7 +68,7 @@ export class GitWorkerProcessor {
   onProgress(job: Job, progress: number) {
     this.logger.verbose(
       `Job ${job.id} of type ${job.name} is progressing, progress ${progress}`,
-      GitWorkerProcessor.name,
+      GitWorkerTaskProcessor.name,
     );
   }
 
@@ -76,7 +76,7 @@ export class GitWorkerProcessor {
   onCompleted(job: Job) {
     this.logger.verbose(
       `Job ${job.id} of type ${job.name} is completed`,
-      GitWorkerProcessor.name,
+      GitWorkerTaskProcessor.name,
     );
   }
 
@@ -84,7 +84,7 @@ export class GitWorkerProcessor {
   onFailed(job: Job, err: Error) {
     this.logger.verbose(
       `Job ${job.id} of type ${job.name} is failed, error ${err}`,
-      GitWorkerProcessor.name,
+      GitWorkerTaskProcessor.name,
     );
   }
 
@@ -92,7 +92,7 @@ export class GitWorkerProcessor {
   onError(error: Error) {
     this.logger.verbose(
       `A job can not complete cause has error ${error}`,
-      GitWorkerProcessor.name,
+      GitWorkerTaskProcessor.name,
     );
   }
 

@@ -4,8 +4,8 @@ import { Module } from '@nestjs/common';
 import { BullQueueType } from '../../../constants';
 import { DockerTasksModule } from '../docker/module';
 import { GitWorkerTaskController } from './controller';
-import { GitWorkerProcessor } from './processor';
-import { GitWorkerTasksService } from './service';
+import { GitWorkerTaskProcessor } from './processor';
+import { GitWorkerTaskService } from './service';
 
 @Module({
   imports: [
@@ -15,7 +15,7 @@ import { GitWorkerTasksService } from './service';
     DockerTasksModule,
   ],
   controllers: [GitWorkerTaskController],
-  providers: [GitWorkerTasksService, GitWorkerProcessor],
-  exports: [GitWorkerTasksService],
+  providers: [GitWorkerTaskService, GitWorkerTaskProcessor],
+  exports: [GitWorkerTaskService],
 })
 export class GitWorkerTasksModule {}

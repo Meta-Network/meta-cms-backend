@@ -8,7 +8,7 @@ import { BullProcessorType, BullQueueType } from '../../../constants';
 import { MetaWorker } from '../../../types/metaWorker';
 
 @Injectable()
-export class GitWorkerTasksService {
+export class GitWorkerTaskService {
   constructor(
     @Inject(WINSTON_MODULE_NEST_PROVIDER)
     private readonly logger: LoggerService,
@@ -23,7 +23,7 @@ export class GitWorkerTasksService {
     const job = await this.gitQueue.add(type, cfg, { jobId: cfg.taskId });
     this.logger.verbose(
       `Successfully add task queue, taskId: ${job.data.taskId}`,
-      GitWorkerTasksService.name,
+      GitWorkerTaskService.name,
     );
   }
 
@@ -32,13 +32,13 @@ export class GitWorkerTasksService {
   //   const _waiting = await this.gitQueue.getJobs(['waiting']);
   //   this.logger.verbose(
   //     `Current have ${_waiting.length} waiting jobs`,
-  //     GitWorkerTasksService.name,
+  //     GitWorkerTaskService.name,
   //   );
   // }
 
   async addGitWorkerQueue(
     type: BullProcessorType,
-    conf: MetaWorker.Configs.GitHubWorkerConfig,
+    conf: MetaWorker.Configs.GitWorkerConfig,
   ): Promise<void> {
     const taskMethod: MetaWorker.Enums.TaskMethod =
       type === BullProcessorType.CREATE_SITE
@@ -56,7 +56,7 @@ export class GitWorkerTasksService {
 
     this.logger.verbose(
       `[addGitWorkerQueue] Add git worker queue task ${taskConfig.taskId} method ${taskConfig.taskMethod}`,
-      GitWorkerTasksService.name,
+      GitWorkerTaskService.name,
     );
     await this.addTaskQueue(type, taskConfig);
   }
