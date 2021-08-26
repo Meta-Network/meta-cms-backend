@@ -104,6 +104,7 @@ export namespace MetaWorker {
 
     export type GitHubWorkerTaskConfig = Info.Task & GitHubWorkerConfig;
 
+    export type GitWorkerConfig = GitHubWorkerConfig;
     export type GitWorkerTaskConfig = GitHubWorkerTaskConfig;
   }
 }
