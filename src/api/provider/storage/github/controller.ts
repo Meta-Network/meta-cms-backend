@@ -3,15 +3,11 @@ import {
   Controller,
   Delete,
   Get,
-  Inject,
-  LoggerService,
-  OnApplicationBootstrap,
   ParseIntPipe,
   Patch,
   Post,
   Query,
 } from '@nestjs/common';
-import { ClientProxy } from '@nestjs/microservices';
 import {
   ApiBadRequestResponse,
   ApiConflictResponse,
@@ -23,14 +19,8 @@ import {
   ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
-import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
-import { firstValueFrom } from 'rxjs';
 import { DeleteResult } from 'typeorm';
 
-import {
-  BullProcessorType,
-  MetaMicroserviceClient,
-} from '../../../../constants';
 import { User } from '../../../../decorators';
 import { GitHubStorageProviderEntity } from '../../../../entities/provider/storage/github.entity';
 import {
@@ -41,11 +31,8 @@ import {
   ValidationException,
 } from '../../../../exceptions';
 import { UCenterJWTPayload } from '../../../../types';
-import { MetaWorker } from '../../../../types/metaWorker';
 import { TransformResponse } from '../../../../utils/responseClass';
 import { GitHubStorageLogicService } from '../../../provider/storage/github/logicService';
-import { SiteService } from '../../../site/service';
-import { GitWorkerTasksService } from '../../../task/git/service';
 
 class GitHubStorageResponse extends TransformResponse<GitHubStorageProviderEntity> {
   @ApiProperty({ type: GitHubStorageProviderEntity })
@@ -59,16 +46,8 @@ class GitHubStorageDeleteResponse extends TransformResponse<DeleteResult> {
 
 @ApiTags('storage')
 @Controller('storage/github')
-export class GitHubStorageController implements OnApplicationBootstrap {
-  constructor(
-    @Inject(WINSTON_MODULE_NEST_PROVIDER)
-    private readonly logger: LoggerService,
-    @Inject(MetaMicroserviceClient.UCenter)
-    private readonly ucenterClient: ClientProxy,
-    private readonly logicService: GitHubStorageLogicService,
-    private readonly siteService: SiteService,
-    private readonly taskService: GitWorkerTasksService,
-  ) {}
+export class GitHubStorageController {
+  constructor(private readonly logicService: GitHubStorageLogicService) {}
 
   @ApiOkResponse({ type: GitHubStorageResponse })
   @ApiNotFoundResponse({
@@ -135,29 +114,11 @@ export class GitHubStorageController implements OnApplicationBootstrap {
     @Query('configId', ParseIntPipe) configId: number,
     @Body() createDto: GitHubStorageProviderEntity,
   ) {
-    try {
-      const config = await this.logicService.createStorageConfig(
-        user.id,
-        configId,
-        createDto,
-      );
-
-      await this.addGitHubWorkerTask(
-        BullProcessorType.CREATE_SITE,
-        configId,
-        user,
-        config,
-      );
-
-      return config;
-    } catch (error) {
-      await this.logicService.deleteStorageConfig(user.id, configId);
-      if (error.message === 'Internal server error') {
-        this.logger.error(error, 'Error: addGitHubWorkerTask faild');
-        throw new DataNotFoundException('user github token not found');
-      }
-      throw error;
-    }
+    return await this.logicService.createStorageConfig(
+      user.id,
+      configId,
+      createDto,
+    );
   }
 
   @ApiOkResponse({ type: GitHubStorageResponse })
@@ -250,58 +211,12 @@ export class GitHubStorageController implements OnApplicationBootstrap {
     return await this.logicService.deleteStorageConfig(uid, configId);
   }
 
-  private async addGitHubWorkerTask(
-    type: BullProcessorType,
-    configId: number,
-    user: UCenterJWTPayload,
-    github: GitHubStorageProviderEntity,
-  ): Promise<void> {
-    const { userName, repoName, branchName, lastCommitHash } = github;
-    const gitTokenFromUCenter = this.ucenterClient.send(
-      'getSocialAuthTokenByUserId',
-      { userId: user.id, platform: 'github' },
-    );
-    const token = await firstValueFrom(gitTokenFromUCenter);
-    if (!token) {
-      this.logger.error(
-        'Send getSocialAuthTokenByUserId not found',
-        'Error: user github token not found',
-        GitWorkerTasksService.name,
-      );
-      throw new DataNotFoundException('user github token not found');
-    }
-    const workerGitInfo: MetaWorker.Info.Git = {
-      gitToken: token.token,
-      gitType: MetaWorker.Enums.GitServiceType.GITHUB,
-      gitUsername: userName,
-      gitReponame: repoName,
-      gitBranchName: branchName,
-      gitLastCommitHash: lastCommitHash,
-    };
-
-    const workerSiteInfo = await this.siteService.generateMetaWorkerSiteInfo(
-      configId,
-    );
-
-    const workerUserInfo: MetaWorker.Info.UCenterUser = {
-      username: user.username,
-      nickname: user.nickname,
-    };
-
-    const workerConfig: MetaWorker.Configs.GitHubWorkerConfig = {
-      ...workerUserInfo,
-      ...workerSiteInfo,
-      ...workerGitInfo,
-    };
-
-    await this.taskService.addGitWorkerQueue(type, workerConfig);
-  }
-
-  async onApplicationBootstrap() {
-    await this.ucenterClient.connect();
-    this.logger.verbose(
-      `Connect UCenter microservice client`,
-      GitWorkerTasksService.name,
-    );
-  }
+  // private async addGitHubWorkerTask(
+  //   type: BullProcessorType,
+  //   configId: number,
+  //   user: UCenterJWTPayload,
+  //   github: GitHubStorageProviderEntity,
+  // ): Promise<void> {
+  //   // await this.taskService.addGitWorkerQueue(type, workerConfig);
+  // }
 }
