@@ -1,35 +1,60 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable, LoggerService } from '@nestjs/common';
+import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
 import { MetaWorker } from '../../types/metaWorker';
 import { TemplateLogicService } from '../theme/template/logicService';
 import { SiteConfigLogicService } from './config/logicService';
 
+type MetaWorkerSiteInfo = MetaWorker.Info.CmsSiteInfo &
+  MetaWorker.Info.CmsSiteConfig &
+  MetaWorker.Info.Template;
+
+type GenerateMetaWorkerSiteInfo = {
+  siteInfo: MetaWorkerSiteInfo;
+  storage: {
+    sType: MetaWorker.Enums.StorageType;
+    sId: number;
+  };
+};
+
 @Injectable()
 export class SiteService {
   constructor(
+    @Inject(WINSTON_MODULE_NEST_PROVIDER)
+    private readonly logger: LoggerService,
     private readonly siteConfigService: SiteConfigLogicService,
     private readonly templateService: TemplateLogicService,
   ) {}
 
   async generateMetaWorkerSiteInfo(
-    configId: number,
-  ): Promise<
-    MetaWorker.Info.CmsSiteInfo &
-      MetaWorker.Info.CmsSiteConfig &
-      MetaWorker.Info.Template
-  > {
-    const config = await this.siteConfigService.getSiteConfigById(configId);
+    uid: number,
+    cid: number,
+  ): Promise<GenerateMetaWorkerSiteInfo> {
+    this.logger.verbose(`Generate meta worker site info`, SiteService.name);
+
+    this.logger.verbose(
+      `Get site config from SiteConfigLogicService`,
+      SiteService.name,
+    );
+    const config = await this.siteConfigService.validateSiteConfigUserId(
+      cid,
+      uid,
+    );
     const { language, timezone, domain, templateId } = config;
     const siteConfig: MetaWorker.Info.CmsSiteConfig = {
-      configId,
+      configId: config.id,
       language,
       timezone,
       domain,
     };
 
+    this.logger.verbose(
+      `Get site info fron site config relations`,
+      SiteService.name,
+    );
     const { title, subtitle, description, author, keywords, favicon } =
       config.siteInfo;
-    const siteInfo: MetaWorker.Info.CmsSiteInfo = {
+    const _siteInfo: MetaWorker.Info.CmsSiteInfo = {
       title,
       subtitle,
       description,
@@ -38,6 +63,10 @@ export class SiteService {
       favicon,
     };
 
+    this.logger.verbose(
+      `Get template info fron TemplateLogicService`,
+      SiteService.name,
+    );
     const template = await this.templateService.getTemplateById(templateId);
     const {
       templateName,
@@ -52,6 +81,11 @@ export class SiteService {
       templateType,
     };
 
-    return { ...siteInfo, ...siteConfig, ...templateInfo };
+    const siteInfo = { ..._siteInfo, ...siteConfig, ...templateInfo };
+
+    return {
+      siteInfo,
+      storage: { sId: config.storeProviderId, sType: config.storeType },
+    };
   }
 }
