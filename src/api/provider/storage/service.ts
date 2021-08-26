@@ -1,0 +1,103 @@
+import {
+  Inject,
+  Injectable,
+  LoggerService,
+  OnApplicationBootstrap,
+} from '@nestjs/common';
+import { ClientProxy } from '@nestjs/microservices';
+import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
+import { firstValueFrom } from 'rxjs';
+
+import { MetaMicroserviceClient } from '../../../constants';
+import { DataNotFoundException } from '../../../exceptions';
+import { MetaWorker } from '../../../types/metaWorker';
+import { GitHubStorageLogicService } from './github/logicService';
+
+type GenerateMetaWorkerGitInfo = {
+  gitInfo: MetaWorker.Info.Git;
+  repoSize: number;
+};
+
+@Injectable()
+export class StorageService implements OnApplicationBootstrap {
+  constructor(
+    @Inject(WINSTON_MODULE_NEST_PROVIDER)
+    private readonly logger: LoggerService,
+    @Inject(MetaMicroserviceClient.UCenter)
+    private readonly ucenterClient: ClientProxy,
+    private readonly githubService: GitHubStorageLogicService,
+  ) {}
+
+  async generateMetaWorkerGitInfo(
+    type: MetaWorker.Enums.StorageType,
+    uid: number,
+    sid: number,
+  ): Promise<GenerateMetaWorkerGitInfo> {
+    if (type === MetaWorker.Enums.StorageType.GITHUB) {
+      this.logger.verbose(`Generate meta worker Git info`, StorageService.name);
+
+      let gitToken = '';
+      try {
+        this.logger.verbose(
+          `Get user GitHub OAuth token from UCenter microservice`,
+          StorageService.name,
+        );
+        const gitTokenFromUCenter = this.ucenterClient.send(
+          'getSocialAuthTokenByUserId',
+          { userId: uid, platform: 'github' },
+        );
+        const token = await firstValueFrom(gitTokenFromUCenter);
+        if (!token)
+          throw new DataNotFoundException('user GitHub OAuth token not found');
+        gitToken = token.token;
+      } catch (err) {
+        this.logger.error(
+          err,
+          `Get user GitHub OAuth token error:`,
+          StorageService.name,
+        );
+        throw new DataNotFoundException('user GitHub OAuth token not found');
+      }
+
+      this.logger.verbose(
+        `Get storage config from GitHubStorageLogicService`,
+        StorageService.name,
+      );
+      const github = await this.githubService.getStorageConfigById(sid);
+
+      this.logger.verbose(
+        `Create GitHub repo from config`,
+        StorageService.name,
+      );
+      const { status, size } =
+        await this.githubService.createGitHubRepoFromConfig(gitToken, github);
+      if (!status) {
+        this.logger.error(
+          `Create GitHub repo from config failed`,
+          StorageService.name,
+        );
+        // TODO: should throw error?
+      }
+
+      const { userName, repoName, branchName, lastCommitHash } = github;
+      const gitInfo: MetaWorker.Info.Git = {
+        gitToken,
+        gitType: MetaWorker.Enums.GitServiceType.GITHUB,
+        gitUsername: userName,
+        gitReponame: repoName,
+        gitBranchName: branchName,
+        gitLastCommitHash: lastCommitHash,
+      };
+
+      return { gitInfo, repoSize: size };
+    }
+  }
+
+  async onApplicationBootstrap() {
+    await this.ucenterClient.connect();
+    this.logger.verbose(
+      `Connect UCenter microservice client`,
+      StorageService.name,
+    );
+  }
+}
