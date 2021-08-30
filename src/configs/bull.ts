@@ -12,6 +12,8 @@ export class BullConfigService implements SharedBullConfigurationFactory {
       redis: {
         host: this.configService.get<string>('redis.host'),
         port: +this.configService.get<number>('redis.port'),
+        username: this.configService.get<string>('redis.user'),
+        password: this.configService.get<string>('redis.pass'),
       },
       limiter: { max: 10, duration: 1000, bounceBack: true },
     };
