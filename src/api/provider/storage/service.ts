@@ -1,3 +1,4 @@
+import { MetaInternalResult } from '@metaio/microservice-model';
 import {
   Inject,
   Injectable,
@@ -46,10 +47,16 @@ export class StorageService implements OnApplicationBootstrap {
           'getSocialAuthTokenByUserId',
           { userId: uid, platform: 'github' },
         );
-        const token = await firstValueFrom(gitTokenFromUCenter);
-        if (!token)
+        const result = await firstValueFrom(gitTokenFromUCenter);
+        const token = new MetaInternalResult(result);
+        if (!token.isSuccess()) {
+          this.logger.error(
+            `User GitHub OAuth token not found: ${token.message}, code: ${token.code}`,
+            StorageService.name,
+          );
           throw new DataNotFoundException('user GitHub OAuth token not found');
-        gitToken = token.token;
+        }
+        gitToken = token.data;
       } catch (err) {
         this.logger.error(
           err,
