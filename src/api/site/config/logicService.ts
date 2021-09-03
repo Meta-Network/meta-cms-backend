@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { validateOrReject } from 'class-validator';
 import { IPaginationOptions, Pagination } from 'nestjs-typeorm-paginate';
 import { DeleteResult, FindOneOptions } from 'typeorm';
 
@@ -9,7 +8,6 @@ import {
   DataNotFoundException,
   RelationNotFoundException,
   ResourceIsInUseException,
-  validationErrorToBadRequestException,
 } from '../../../exceptions';
 import { checkConfigIsDeletable } from '../../../utils/validation';
 import { SiteConfigBaseService } from '../../site/config/baseService';
@@ -45,23 +43,18 @@ export class SiteConfigLogicService {
     sid: number,
     config: SiteConfigEntity,
   ): Promise<SiteConfigEntity> {
-    try {
-      const info = await this.siteInfoLogicService.validateSiteInfoUserId(
-        sid,
-        uid,
-      );
+    const info = await this.siteInfoLogicService.validateSiteInfoUserId(
+      sid,
+      uid,
+    );
 
-      const tmpConfig = Object.assign(new SiteConfigEntity(), config);
-      await validateOrReject(tmpConfig);
+    const tmpConfig = Object.assign(new SiteConfigEntity(), config);
 
-      const newConfig: SiteConfigEntity = { ...tmpConfig, siteInfo: info };
-      const result = await this.siteConfigBaseService.create(newConfig);
+    const newConfig: SiteConfigEntity = { ...tmpConfig, siteInfo: info };
+    const result = await this.siteConfigBaseService.create(newConfig);
 
-      if (result.siteInfo) delete result.siteInfo;
-      return result;
-    } catch (errors) {
-      throw validationErrorToBadRequestException(errors);
-    }
+    if (result.siteInfo) delete result.siteInfo;
+    return result;
   }
 
   async updateSiteConfig(
@@ -70,21 +63,14 @@ export class SiteConfigLogicService {
     cid: number,
     config: SiteConfigEntity,
   ): Promise<SiteConfigEntity> {
-    try {
-      const oldConf = await this.validateSiteConfigUserId(cid, uid);
-      if (oldConf.siteInfo.id !== sid)
-        throw new AccessDeniedException('access denied, site id inconsistent');
+    const oldConf = await this.validateSiteConfigUserId(cid, uid);
+    if (oldConf.siteInfo.id !== sid)
+      throw new AccessDeniedException('access denied, site id inconsistent');
 
-      const tmpConf = Object.assign(new SiteConfigEntity(), config);
-      await validateOrReject(tmpConf, { skipMissingProperties: true });
+    const result = await this.siteConfigBaseService.update(oldConf, config);
 
-      const result = await this.siteConfigBaseService.update(oldConf, config);
-
-      if (result.siteInfo) delete result.siteInfo;
-      return result;
-    } catch (errors) {
-      throw validationErrorToBadRequestException(errors);
-    }
+    if (result.siteInfo) delete result.siteInfo;
+    return result;
   }
 
   async deleteSiteConfig(uid: number, cid: number): Promise<DeleteResult> {

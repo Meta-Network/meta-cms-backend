@@ -10,6 +10,8 @@ import {
   Patch,
   Post,
   Query,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
@@ -38,6 +40,10 @@ import {
   PaginationResponse,
   TransformResponse,
 } from '../../../utils/responseClass';
+import {
+  PatchMethodValidation,
+  PostMethodValidation,
+} from '../../../utils/validation';
 import { SiteInfoLogicService } from '../../site/info/logicService';
 
 class SiteInfoPagination extends PaginationResponse<SiteInfoEntity> {
@@ -101,6 +107,7 @@ export class SiteInfoController {
       'When the fields in the request body does not pass type validation',
   })
   @Post()
+  @UsePipes(new ValidationPipe(PostMethodValidation))
   async createSiteInfo(
     @User('id', ParseIntPipe) uid: number,
     @Body() createDto: SiteInfoEntity,
@@ -123,6 +130,7 @@ export class SiteInfoController {
     description: 'When request user id does not match',
   })
   @Patch(':siteId')
+  @UsePipes(new ValidationPipe(PatchMethodValidation))
   async updateSiteInfo(
     @User('id', ParseIntPipe) uid: number,
     @Body() updateDto: SiteInfoEntity,

@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { validateOrReject } from 'class-validator';
 import { IPaginationOptions, Pagination } from 'nestjs-typeorm-paginate';
 import { DeleteResult, FindOneOptions } from 'typeorm';
 
@@ -9,7 +8,6 @@ import {
   AccessDeniedException,
   DataNotFoundException,
   ResourceIsInUseException,
-  validationErrorToBadRequestException,
 } from '../../../exceptions';
 import { SiteInfoBaseService } from '../../site/info/baseService';
 
@@ -43,17 +41,11 @@ export class SiteInfoLogicService {
     uid: number,
     info: SiteInfoEntity,
   ): Promise<SiteInfoEntity> {
-    try {
-      const newInfo = Object.assign(new SiteInfoEntity(), {
-        ...info,
-        userId: uid,
-      });
-      await validateOrReject(newInfo);
-
-      return await this.siteInfoBaseService.create(newInfo);
-    } catch (errors) {
-      throw validationErrorToBadRequestException(errors);
-    }
+    const newInfo = Object.assign(new SiteInfoEntity(), {
+      ...info,
+      userId: uid,
+    });
+    return await this.siteInfoBaseService.create(newInfo);
   }
 
   async updateSiteInfo(
@@ -61,16 +53,8 @@ export class SiteInfoLogicService {
     sid: number,
     info: SiteInfoEntity,
   ): Promise<SiteInfoEntity> {
-    try {
-      const oldInfo = await this.validateSiteInfoUserId(sid, uid);
-
-      const tmpInfo = Object.assign(new SiteInfoEntity(), info);
-      await validateOrReject(tmpInfo, { skipMissingProperties: true });
-
-      return await this.siteInfoBaseService.update(oldInfo, info);
-    } catch (errors) {
-      throw validationErrorToBadRequestException(errors);
-    }
+    const oldInfo = await this.validateSiteInfoUserId(sid, uid);
+    return await this.siteInfoBaseService.update(oldInfo, info);
   }
 
   async deleteSiteInfo(uid: number, sid: number): Promise<DeleteResult> {

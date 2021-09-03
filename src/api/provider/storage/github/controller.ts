@@ -7,6 +7,8 @@ import {
   Patch,
   Post,
   Query,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
@@ -32,6 +34,10 @@ import {
 } from '../../../../exceptions';
 import { UCenterJWTPayload } from '../../../../types';
 import { TransformResponse } from '../../../../utils/responseClass';
+import {
+  PatchMethodValidation,
+  PostMethodValidation,
+} from '../../../../utils/validation';
 import { GitHubStorageLogicService } from '../../../provider/storage/github/logicService';
 
 class GitHubStorageResponse extends TransformResponse<GitHubStorageProviderEntity> {
@@ -109,6 +115,7 @@ export class GitHubStorageController {
     description: 'Site config id',
   })
   @Post()
+  @UsePipes(new ValidationPipe(PostMethodValidation))
   async createStorageConfig(
     @User() user: UCenterJWTPayload,
     @Query('configId', ParseIntPipe) configId: number,
@@ -154,6 +161,7 @@ export class GitHubStorageController {
     description: 'Site config id',
   })
   @Patch()
+  @UsePipes(new ValidationPipe(PatchMethodValidation))
   async updateStorageConfig(
     @User() user: UCenterJWTPayload,
     @Query('configId', ParseIntPipe) configId: number,
@@ -164,14 +172,6 @@ export class GitHubStorageController {
       configId,
       updateDto,
     );
-
-    // Update config should run Hexo worker
-    // await this.addGitWorkerQueue(
-    //   BullProcessorType.UPDATE_SITE,
-    //   configId,
-    //   user,
-    //   result,
-    // );
 
     return result;
   }

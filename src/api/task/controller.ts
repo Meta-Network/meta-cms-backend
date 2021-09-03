@@ -1,15 +1,26 @@
-import { Body, Controller, Inject, LoggerService, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Inject,
+  LoggerService,
+  Post,
+  UsePipes,
+  ValidationPipe,
+} from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+import { IsNumber } from 'class-validator';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
 import { User } from '../../decorators';
 import { ValidationException } from '../../exceptions';
 import { UCenterJWTPayload } from '../../types';
+import { PostMethodValidation } from '../../utils/validation';
 import { TasksService } from './service';
 
-type DeploySiteFromConfigBody = {
+class DeploySiteFromConfigDto {
+  @IsNumber()
   configId: number;
-};
+}
 
 @ApiTags('task')
 @Controller('task')
@@ -21,9 +32,10 @@ export class TasksController {
   ) {}
 
   @Post('deploy')
+  @UsePipes(new ValidationPipe(PostMethodValidation))
   async deploySiteFromConfig(
     @User() user: UCenterJWTPayload,
-    @Body() body: DeploySiteFromConfigBody,
+    @Body() body: DeploySiteFromConfigDto,
   ) {
     if (!body && !body.configId)
       throw new ValidationException('request body does not contain configId');

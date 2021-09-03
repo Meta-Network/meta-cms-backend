@@ -1,6 +1,5 @@
 import { MetaWorker } from '@metaio/worker-model';
 import { Inject, Injectable, LoggerService } from '@nestjs/common';
-import { validateOrReject } from 'class-validator';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { Octokit } from 'octokit';
 import { DeleteResult } from 'typeorm';
@@ -10,7 +9,6 @@ import {
   AccessDeniedException,
   DataAlreadyExistsException,
   DataNotFoundException,
-  validationErrorToBadRequestException,
 } from '../../../../exceptions';
 import { GitHubStorageBaseService } from '../../../provider/storage/github/baseService';
 import { SiteConfigLogicService } from '../../../site/config/logicService';
@@ -57,39 +55,34 @@ export class GitHubStorageLogicService {
     cid: number,
     storage: GitHubStorageProviderEntity,
   ): Promise<GitHubStorageProviderEntity> {
-    try {
-      const config = await this.configLogicService.validateSiteConfigUserId(
-        cid,
-        uid,
-      );
-      if (
-        config.storeType === MetaWorker.Enums.StorageType.GITHUB &&
-        config.storeProviderId
-      )
-        throw new DataAlreadyExistsException();
+    const config = await this.configLogicService.validateSiteConfigUserId(
+      cid,
+      uid,
+    );
+    if (
+      config.storeType === MetaWorker.Enums.StorageType.GITHUB &&
+      config.storeProviderId
+    )
+      throw new DataAlreadyExistsException();
 
-      const newStorage = Object.assign(
-        new GitHubStorageProviderEntity(),
-        storage,
-      );
-      await validateOrReject(newStorage);
+    const newStorage = Object.assign(
+      new GitHubStorageProviderEntity(),
+      storage,
+    );
 
-      const result = await this.baseService.create(newStorage);
-      await this.configLogicService.updateSiteConfig(
-        uid,
-        config.siteInfo.id,
-        cid,
-        {
-          ...config,
-          storeType: MetaWorker.Enums.StorageType.GITHUB,
-          storeProviderId: result.id,
-        },
-      );
+    const result = await this.baseService.create(newStorage);
+    await this.configLogicService.updateSiteConfig(
+      uid,
+      config.siteInfo.id,
+      cid,
+      {
+        ...config,
+        storeType: MetaWorker.Enums.StorageType.GITHUB,
+        storeProviderId: result.id,
+      },
+    );
 
-      return result;
-    } catch (error) {
-      throw validationErrorToBadRequestException(error);
-    }
+    return result;
   }
 
   async updateStorageConfig(
@@ -97,30 +90,20 @@ export class GitHubStorageLogicService {
     cid: number,
     storage: GitHubStorageProviderEntity,
   ): Promise<GitHubStorageProviderEntity> {
-    try {
-      const config = await this.configLogicService.validateSiteConfigUserId(
-        cid,
-        uid,
-      );
-      if (config.storeType !== MetaWorker.Enums.StorageType.GITHUB)
-        throw new DataNotFoundException('storage type not found');
-      if (!config.storeProviderId)
-        throw new DataNotFoundException('storage provider id not found');
+    const config = await this.configLogicService.validateSiteConfigUserId(
+      cid,
+      uid,
+    );
+    if (config.storeType !== MetaWorker.Enums.StorageType.GITHUB)
+      throw new DataNotFoundException('storage type not found');
+    if (!config.storeProviderId)
+      throw new DataNotFoundException('storage provider id not found');
 
-      const oldStorage = await this.baseService.read(config.storeProviderId);
-      if (!oldStorage)
-        throw new DataNotFoundException('github storage not found');
+    const oldStorage = await this.baseService.read(config.storeProviderId);
+    if (!oldStorage)
+      throw new DataNotFoundException('github storage not found');
 
-      const tmpStorage = Object.assign(
-        new GitHubStorageProviderEntity(),
-        storage,
-      );
-      await validateOrReject(tmpStorage, { skipMissingProperties: true });
-
-      return await this.baseService.update(oldStorage, storage);
-    } catch (error) {
-      throw validationErrorToBadRequestException(error);
-    }
+    return await this.baseService.update(oldStorage, storage);
   }
 
   async deleteStorageConfig(uid: number, cid: number): Promise<DeleteResult> {

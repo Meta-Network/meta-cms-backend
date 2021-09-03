@@ -9,6 +9,8 @@ import {
   Patch,
   Post,
   Query,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
@@ -37,6 +39,10 @@ import {
   PaginationResponse,
   TransformResponse,
 } from '../../../utils/responseClass';
+import {
+  PatchMethodValidation,
+  PostMethodValidation,
+} from '../../../utils/validation';
 import { SiteConfigLogicService } from '../../site/config/logicService';
 
 class SiteConfigPagination extends PaginationResponse<SiteConfigEntity> {
@@ -103,6 +109,7 @@ export class SiteConfigController {
   })
   @ApiQuery({ name: 'siteId', type: Number, example: 1 })
   @Post()
+  @UsePipes(new ValidationPipe(PostMethodValidation))
   async createSiteConfig(
     @User('id', ParseIntPipe) uid: number,
     @Query('siteId', ParseIntPipe) siteId: number,
@@ -128,6 +135,7 @@ export class SiteConfigController {
   })
   @ApiQuery({ name: 'siteId', type: Number, example: 1 })
   @Patch(':configId')
+  @UsePipes(new ValidationPipe(PatchMethodValidation))
   async updateSiteConfig(
     @User('id', ParseIntPipe) uid: number,
     @Param('configId', ParseIntPipe) configId: number,
