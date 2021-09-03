@@ -1,3 +1,4 @@
+import { MetaWorker } from '@metaio/worker-model';
 import {
   IsEnum,
   IsNotEmpty,
@@ -7,7 +8,6 @@ import {
 } from 'class-validator';
 import { Column, Entity } from 'typeorm';
 
-import { MetaWorker } from '../types/metaWorker';
 import { BaseEntity } from './base.entity';
 
 @Entity()
@@ -54,6 +54,15 @@ export class ThemeTemplateEntity extends BaseEntity {
   @IsString()
   @IsNotEmpty()
   branchName: string;
+
+  /**
+   * Template theme name
+   * @example 'master'
+   */
+  @Column({ comment: 'Template theme name' })
+  @IsString()
+  @IsNotEmpty()
+  themeName: string;
 
   /**
    * Preview image

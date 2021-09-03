@@ -1,7 +1,7 @@
+import { MetaWorker } from '@metaio/worker-model';
 import { Inject, Injectable, LoggerService } from '@nestjs/common';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
-import { MetaWorker } from '../../types/metaWorker';
 import { TemplateLogicService } from '../theme/template/logicService';
 import { SiteConfigLogicService } from './config/logicService';
 
@@ -73,12 +73,14 @@ export class SiteService {
       repoUrl,
       branchName: templateBranchName,
       templateType,
+      themeName,
     } = template;
     const templateInfo: MetaWorker.Info.Template = {
       templateName,
       templateRepoUrl: repoUrl,
       templateBranchName,
       templateType,
+      themeName,
     };
 
     const siteInfo = { ..._siteInfo, ...siteConfig, ...templateInfo };
