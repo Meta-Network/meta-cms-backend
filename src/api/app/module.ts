@@ -14,6 +14,7 @@ import { BullConfigService } from '../../configs/bull';
 import { TypeORMConfigService } from '../../configs/typeorm';
 import { WinstonConfigService } from '../../configs/winston';
 import { TransformResponseInterceptor } from '../../interceptors/transform';
+import { AppCacheModule } from '../cache/module';
 import { StorageModule } from '../provider/storage/module';
 import { SiteModule } from '../site/module';
 import { TasksModule } from '../task/module';
@@ -39,6 +40,7 @@ import { ThemeTemplateModule } from '../theme/template/module';
     }),
     ScheduleModule.forRoot(),
     UCenterAuthModule,
+    AppCacheModule,
     ThemeTemplateModule,
     SiteModule,
     StorageModule,
