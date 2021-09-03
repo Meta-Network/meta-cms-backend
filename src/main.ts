@@ -15,13 +15,14 @@ async function bootstrap() {
   const appPort = +configService.get<number>('app.port', 3000);
   const enableSwagger = configService.get<boolean>('swagger.enable');
   const msServerConfig = configService.get<NatsOptions>('microservice.server');
+  const cookieName = configService.get<string>('jwt.cookieName');
 
   if (enableSwagger) {
     const swaggerConfig = new DocumentBuilder()
       .setTitle(configService.get<string>('app.name'))
       .setDescription('CMS API testing branch')
       .setVersion(process.env.npm_package_version || '0.0.1')
-      .addCookieAuth('ucenter_access_token')
+      .addCookieAuth(cookieName)
       .build();
     const document = SwaggerModule.createDocument(app, swaggerConfig);
     SwaggerModule.setup('api', app, document, {

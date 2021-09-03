@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
 import { JsonWebTokenError, TokenExpiredError } from 'jsonwebtoken';
@@ -12,14 +13,18 @@ import {
 
 @Injectable()
 export class UCenterAuthService {
-  constructor(private readonly jwtService: JwtService) {}
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly jwtService: JwtService,
+  ) {}
 
   validateJWT(req: Request) {
     const cookie = req.cookies;
-    if (!cookie || !cookie.ucenter_access_token) {
+    const cookieName = this.configService.get<string>('jwt.cookieName');
+    if (!cookie || !cookie[cookieName]) {
       throw new RequirdHttpHeadersNotFoundException();
     }
-    const token: string = cookie.ucenter_access_token;
+    const token: string = cookie[cookieName];
 
     try {
       this.jwtService.verify(token, {

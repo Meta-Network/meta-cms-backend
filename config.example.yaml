@@ -15,6 +15,7 @@ redis:
   pass:
 
 jwt:
+  cookieName:
   verify:
     issuer:
     audience:
