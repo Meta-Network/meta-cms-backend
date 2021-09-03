@@ -2,6 +2,7 @@ import { MetaWorker } from '@metaio/worker-model';
 import { InjectQueue } from '@nestjs/bull';
 import { Inject, Injectable, LoggerService } from '@nestjs/common';
 import { Queue } from 'bull';
+import crypto from 'crypto';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { v4 as uuid } from 'uuid';
 
@@ -44,9 +45,15 @@ export class GitWorkerTaskService {
       type === BullProcessorType.CREATE_SITE
         ? MetaWorker.Enums.TaskMethod.CREATE_REPO_FROM_TEMPLATE
         : MetaWorker.Enums.TaskMethod.CREATE_REPO_FROM_TEMPLATE;
+
+    const taskId = uuid();
+    const taskIdHash = crypto.createHash('sha256').update(taskId).digest('hex');
+    const taskWorkspace = taskIdHash.substring(taskIdHash.length - 16);
+
     const taskInfo: MetaWorker.Info.Task = {
-      taskId: uuid(),
+      taskId,
       taskMethod,
+      taskWorkspace, // TODO: use Redis for one day cache, key is configId
     };
 
     const taskConfig: MetaWorker.Configs.GitWorkerTaskConfig = {
