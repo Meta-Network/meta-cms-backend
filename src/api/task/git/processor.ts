@@ -1,3 +1,4 @@
+import { MetaWorker } from '@metaio/worker-model';
 import {
   OnQueueActive,
   OnQueueCompleted,
@@ -14,7 +15,6 @@ import { Job } from 'bull';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
 import { BullProcessorType, BullQueueType } from '../../../constants';
-import { MetaWorker } from '../../../types/metaWorker';
 import { DockerTasksService } from '../docker/service';
 
 @Processor(BullQueueType.WORKER_GIT)

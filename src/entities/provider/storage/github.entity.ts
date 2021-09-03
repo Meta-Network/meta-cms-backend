@@ -1,3 +1,4 @@
+import { MetaWorker } from '@metaio/worker-model';
 import {
   IsBoolean,
   IsEnum,
@@ -7,7 +8,6 @@ import {
 } from 'class-validator';
 import { Column, Entity } from 'typeorm';
 
-import { MetaWorker } from '../../../types/metaWorker';
 import { BaseEntity } from '../../base.entity';
 
 @Entity()

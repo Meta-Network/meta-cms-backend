@@ -609,6 +609,11 @@
   resolved "https://registry.yarnpkg.com/@metaio/microservice-model/-/microservice-model-1.0.1.tgz#2c41c3247d8705ffea47f62b6d28d07fd10703ed"
   integrity sha512-vC/6KhStSRBsnweHlEwT3AHQ5B7e1LB7ZkzWTtyt0TLu6qcZd3ZeZdAO+OxGh4ne4BF96uivKKT0tQ8gViyIoA==
 
+"@metaio/worker-model@^1.0.3":
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/@metaio/worker-model/-/worker-model-1.0.3.tgz#26940faf10dcfd876b76f5eb00e37ffa3db1edc8"
+  integrity sha512-DoW3kKjt/9cD58zkbOsLAwKxNstwUOSs2s3sLcOPZXRtlUqEGKER780U/zmYhU+Z831L91GIDX6ZRBiHBVLakw==
+
 "@nestjs/bull@^0.4.1":
   version "0.4.1"
   resolved "https://registry.npmjs.org/@nestjs/bull/-/bull-0.4.1.tgz"

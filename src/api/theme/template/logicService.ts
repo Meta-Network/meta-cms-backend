@@ -1,10 +1,10 @@
+import { MetaWorker } from '@metaio/worker-model';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { ThemeTemplateEntity } from '../../../entities/themeTemplate.entity';
 import { TemplateQueryType } from '../../../types/enum';
-import { MetaWorker } from '../../../types/metaWorker';
 
 @Injectable()
 export class TemplateLogicService {

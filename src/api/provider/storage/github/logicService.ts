@@ -1,3 +1,4 @@
+import { MetaWorker } from '@metaio/worker-model';
 import { Inject, Injectable, LoggerService } from '@nestjs/common';
 import { validateOrReject } from 'class-validator';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
@@ -11,7 +12,6 @@ import {
   DataNotFoundException,
   validationErrorToBadRequestException,
 } from '../../../../exceptions';
-import { MetaWorker } from '../../../../types/metaWorker';
 import { GitHubStorageBaseService } from '../../../provider/storage/github/baseService';
 import { SiteConfigLogicService } from '../../../site/config/logicService';
 

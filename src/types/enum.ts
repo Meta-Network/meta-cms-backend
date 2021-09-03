@@ -1,4 +1,4 @@
-import { MetaWorker } from './metaWorker';
+import { MetaWorker } from '@metaio/worker-model';
 
 /** Only for api query param use */
 enum TemplateQueryEnum {

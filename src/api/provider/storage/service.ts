@@ -1,4 +1,5 @@
 import { MetaInternalResult } from '@metaio/microservice-model';
+import { MetaWorker } from '@metaio/worker-model';
 import {
   Inject,
   Injectable,
@@ -11,7 +12,6 @@ import { firstValueFrom } from 'rxjs';
 
 import { MetaMicroserviceClient } from '../../../constants';
 import { DataNotFoundException } from '../../../exceptions';
-import { MetaWorker } from '../../../types/metaWorker';
 import { GitHubStorageLogicService } from './github/logicService';
 
 type GenerateMetaWorkerGitInfo = {

@@ -1,3 +1,4 @@
+import { MetaWorker } from '@metaio/worker-model';
 import { ApiHideProperty, ApiResponseProperty } from '@nestjs/swagger';
 import {
   IsEnum,
@@ -9,7 +10,6 @@ import {
 } from 'class-validator';
 import { Column, Entity, ManyToOne } from 'typeorm';
 
-import { MetaWorker } from '../types/metaWorker';
 import { BaseEntity } from './base.entity';
 import { SiteInfoEntity } from './siteInfo.entity';
 

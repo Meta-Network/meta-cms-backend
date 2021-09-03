@@ -1,3 +1,4 @@
+import { MetaWorker } from '@metaio/worker-model';
 import { InjectQueue } from '@nestjs/bull';
 import {
   Body,
@@ -15,7 +16,6 @@ import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { BullQueueType } from '../../../constants';
 import { BasicAuth, SkipUCenterAuth } from '../../../decorators';
 import { DataNotFoundException } from '../../../exceptions';
-import { MetaWorker } from '../../../types/metaWorker';
 
 @Controller('task/git')
 export class GitWorkerTaskController {

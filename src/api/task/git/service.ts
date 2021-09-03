@@ -1,3 +1,4 @@
+import { MetaWorker } from '@metaio/worker-model';
 import { InjectQueue } from '@nestjs/bull';
 import { Inject, Injectable, LoggerService } from '@nestjs/common';
 import { Queue } from 'bull';
@@ -5,7 +6,6 @@ import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { v4 as uuid } from 'uuid';
 
 import { BullProcessorType, BullQueueType } from '../../../constants';
-import { MetaWorker } from '../../../types/metaWorker';
 
 @Injectable()
 export class GitWorkerTaskService {

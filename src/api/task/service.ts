@@ -1,10 +1,10 @@
+import { MetaWorker } from '@metaio/worker-model';
 import { Inject, Injectable, LoggerService } from '@nestjs/common';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
 import { BullProcessorType } from '../../constants';
 import { DataNotFoundException } from '../../exceptions';
 import { UCenterJWTPayload } from '../../types';
-import { MetaWorker } from '../../types/metaWorker';
 import { StorageService } from '../provider/storage/service';
 import { SiteService } from '../site/service';
 import { GitWorkerTaskService } from './git/service';
