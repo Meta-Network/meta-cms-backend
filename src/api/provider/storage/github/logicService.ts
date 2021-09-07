@@ -184,7 +184,7 @@ export class GitHubStorageLogicService {
         `Repo ${repoData.full_name} already exists, size: ${repoData.size}, pull: ${pull} push: ${push}`,
         GitHubStorageLogicService.name,
       );
-      console.log(repoData);
+      // console.log(repoData);
       return {
         status: true,
         size: repoData.size,
@@ -209,7 +209,7 @@ export class GitHubStorageLogicService {
             `Repo ${repoData.full_name} created, size: ${repoData.size}, pull: ${pull} push: ${push}`,
             GitHubStorageLogicService.name,
           );
-          console.log(repoData);
+          // console.log(repoData);
           return {
             status: true,
             size: repoData.size,

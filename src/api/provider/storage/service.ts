@@ -83,7 +83,6 @@ export class StorageService implements OnApplicationBootstrap {
           `Create GitHub repo from config failed`,
           StorageService.name,
         );
-        // TODO: should throw error?
       }
 
       const { userName, repoName, branchName, lastCommitHash } = github;
