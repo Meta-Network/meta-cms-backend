@@ -30,7 +30,20 @@ async function bootstrap() {
     });
   }
 
-  app.enableCors();
+  app.enableCors({
+    methods: 'POST, PUT, GET, OPTIONS, DELETE, PATCH, HEAD',
+    origin: configService.get<string[]>('cors.origins'),
+    credentials: true,
+  });
+
+  app.use((req, res, next) => {
+    res.header(
+      'Access-Control-Allow-Methods',
+      'POST, PUT, GET, OPTIONS, DELETE, PATCH, HEAD',
+    );
+    next();
+  });
+
   app.use(cookieParser());
   app.use(
     formCors({
