@@ -16,6 +16,7 @@ import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { BullQueueType } from '../../../constants';
 import { BasicAuth, SkipUCenterAuth } from '../../../decorators';
 import { DataNotFoundException } from '../../../exceptions';
+import { AppCacheService } from '../../cache/service';
 
 @Controller('task/git')
 export class GitWorkerTaskController {
@@ -24,6 +25,7 @@ export class GitWorkerTaskController {
     private readonly gitQueue: Queue<MetaWorker.Configs.GitWorkerTaskConfig>,
     @Inject(WINSTON_MODULE_NEST_PROVIDER)
     private readonly logger: LoggerService,
+    private readonly cache: AppCacheService,
   ) {}
 
   @Get(':name')
@@ -47,12 +49,25 @@ export class GitWorkerTaskController {
   async updateOne(
     @BasicAuth() auth: string,
     @Param('name') name: string,
-    @Body() body: any,
+    @Body() body: MetaWorker.Info.TaskReport,
   ): Promise<void> {
     this.logger.verbose(
-      `Worker ${name} report ${body.reason} reason`,
+      `Worker ${name} report ${body.reason} reason on ${body.timestamp}`,
       GitWorkerTaskController.name,
     );
-    console.log('auth:', auth, '\nname:', name, '\nbody:', body);
+
+    if (body.reason === MetaWorker.Enums.TaskReportReason.HEALTH_CHECK) {
+      const job = await this.gitQueue.getJob(auth);
+      if (job && job.data) {
+        const key = job.data.configId.toString();
+        const value = job.data.taskWorkspace;
+        const ttl = 60 * 10;
+        this.cache.set(key, value, 60 * 10);
+        this.logger.verbose(
+          `Update cache ${key} use ${value} ttl ${ttl} sec`,
+          GitWorkerTaskController.name,
+        );
+      }
+    }
   }
 }

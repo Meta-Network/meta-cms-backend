@@ -39,7 +39,7 @@ export class AppCacheService {
     this.logger.verbose(`Set cache key ${key}`, AppCacheService.name);
     try {
       if (typeof arg === 'number') {
-        return await this.cacheManager.set(key, value, arg);
+        return await this.cacheManager.set(key, value, { ttl: arg });
       }
       return await this.cacheManager.set(key, value, arg);
     } catch (err) {

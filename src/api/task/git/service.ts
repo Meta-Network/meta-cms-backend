@@ -7,6 +7,7 @@ import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { v4 as uuid } from 'uuid';
 
 import { BullProcessorType, BullQueueType } from '../../../constants';
+import { AppCacheService } from '../../cache/service';
 
 @Injectable()
 export class GitWorkerTaskService {
@@ -15,6 +16,7 @@ export class GitWorkerTaskService {
     private readonly logger: LoggerService,
     @InjectQueue(BullQueueType.WORKER_GIT)
     private readonly gitQueue: Queue<MetaWorker.Configs.GitWorkerTaskConfig>,
+    private readonly cache: AppCacheService,
   ) {}
 
   private async addTaskQueue(
@@ -41,19 +43,39 @@ export class GitWorkerTaskService {
     type: BullProcessorType,
     conf: MetaWorker.Configs.GitWorkerConfig,
   ): Promise<void> {
-    const taskMethod: MetaWorker.Enums.TaskMethod =
-      type === BullProcessorType.CREATE_SITE
-        ? MetaWorker.Enums.TaskMethod.CREATE_REPO_FROM_TEMPLATE
-        : MetaWorker.Enums.TaskMethod.CREATE_REPO_FROM_TEMPLATE;
+    let taskMethod: MetaWorker.Enums.TaskMethod;
+    if (type === BullProcessorType.CREATE_SITE) {
+      taskMethod = MetaWorker.Enums.TaskMethod.CREATE_REPO_FROM_TEMPLATE;
+    }
+    if (type === BullProcessorType.UPDATE_SITE) {
+      taskMethod = MetaWorker.Enums.TaskMethod.UPDATE_REPO_USE_TEMPLATE;
+    }
 
-    const taskId = uuid();
-    const taskIdHash = crypto.createHash('sha256').update(taskId).digest('hex');
-    const taskWorkspace = taskIdHash.substring(taskIdHash.length - 16);
+    const taskId = uuid(); // taskId and taskWorkspace hash
+    const confIdStr = conf.configId.toString(); // cache unique key
+
+    let taskWorkspace = await this.cache.get<string>(confIdStr);
+    this.logger.verbose(
+      `Get config ${confIdStr} task workspace from cache ${taskWorkspace}`,
+      GitWorkerTaskService.name,
+    );
+    if (!taskWorkspace) {
+      const taskIdHash = crypto
+        .createHash('sha256')
+        .update(taskId)
+        .digest('hex');
+      taskWorkspace = taskIdHash.substring(taskIdHash.length - 16);
+      const _cache = await this.cache.set(confIdStr, taskWorkspace, 60 * 10); // 10min cache
+      this.logger.verbose(
+        `Can not get task workspace from cache, generate new ${taskWorkspace} for config ${confIdStr} ${_cache}`,
+        GitWorkerTaskService.name,
+      );
+    }
 
     const taskInfo: MetaWorker.Info.Task = {
       taskId,
       taskMethod,
-      taskWorkspace, // TODO: use Redis for one day cache, key is configId
+      taskWorkspace,
     };
 
     const taskConfig: MetaWorker.Configs.GitWorkerTaskConfig = {
