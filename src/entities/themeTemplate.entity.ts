@@ -1,4 +1,5 @@
 import { MetaWorker } from '@metaio/worker-model';
+import { ApiHideProperty, ApiResponseProperty } from '@nestjs/swagger';
 import {
   IsEnum,
   IsNotEmpty,
@@ -6,9 +7,10 @@ import {
   IsString,
   IsUrl,
 } from 'class-validator';
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, JoinColumn, OneToOne } from 'typeorm';
 
 import { BaseEntity } from './base.entity';
+import { ThemeEntity } from './theme.entity';
 
 @Entity()
 export class ThemeTemplateEntity extends BaseEntity {
@@ -34,17 +36,17 @@ export class ThemeTemplateEntity extends BaseEntity {
   })
   @IsEnum(MetaWorker.Enums.TemplateType)
   @IsNotEmpty()
-  templateType?: MetaWorker.Enums.TemplateType;
+  templateType: MetaWorker.Enums.TemplateType;
 
   /**
    * Template repo Url
    * @type varchar(255)
-   * @example 'https://github.com/whyouare111/hexo-theme-cactus.git'
+   * @example 'https://github.com/Meta-Network/meta-hexo-starter.git'
    */
   @Column({ comment: 'Template repo Url' })
   @IsUrl()
   @IsNotEmpty()
-  repoUrl: string;
+  templateRepo: string;
 
   /**
    * Template repo branch name
@@ -53,16 +55,7 @@ export class ThemeTemplateEntity extends BaseEntity {
   @Column({ comment: 'Template repo branch name' })
   @IsString()
   @IsNotEmpty()
-  branchName: string;
-
-  /**
-   * Template theme name
-   * @example 'master'
-   */
-  @Column({ comment: 'Template theme name' })
-  @IsString()
-  @IsNotEmpty()
-  themeName: string;
+  templateBranch: string;
 
   /**
    * Preview image
@@ -85,4 +78,10 @@ export class ThemeTemplateEntity extends BaseEntity {
   @IsUrl()
   @IsOptional()
   previewSite?: string | null = null;
+
+  @OneToOne(() => ThemeEntity)
+  @JoinColumn()
+  @ApiHideProperty()
+  @ApiResponseProperty({ type: ThemeEntity })
+  theme: ThemeEntity;
 }

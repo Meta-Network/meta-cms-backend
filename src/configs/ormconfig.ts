@@ -3,6 +3,7 @@ import { ConnectionOptions } from 'typeorm';
 import { GitHubStorageProviderEntity } from '../entities/provider/storage/github.entity';
 import { SiteConfigEntity } from '../entities/siteConfig.entity';
 import { SiteInfoEntity } from '../entities/siteInfo.entity';
+import { ThemeEntity } from '../entities/theme.entity';
 import { ThemeTemplateEntity } from '../entities/themeTemplate.entity';
 import { configBuilder } from './index';
 
@@ -30,6 +31,7 @@ const options: ConnectionOptions = {
     SiteInfoEntity,
     SiteConfigEntity,
     ThemeTemplateEntity,
+    ThemeEntity,
     GitHubStorageProviderEntity,
   ],
   synchronize: false,

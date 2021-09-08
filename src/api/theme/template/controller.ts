@@ -25,7 +25,7 @@ class TemplateListResponse extends TransformResponse<ThemeTemplateEntity> {
 }
 
 @ApiTags('theme')
-@Controller('theme/template')
+@Controller('templates')
 export class TemplateController {
   constructor(private readonly logicService: TemplateLogicService) {}
 

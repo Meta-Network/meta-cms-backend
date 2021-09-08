@@ -16,11 +16,13 @@ export class TemplateLogicService {
   async getTemplates(
     type?: keyof typeof TemplateQueryType,
   ): Promise<ThemeTemplateEntity[]> {
-    if (type === 'ALL') return await this.templateRepository.find();
+    if (type === 'ALL')
+      return await this.templateRepository.find({ relations: ['theme'] });
 
     if (type)
       return await this.templateRepository.find({
-        templateType: MetaWorker.Enums.TemplateType[type],
+        where: { templateType: MetaWorker.Enums.TemplateType[type] },
+        relations: ['theme'],
       });
 
     return await this.templateRepository.find();

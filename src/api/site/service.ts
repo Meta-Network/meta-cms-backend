@@ -68,19 +68,14 @@ export class SiteService {
       SiteService.name,
     );
     const template = await this.templateService.getTemplateById(templateId);
-    const {
-      templateName,
-      repoUrl,
-      branchName: templateBranchName,
-      templateType,
-      themeName,
-    } = template;
+    const { templateName, templateRepo, templateBranch, templateType, theme } =
+      template;
     const templateInfo: MetaWorker.Info.Template = {
       templateName,
-      templateRepoUrl: repoUrl,
-      templateBranchName,
+      templateRepoUrl: templateRepo,
+      templateBranchName: templateBranch,
       templateType,
-      themeName,
+      themeName: theme.themeName,
     };
 
     const siteInfo = { ..._siteInfo, ...siteConfig, ...templateInfo };
