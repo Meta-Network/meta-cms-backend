@@ -180,17 +180,40 @@ export class GitHubStorageLogicService {
           `Insufficient GitHub permissions, pull: ${pull}, push: ${push}`,
         );
       }
+
+      let commitCount = 0;
+      try {
+        const { data: commitData } = await octokit.rest.repos.listCommits({
+          owner: userName,
+          repo: repoName,
+        });
+        commitCount = commitData.length;
+      } catch (error) {
+        if (
+          error.status === 409 ||
+          error.message.includes('Git Repository is empty')
+        ) {
+          this.logger.verbose(
+            `Repo ${repoData.full_name} already exists, but it is empty, size: ${repoData.size}, pull: ${pull} push: ${push}`,
+            GitHubStorageLogicService.name,
+          );
+          return {
+            status: true,
+            size: repoData.size || 0,
+            permissions: repoData.permissions,
+          };
+        }
+      }
+
       this.logger.verbose(
-        `Repo ${repoData.full_name} already exists, size: ${repoData.size}, pull: ${pull} push: ${push}`,
+        `Repo ${repoData.full_name} already exists, commit count: ${commitCount}, size: ${repoData.size}, pull: ${pull} push: ${push}`,
         GitHubStorageLogicService.name,
       );
-      // console.log(repoData);
       return {
         status: true,
-        size: repoData.size,
+        size: repoData.size || commitCount,
         permissions: repoData.permissions,
       };
-      // throw new Error('DEBUG'); // TODO: How to check github repo not empty
     } catch (error) {
       if (error.status === 404) {
         this.logger.verbose(
@@ -209,7 +232,6 @@ export class GitHubStorageLogicService {
             `Repo ${repoData.full_name} created, size: ${repoData.size}, pull: ${pull} push: ${push}`,
             GitHubStorageLogicService.name,
           );
-          // console.log(repoData);
           return {
             status: true,
             size: repoData.size,
