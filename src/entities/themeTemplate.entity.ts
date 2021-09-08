@@ -58,6 +58,15 @@ export class ThemeTemplateEntity extends BaseEntity {
   templateBranch: string;
 
   /**
+   * Template description
+   * @example 'This is a template description'
+   */
+  @Column({ comment: 'Template description', default: '' })
+  @IsString()
+  @IsOptional()
+  templateDescription?: string = '';
+
+  /**
    * Preview image
    * @type varchar(255)
    * @default null
