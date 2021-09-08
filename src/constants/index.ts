@@ -1,5 +1,6 @@
 export enum BullQueueType {
   WORKER_GIT = 'WORKER_GIT',
+  WORKER_HEXO = 'WORKER_HEXO',
 }
 
 export enum BullProcessorType {
