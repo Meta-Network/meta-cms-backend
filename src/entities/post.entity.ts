@@ -1,5 +1,6 @@
-import { IsInt, IsNotEmpty, IsString } from "class-validator";
+import { IsEnum, IsInt, IsNotEmpty, IsString } from "class-validator";
 import { Column, Entity } from "typeorm";
+import { PostState } from "../enums/postState";
 
 import { BaseEntity } from "./base.entity";
 
@@ -24,4 +25,13 @@ export class PostEntity extends BaseEntity {
   @IsString()
   @IsNotEmpty()
   metadataHash: string;
+
+  @Column({
+    comment: 'Post state',
+    type: 'enum',
+    enum: PostState,
+    default: PostState.Pending,
+  })
+  @IsEnum(PostState)
+  state: PostState;
 }

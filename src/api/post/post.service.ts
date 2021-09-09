@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { PostEntity } from '../../entities/post.entity';
+import { PostState } from '../../enums/postState';
 
 @Injectable()
 export class PostService {
@@ -11,6 +12,6 @@ export class PostService {
   ) { }
 
   async getPostsByUserId(userId: number) {
-    return await this.postRepository.find({ where: { userId }});
+    return await this.postRepository.find({ where: { userId, state: PostState.Pending }});
   }
 }
