@@ -19,4 +19,9 @@ export class PostEntity extends BaseEntity {
   @IsString()
   @IsNotEmpty()
   content: string;
+
+  @Column({ comment: 'Post metadata hash' })
+  @IsString()
+  @IsNotEmpty()
+  metadataHash: string;
 }
