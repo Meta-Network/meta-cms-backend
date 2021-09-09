@@ -13,7 +13,7 @@ export class AccessTokenEntity extends BaseEntity {
   @IsNotEmpty()
   platform: string;
 
-  @Column({ comment: 'Matataki access token' })
+  @Column({ comment: 'Access token' })
   @IsString()
   @IsNotEmpty()
   accessToken: string;
