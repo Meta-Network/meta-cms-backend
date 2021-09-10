@@ -7,7 +7,8 @@ import { SiteConfigLogicService } from './config/logicService';
 
 type MetaWorkerSiteInfo = MetaWorker.Info.CmsSiteInfo &
   MetaWorker.Info.CmsSiteConfig &
-  MetaWorker.Info.Template;
+  MetaWorker.Info.Template &
+  MetaWorker.Info.Theme;
 
 type GenerateMetaWorkerSiteInfo = {
   siteInfo: MetaWorkerSiteInfo;
@@ -75,10 +76,9 @@ export class SiteService {
       templateRepoUrl: templateRepo,
       templateBranchName: templateBranch,
       templateType,
-      themeName: theme.themeName,
     };
 
-    const siteInfo = { ..._siteInfo, ...siteConfig, ...templateInfo };
+    const siteInfo = { ..._siteInfo, ...siteConfig, ...templateInfo, ...theme };
 
     return {
       siteInfo,
