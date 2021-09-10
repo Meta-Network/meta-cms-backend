@@ -27,7 +27,7 @@ export class ThemeEntity extends BaseEntity {
    * @type varchar(255)
    * @example 'https://github.com/whyouare111/hexo-theme-cactus.git'
    */
-  @Column({ comment: 'Template repo Url' })
+  @Column({ comment: 'Theme repo Url' })
   @IsUrl()
   @IsNotEmpty()
   themeRepo: string;
@@ -36,10 +36,10 @@ export class ThemeEntity extends BaseEntity {
    * Theme repo branch name
    * @example 'master'
    */
-  @Column({ comment: 'Template repo branch name' })
+  @Column({ comment: 'Theme repo branch name' })
   @IsString()
   @IsNotEmpty()
-  templateBranch: string;
+  themeBranch: string;
 
   /**
    * Theme type
