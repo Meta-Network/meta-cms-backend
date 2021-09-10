@@ -2,7 +2,7 @@ import {
   IsNotEmpty,
   IsString,
 } from 'class-validator';
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, Index } from 'typeorm';
 
 import { BaseEntity } from './base.entity';
 
@@ -11,6 +11,7 @@ export class AccessTokenEntity extends BaseEntity {
   @Column({ comment: 'Platform' })
   @IsString()
   @IsNotEmpty()
+  @Index()
   platform: string;
 
   @Column({ comment: 'Access token' })
