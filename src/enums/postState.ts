@@ -1,5 +1,5 @@
 export enum PostState {
-  Pending,
-  Published,
-  Ignored,
+  Pending = 'pending',
+  Published = 'published',
+  Ignored = 'ignored',
 }
