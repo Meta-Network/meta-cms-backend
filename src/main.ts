@@ -8,6 +8,7 @@ import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
 import { AppModule } from './api/app/module';
 import { RequestNotAcceptableException } from './exceptions';
+import { EntityNotFoundExceptionFilter } from './filters/entity-not-found-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -52,6 +53,8 @@ async function bootstrap() {
   );
   app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
   app.connectMicroservice<MicroserviceOptions>(msServerConfig);
+
+  app.useGlobalFilters(new EntityNotFoundExceptionFilter());
 
   await app.startAllMicroservices();
   await app.listen(appPort);
