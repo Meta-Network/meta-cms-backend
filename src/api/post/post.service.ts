@@ -20,4 +20,13 @@ export class PostService {
       },
     });
   }
+
+  async setPostState(postId: number, state: PostState) {
+    const post = await this.postRepository.findOneOrFail(postId);
+    post.state = state;
+
+    this.postRepository.save(post);
+
+    return post;
+  }
 }
