@@ -1,4 +1,4 @@
-import { IsEnum, IsInt, IsNotEmpty, IsOptional, IsString } from "class-validator";
+import { IsArray, IsEnum, IsInt, IsNotEmpty, IsOptional, IsString } from "class-validator";
 import { Column, Entity, Index } from "typeorm";
 import { PostState } from "../enums/postState";
 
@@ -45,4 +45,14 @@ export class PostEntity extends BaseEntity {
   })
   @IsEnum(PostState)
   state: PostState;
+
+  @Column({ comment: 'Post category', nullable: true })
+  @IsString()
+  @IsOptional()
+  category?: string;
+
+  @Column({ type: 'simple-array', nullable: true, comment: 'Post tags' })
+  @IsArray()
+  @IsOptional()
+  tags?: Array<string>;
 }
