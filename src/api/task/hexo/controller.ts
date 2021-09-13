@@ -22,7 +22,7 @@ import { AppCacheService } from '../../cache/service';
 export class HexoWorkerTaskController {
   constructor(
     @InjectQueue(BullQueueType.WORKER_HEXO)
-    private readonly queue: Queue<MetaWorker.Configs.GitWorkerTaskConfig>,
+    private readonly queue: Queue<MetaWorker.Configs.DeployTaskConfig>,
     @Inject(WINSTON_MODULE_NEST_PROVIDER)
     private readonly logger: LoggerService,
     private readonly cache: AppCacheService,
@@ -33,7 +33,7 @@ export class HexoWorkerTaskController {
   async findOneTask(
     @BasicAuth(ParseUUIDPipe) auth: string,
     @Param('name') name: string,
-  ): Promise<MetaWorker.Configs.GitWorkerTaskConfig> {
+  ): Promise<MetaWorker.Configs.DeployTaskConfig> {
     const job = await this.queue.getJob(auth);
     this.logger.verbose(
       `Worker ${name} get task ${job.name}`,

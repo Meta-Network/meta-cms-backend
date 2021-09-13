@@ -37,7 +37,7 @@ export class TasksService {
     const { gitInfo, repoSize } =
       await this.storageService.generateMetaWorkerGitInfo(sType, user.id, sId);
 
-    const workerConfig: MetaWorker.Configs.GitHubWorkerConfig = {
+    const workerConfig: MetaWorker.Configs.DeployConfig = {
       ...userInfo,
       ...siteInfo,
       ...gitInfo,

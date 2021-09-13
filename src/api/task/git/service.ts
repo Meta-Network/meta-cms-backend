@@ -7,6 +7,7 @@ import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { v4 as uuid } from 'uuid';
 
 import { BullProcessorType, BullQueueType } from '../../../constants';
+import { GitQueueTaskConfig } from '../../../types';
 import { AppCacheService } from '../../cache/service';
 
 @Injectable()
@@ -15,14 +16,11 @@ export class GitWorkerTaskService {
     @Inject(WINSTON_MODULE_NEST_PROVIDER)
     private readonly logger: LoggerService,
     @InjectQueue(BullQueueType.WORKER_GIT)
-    private readonly gitQueue: Queue<MetaWorker.Configs.GitWorkerTaskConfig>,
+    private readonly gitQueue: Queue<GitQueueTaskConfig>,
     private readonly cache: AppCacheService,
   ) {}
 
-  private async addTaskQueue(
-    type: BullProcessorType,
-    cfg: MetaWorker.Configs.GitWorkerTaskConfig,
-  ) {
+  private async addTaskQueue(type: BullProcessorType, cfg: GitQueueTaskConfig) {
     const job = await this.gitQueue.add(type, cfg, { jobId: cfg.taskId });
     this.logger.verbose(
       `Successfully add task queue, taskId: ${job.data.taskId}`,
@@ -41,14 +39,14 @@ export class GitWorkerTaskService {
 
   async addGitWorkerQueue(
     type: BullProcessorType,
-    conf: MetaWorker.Configs.GitWorkerConfig,
+    conf: MetaWorker.Configs.DeployConfig,
   ): Promise<void> {
     let taskMethod: MetaWorker.Enums.TaskMethod;
     if (type === BullProcessorType.CREATE_SITE) {
-      taskMethod = MetaWorker.Enums.TaskMethod.CREATE_REPO_FROM_TEMPLATE;
+      taskMethod = MetaWorker.Enums.TaskMethod.GIT_INIT_PUSH;
     }
     if (type === BullProcessorType.UPDATE_SITE) {
-      taskMethod = MetaWorker.Enums.TaskMethod.UPDATE_REPO_USE_TEMPLATE;
+      taskMethod = MetaWorker.Enums.TaskMethod.GIT_OVERWRITE_PUSH;
     }
 
     const taskId = uuid(); // taskId and taskWorkspace hash
@@ -78,7 +76,7 @@ export class GitWorkerTaskService {
       taskWorkspace,
     };
 
-    const taskConfig: MetaWorker.Configs.GitWorkerTaskConfig = {
+    const taskConfig: MetaWorker.Configs.DeployTaskConfig = {
       ...taskInfo,
       ...conf,
     };

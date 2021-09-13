@@ -1,3 +1,4 @@
+import { MetaWorker } from '@metaio/worker-model';
 import { Request } from 'express';
 import { JwtPayload } from 'jsonwebtoken';
 
@@ -42,3 +43,7 @@ export type RemoveIndex<Q> = {
     ? key
     : never]: Q[key];
 };
+
+export type GitQueueTaskConfig =
+  | MetaWorker.Configs.DeployTaskConfig
+  | MetaWorker.Configs.PublishTaskConfig;

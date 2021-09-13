@@ -26,11 +26,9 @@ export class GitWorkerTaskProcessor {
   ) {}
 
   @Process(BullProcessorType.CREATE_SITE)
-  async handleCreateSiteProcess(
-    job: Job<MetaWorker.Configs.GitWorkerTaskConfig>,
-  ) {
+  async handleCreateSiteProcess(job: Job<MetaWorker.Configs.DeployTaskConfig>) {
     const { taskMethod } = job.data;
-    if (taskMethod === MetaWorker.Enums.TaskMethod.CREATE_REPO_FROM_TEMPLATE) {
+    if (taskMethod === MetaWorker.Enums.TaskMethod.GIT_INIT_PUSH) {
       this.logger.verbose(
         `Processing job ${job.id} of type ${job.name}`,
         GitWorkerTaskProcessor.name,
