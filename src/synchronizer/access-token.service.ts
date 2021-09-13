@@ -11,8 +11,8 @@ export class AccessTokenService {
     private repository: Repository<AccessTokenEntity>,
   ) {}
 
-  async save(platform: string, accessToken: string) {
-    const entity = this.repository.create({ platform, accessToken });
+  async save(userId: number, platform: string, accessToken: string) {
+    const entity = this.repository.create({ userId, platform, accessToken });
 
     await this.repository.save(entity);
   }

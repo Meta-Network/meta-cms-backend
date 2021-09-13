@@ -9,9 +9,9 @@ export class SynchronizerController {
 
   @MessagePattern('newAccessToken')
   async newAccessToken(
-    @Payload() payload: { platform: string; accessToken: string },
+    @Payload() payload: { uid: number; platform: string; accessToken: string },
   ) {
-    const { platform, accessToken } = payload;
-    await this.accessTokenService.save(platform, accessToken);
+    const { uid: userId, platform, accessToken } = payload;
+    await this.accessTokenService.save(userId, platform, accessToken);
   }
 }
