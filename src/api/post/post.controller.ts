@@ -33,8 +33,8 @@ class PostPagination extends PaginationResponse<PostEntity> {
   readonly items: PostEntity[];
 }
 class PostListResponse extends TransformResponse<PostPagination> {
-  @ApiProperty({ type: PostEntity, isArray: true })
-  readonly data: PostPagination[];
+  @ApiProperty({ type: PostPagination })
+  readonly data: PostPagination;
 }
 class PostEntityResponse extends TransformResponse<PostEntity> {
   @ApiProperty({ type: PostEntity })
@@ -57,12 +57,12 @@ export class PostController {
   @ApiQuery({ name: 'limit', type: Number, example: 10 })
   async getPosts(
     @User('id', ParseIntPipe) uid: number,
-    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page = 1,
-    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit = 10,
+    @Query('page', ParseIntPipe, new DefaultValuePipe(1)) page: number,
+    @Query('limit', ParseIntPipe, new DefaultValuePipe(10)) limit: number,
   ) {
     const options = {
       page,
-      limit: limit > 100 ? 100 : limit,
+      limit: Math.max(limit, 100),
       route: '/post',
     } as IPaginationOptions;
 
