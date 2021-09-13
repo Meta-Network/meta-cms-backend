@@ -60,6 +60,17 @@ export class SiteConfigEntity extends BaseEntity {
   domain?: string = '';
 
   /**
+   * Site subdomain
+   * @type varchar(255)
+   * @default ''
+   * @example 'www.example.com'
+   */
+  @Column({ comment: 'Site subdomain', default: '' })
+  @IsFQDN()
+  @IsOptional()
+  subdomain?: string = '';
+
+  /**
    * Site store type
    * @type enum
    * @default null
