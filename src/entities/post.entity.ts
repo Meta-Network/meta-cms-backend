@@ -1,8 +1,15 @@
-import { IsArray, IsEnum, IsInt, IsNotEmpty, IsOptional, IsString } from "class-validator";
-import { Column, Entity, Index } from "typeorm";
-import { PostState } from "../enums/postState";
+import {
+  IsArray,
+  IsEnum,
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+} from 'class-validator';
+import { Column, Entity, Index } from 'typeorm';
 
-import { BaseEntity } from "./base.entity";
+import { PostState } from '../enums/postState';
+import { BaseEntity } from './base.entity';
 
 @Entity()
 @Index(['userId', 'state'])
@@ -12,7 +19,7 @@ export class PostEntity extends BaseEntity {
   @IsNotEmpty()
   userId: number;
 
-  @Column({ comment: 'Post title'})
+  @Column({ comment: 'Post title' })
   @IsString()
   @IsNotEmpty()
   title: string;

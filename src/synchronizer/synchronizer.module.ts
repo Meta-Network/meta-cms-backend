@@ -1,14 +1,14 @@
 import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ClientsModule } from '@nestjs/microservices';
+import { TypeOrmModule } from '@nestjs/typeorm';
+
 import { UCenterMicroserviceConfigService } from '../configs/microservices/ucenter';
 import { MetaMicroserviceClient } from '../constants';
-
-import { MatatakiModule } from './matataki/matataki.module';
-import { AccessTokenService } from './access-token.service';
-import { SynchronizerController } from './synchronizer.controller';
 import { AccessTokenEntity } from '../entities/accessToken.entity';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { AccessTokenService } from './access-token.service';
+import { MatatakiModule } from './matataki/matataki.module';
+import { SynchronizerController } from './synchronizer.controller';
 
 @Module({
   imports: [
@@ -23,6 +23,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
     MatatakiModule,
   ],
   providers: [AccessTokenService],
-  controllers: [SynchronizerController]
+  controllers: [SynchronizerController],
 })
 export class SynchronizerModule {}
