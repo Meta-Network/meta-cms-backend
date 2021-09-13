@@ -21,6 +21,7 @@ import { StorageModule } from '../provider/storage/module';
 import { SiteModule } from '../site/module';
 import { TasksModule } from '../task/module';
 import { ThemeTemplateModule } from '../theme/template/module';
+import { TokenModule } from '../token/token.module';
 
 @Module({
   imports: [
@@ -49,6 +50,7 @@ import { ThemeTemplateModule } from '../theme/template/module';
     TasksModule,
     SynchronizerModule,
     PostModule,
+    TokenModule,
   ],
   providers: [
     {

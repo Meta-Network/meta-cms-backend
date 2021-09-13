@@ -16,4 +16,19 @@ export class AccessTokenService {
 
     await this.repository.save(entity);
   }
+
+  async read(userId: number) {
+    return await this.repository.find({ where: { userId } });
+  }
+
+  async updateActive(userId: number, platform: string, active: boolean) {
+    const token = await this.repository.findOneOrFail({
+      where: { userId, platform },
+    });
+    token.active = active;
+
+    await this.repository.save(token);
+
+    return token;
+  }
 }
