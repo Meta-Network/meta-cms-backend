@@ -14,7 +14,9 @@ import { BullConfigService } from '../../configs/bull';
 import { TypeORMConfigService } from '../../configs/typeorm';
 import { WinstonConfigService } from '../../configs/winston';
 import { TransformResponseInterceptor } from '../../interceptors/transform';
+import { SynchronizerModule } from '../../synchronizer/synchronizer.module';
 import { AppCacheModule } from '../cache/module';
+import { PostModule } from '../post/post.module';
 import { StorageModule } from '../provider/storage/module';
 import { SiteModule } from '../site/module';
 import { TasksModule } from '../task/module';
@@ -45,6 +47,8 @@ import { ThemeTemplateModule } from '../theme/template/module';
     SiteModule,
     StorageModule,
     TasksModule,
+    SynchronizerModule,
+    PostModule,
   ],
   providers: [
     {

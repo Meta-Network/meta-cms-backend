@@ -1,8 +1,10 @@
 import { ConnectionOptions } from 'typeorm';
 
+import { AccessTokenEntity } from '../entities/accessToken.entity';
 import { GitHubStorageProviderEntity } from '../entities/provider/storage/github.entity';
 import { SiteConfigEntity } from '../entities/siteConfig.entity';
 import { SiteInfoEntity } from '../entities/siteInfo.entity';
+import { PostEntity } from '../entities/post.entity';
 import { ThemeEntity } from '../entities/theme.entity';
 import { ThemeTemplateEntity } from '../entities/themeTemplate.entity';
 import { configBuilder } from './index';
@@ -33,6 +35,8 @@ const options: ConnectionOptions = {
     ThemeTemplateEntity,
     ThemeEntity,
     GitHubStorageProviderEntity,
+    AccessTokenEntity,
+    PostEntity,
   ],
   synchronize: false,
   migrationsTableName: 'be_migrations',
