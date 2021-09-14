@@ -5,6 +5,7 @@ import { PostEntity } from '../entities/post.entity';
 import { GitHubStorageProviderEntity } from '../entities/provider/storage/github.entity';
 import { SiteConfigEntity } from '../entities/siteConfig.entity';
 import { SiteInfoEntity } from '../entities/siteInfo.entity';
+import { SynchronizerEntity } from '../entities/synchromizer.entity';
 import { ThemeEntity } from '../entities/theme.entity';
 import { ThemeTemplateEntity } from '../entities/themeTemplate.entity';
 import { configBuilder } from './index';
@@ -37,6 +38,7 @@ const options: ConnectionOptions = {
     GitHubStorageProviderEntity,
     AccessTokenEntity,
     PostEntity,
+    SynchronizerEntity,
   ],
   synchronize: false,
   migrationsTableName: 'be_migrations',
