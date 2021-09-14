@@ -1,6 +1,7 @@
 import { ConnectionOptions } from 'typeorm';
 
 import { AccessTokenEntity } from '../entities/accessToken.entity';
+import { MatatakiSyncEntity } from '../entities/matatakiSync.entity';
 import { PostEntity } from '../entities/post.entity';
 import { GitHubStorageProviderEntity } from '../entities/provider/storage/github.entity';
 import { SiteConfigEntity } from '../entities/siteConfig.entity';
@@ -39,6 +40,7 @@ const options: ConnectionOptions = {
     AccessTokenEntity,
     PostEntity,
     SynchronizerEntity,
+    MatatakiSyncEntity,
   ],
   synchronize: false,
   migrationsTableName: 'be_migrations',
