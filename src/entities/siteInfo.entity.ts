@@ -21,7 +21,7 @@ export class SiteInfoEntity extends BaseEntity {
   /** UCenter user id */
   @Column({ comment: 'UCenter user id' })
   @IsInt()
-  @IsNotEmpty()
+  @IsOptional()
   @ApiHideProperty()
   @ApiResponseProperty({ example: 1 })
   userId: number;
