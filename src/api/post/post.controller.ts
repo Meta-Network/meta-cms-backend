@@ -62,7 +62,7 @@ export class PostController {
   ) {
     const options = {
       page,
-      limit: Math.max(limit, 100),
+      limit,
       route: '/post',
     } as IPaginationOptions;
 

@@ -7,8 +7,8 @@ import {
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
-import { IsNumber } from 'class-validator';
+import { ApiProperty, ApiTags } from '@nestjs/swagger';
+import { IsNotEmpty, IsNumber } from 'class-validator';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
 import { SkipUCenterAuth, User } from '../../decorators';
@@ -18,7 +18,9 @@ import { PostMethodValidation } from '../../utils/validation';
 import { TasksService } from './service';
 
 class DeploySiteFromConfigDto {
+  @ApiProperty({ description: 'Site config id', example: 1 })
   @IsNumber()
+  @IsNotEmpty()
   configId: number;
 }
 
