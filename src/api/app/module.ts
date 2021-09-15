@@ -16,6 +16,7 @@ import { WinstonConfigService } from '../../configs/winston';
 import { TransformResponseInterceptor } from '../../interceptors/transform';
 import { SynchronizerModule } from '../../synchronizer/synchronizer.module';
 import { AppCacheModule } from '../cache/module';
+import { DomainModule } from '../domain/module';
 import { PostModule } from '../post/post.module';
 import { StorageModule } from '../provider/storage/module';
 import { SiteModule } from '../site/module';
@@ -51,6 +52,7 @@ import { TokenModule } from '../token/token.module';
     SynchronizerModule,
     PostModule,
     TokenModule,
+    DomainModule,
   ],
   providers: [
     {

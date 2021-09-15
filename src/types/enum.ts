@@ -11,3 +11,10 @@ export const TemplateQueryType = {
   ...MetaWorker.Enums.TemplateType,
   ...TemplateQueryEnum,
 };
+
+export enum DomainvalidateStatus {
+  Available = 'AVAILABLE',
+  Occupied = 'OCCUPIED',
+  Reserve = 'RESERVE',
+  Disable = 'DISABLE',
+}
