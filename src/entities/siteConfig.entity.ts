@@ -8,7 +8,7 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator';
-import { Column, Entity, ManyToOne } from 'typeorm';
+import { Column, Entity, Index, ManyToOne } from 'typeorm';
 
 import { BaseEntity } from './base.entity';
 import { SiteInfoEntity } from './siteInfo.entity';
@@ -51,24 +51,25 @@ export class SiteConfigEntity extends BaseEntity {
   /**
    * Site domain
    * @type varchar(255)
-   * @default ''
+   * @default null
    * @example 'www.example.com'
    */
-  @Column({ comment: 'Site domain', default: '' })
+  @Column({ comment: 'Site domain', nullable: true })
   @IsFQDN()
   @IsOptional()
-  domain?: string = '';
+  domain?: string | null = null;
 
   /**
-   * Site subdomain
+   * Meta space prefix
    * @type varchar(255)
    * @default ''
    * @example 'www.example.com'
    */
-  @Column({ comment: 'Site subdomain', default: '' })
-  @IsFQDN()
+  @Column({ comment: 'Meta space prefix', nullable: true })
+  @IsString()
   @IsOptional()
-  subdomain?: string = '';
+  @Index({ unique: true })
+  metaSpacePrefix: string;
 
   /**
    * Site store type
