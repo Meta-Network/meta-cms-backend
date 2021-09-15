@@ -1,4 +1,10 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Post,
+  UsePipes,
+  ValidationPipe,
+} from '@nestjs/common';
 import {
   ApiCookieAuth,
   ApiOkResponse,
@@ -7,7 +13,8 @@ import {
 } from '@nestjs/swagger';
 
 import { TransformResponse } from '../../../utils/responseClass';
-import { DomainvalidateResult } from './dto';
+import { PostMethodValidation } from '../../../utils/validation';
+import { DomainValidateRequest, DomainvalidateResult } from './dto';
 import { DomainValidateService } from './service';
 
 class ValidateMetaSpacePrefixResponse extends TransformResponse<DomainvalidateResult> {
@@ -22,8 +29,10 @@ export class DomainValidateController {
   constructor(private readonly service: DomainValidateService) {}
 
   @ApiOkResponse({ type: ValidateMetaSpacePrefixResponse })
-  @Get(':prefix')
-  async validateMetaSpacePrefix(@Param('prefix') prefix: string) {
-    return await this.service.validateMetaSpacePrefix(prefix);
+  @Post()
+  @UsePipes(new ValidationPipe(PostMethodValidation))
+  async validateMetaSpacePrefix(@Body() reqDto: DomainValidateRequest) {
+    const { domain } = reqDto;
+    return await this.service.validateMetaSpacePrefix(domain);
   }
 }
