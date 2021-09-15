@@ -7,7 +7,7 @@ import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { v4 as uuid } from 'uuid';
 
 import { BullProcessorType, BullQueueType } from '../../../constants';
-import { GitQueueTaskConfig } from '../../../types';
+import { QueueTaskConfig } from '../../../types';
 import { AppCacheService } from '../../cache/service';
 
 @Injectable()
@@ -16,11 +16,11 @@ export class GitWorkerTaskService {
     @Inject(WINSTON_MODULE_NEST_PROVIDER)
     private readonly logger: LoggerService,
     @InjectQueue(BullQueueType.WORKER_GIT)
-    private readonly gitQueue: Queue<GitQueueTaskConfig>,
+    private readonly gitQueue: Queue<QueueTaskConfig>,
     private readonly cache: AppCacheService,
   ) {}
 
-  private async addTaskQueue(type: BullProcessorType, cfg: GitQueueTaskConfig) {
+  private async addTaskQueue(type: BullProcessorType, cfg: QueueTaskConfig) {
     const job = await this.gitQueue.add(type, cfg, { jobId: cfg.taskId });
     this.logger.verbose(
       `Successfully add task queue, taskId: ${job.data.taskId}`,

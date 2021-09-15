@@ -9,7 +9,7 @@ import { StorageService } from '../provider/storage/service';
 import { SiteService } from '../site/service';
 import { GitWorkerTaskService } from './git/service';
 
-@Injectable()
+// @Injectable()
 export class TasksService {
   constructor(
     @Inject(WINSTON_MODULE_NEST_PROVIDER)
@@ -19,10 +19,7 @@ export class TasksService {
     private readonly gitWorkerService: GitWorkerTaskService,
   ) {}
 
-  async deploySiteFromConfig(
-    user: UCenterJWTPayload,
-    cid: number,
-  ): Promise<void> {
+  async deploySiteFromConfig(user: any, cid: number): Promise<void> {
     this.logger.verbose(`Generate meta worker user info`, TasksService.name);
     const userInfo: MetaWorker.Info.UCenterUser = {
       username: user.username,

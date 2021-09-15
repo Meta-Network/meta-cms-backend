@@ -16,14 +16,14 @@ import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { BullQueueType } from '../../../constants';
 import { BasicAuth, SkipUCenterAuth } from '../../../decorators';
 import { DataNotFoundException } from '../../../exceptions';
-import { GitQueueTaskConfig } from '../../../types';
+import { QueueTaskConfig } from '../../../types';
 import { AppCacheService } from '../../cache/service';
 
 @Controller('task/git')
 export class GitWorkerTaskController {
   constructor(
     @InjectQueue(BullQueueType.WORKER_GIT)
-    private readonly gitQueue: Queue<GitQueueTaskConfig>,
+    private readonly gitQueue: Queue<QueueTaskConfig>,
     @Inject(WINSTON_MODULE_NEST_PROVIDER)
     private readonly logger: LoggerService,
     private readonly cache: AppCacheService,
@@ -34,7 +34,7 @@ export class GitWorkerTaskController {
   async findOneTask(
     @BasicAuth(ParseUUIDPipe) auth: string,
     @Param('name') name: string,
-  ): Promise<GitQueueTaskConfig> {
+  ): Promise<QueueTaskConfig> {
     const job = await this.gitQueue.getJob(auth);
     this.logger.verbose(
       `Worker ${name} get task ${job.name}`,

@@ -16,34 +16,34 @@ import { ValidationException } from '../../exceptions';
 import { UCenterJWTPayload } from '../../types';
 import { PostMethodValidation } from '../../utils/validation';
 import { TasksService } from './service';
+import { Tasks2Service } from './tasks.service';
 
-class DeploySiteFromConfigDto {
-  @IsNumber()
-  configId: number;
-}
-
-@ApiTags('task')
-// @Controller('task')
-export class TasksController {
+@ApiTags('tasks2')
+@Controller('tasks2')
+export class Tasks2Controller {
   constructor(
     @Inject(WINSTON_MODULE_NEST_PROVIDER)
     private readonly logger: LoggerService,
-    private readonly service: TasksService,
+    private readonly service: Tasks2Service,
   ) {}
 
-  @Post('deploy')
+  @SkipUCenterAuth(true)
+  @Post('deploy-sample')
   @UsePipes(new ValidationPipe(PostMethodValidation))
-  async deploySiteFromConfig(
-    @User() user: UCenterJWTPayload,
-    @Body() body: DeploySiteFromConfigDto,
-  ) {
-    if (!body && !body.configId)
-      throw new ValidationException('request body does not contain configId');
-    const cid = body.configId;
+  async deploySiteFromConfig2() {
+    const cid = 20,
+      uid = 14;
     this.logger.verbose(
-      `User ${user.id} request deploy site from config ${cid}`,
-      TasksController.name,
+      `User ${uid} request deploy site from config ${cid}`,
+      Tasks2Controller.name,
     );
-    return await this.service.deploySiteFromConfig(user, cid);
+    return await this.service.deploySite(
+      {
+        id: uid,
+        username: 'test-deploy',
+        nickname: 'test-deploy',
+      },
+      cid,
+    );
   }
 }

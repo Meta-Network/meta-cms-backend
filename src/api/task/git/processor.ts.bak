@@ -17,7 +17,7 @@ import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { BullProcessorType, BullQueueType } from '../../../constants';
 import { DockerTasksService } from '../docker/service';
 
-@Processor(BullQueueType.WORKER_GIT)
+//@Processor(BullQueueType.WORKER_GIT)
 export class GitWorkerTaskProcessor {
   constructor(
     @Inject(WINSTON_MODULE_NEST_PROVIDER)

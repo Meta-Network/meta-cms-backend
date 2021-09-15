@@ -44,6 +44,6 @@ export type RemoveIndex<Q> = {
     : never]: Q[key];
 };
 
-export type GitQueueTaskConfig =
+export type QueueTaskConfig =
   | MetaWorker.Configs.DeployTaskConfig
   | MetaWorker.Configs.PublishTaskConfig;
