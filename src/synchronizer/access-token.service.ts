@@ -31,4 +31,8 @@ export class AccessTokenService {
 
     return token;
   }
+
+  async hasAny(userId: number) {
+    return (await this.repository.count({ where: { userId } })) > 0;
+  }
 }

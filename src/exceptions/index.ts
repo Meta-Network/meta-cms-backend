@@ -197,3 +197,12 @@ export const validationErrorToBadRequestException = (
     throw errors;
   }
 };
+
+export class EmptyAccessTokenException extends AccessDeniedException {
+  constructor() {
+    super('Empty access token');
+  }
+
+  @ApiProperty({ example: 'Forbidden: Empty access token' })
+  readonly message: string;
+}
