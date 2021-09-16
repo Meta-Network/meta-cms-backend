@@ -33,6 +33,8 @@ export class AccessTokenService {
   }
 
   async hasAny(userId: number, platform?: string) {
-    return (await this.repository.count({ where: { userId, platform } })) > 0;
+    const where = !platform ? { userId } : { userId, platform };
+
+    return (await this.repository.count({ where })) > 0;
   }
 }
