@@ -63,7 +63,7 @@ export class PostController {
   })
   @ApiForbiddenResponse({
     type: EmptyAccessTokenException,
-    description: 'When request user with no any access tokens',
+    description: 'When request user has no any access tokens',
   })
   @ApiQuery({ name: 'page', type: Number, example: 1 })
   @ApiQuery({ name: 'limit', type: Number, example: 10 })
@@ -88,6 +88,10 @@ export class PostController {
 
   @Post(':postId/publish')
   @ApiCreatedResponse({ type: PostEntityResponse })
+  @ApiBadRequestResponse({
+    type: RequirdHttpHeadersNotFoundException,
+    description: 'When cookie with access token not provided',
+  })
   async setPostPublished(
     @User('id', ParseIntPipe) uid: number,
     @Param('postId', ParseIntPipe) postId: number,
@@ -97,10 +101,33 @@ export class PostController {
 
   @Post(':postId/ignore')
   @ApiCreatedResponse({ type: PostEntityResponse })
+  @ApiBadRequestResponse({
+    type: RequirdHttpHeadersNotFoundException,
+    description: 'When cookie with access token not provided',
+  })
   async setPostIgnored(
     @User('id', ParseIntPipe) uid: number,
     @Param('postId', ParseIntPipe) postId: number,
   ) {
     return await this.postService.setPostState(postId, PostState.Ignored);
+  }
+
+  @Post('sync/:platform')
+  @ApiBadRequestResponse({
+    type: RequirdHttpHeadersNotFoundException,
+    description: 'When cookie with access token not provided',
+  })
+  @ApiForbiddenResponse({
+    type: EmptyAccessTokenException,
+    description: 'When request user has no any access tokens',
+  })
+  async triggerPostSync(
+    @User('id', ParseIntPipe) uid: number,
+    @Param('platform') platform: string,
+  ) {
+    const hasAnyToken = await this.accessTokenService.hasAny(uid, platform);
+    if (!hasAnyToken) {
+      throw new EmptyAccessTokenException();
+    }
   }
 }

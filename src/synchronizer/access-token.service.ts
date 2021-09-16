@@ -32,7 +32,7 @@ export class AccessTokenService {
     return token;
   }
 
-  async hasAny(userId: number) {
-    return (await this.repository.count({ where: { userId } })) > 0;
+  async hasAny(userId: number, platform?: string) {
+    return (await this.repository.count({ where: { userId, platform } })) > 0;
   }
 }
