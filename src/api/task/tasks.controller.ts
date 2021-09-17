@@ -11,11 +11,8 @@ import { ApiTags } from '@nestjs/swagger';
 import { IsNumber } from 'class-validator';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
-import { SkipUCenterAuth, User } from '../../decorators';
-import { ValidationException } from '../../exceptions';
-import { UCenterJWTPayload } from '../../types';
+import { SkipUCenterAuth } from '../../decorators';
 import { PostMethodValidation } from '../../utils/validation';
-import { TasksService } from './service';
 import { Tasks2Service } from './tasks.service';
 
 @ApiTags('tasks2')

@@ -4,24 +4,23 @@ import { Job, Queue } from 'bull';
 import { v4 as uuid } from 'uuid';
 
 import { QueueTaskConfig } from '../../../types';
-import { DockerTasksService } from '../docker/service';
 import { TaskDispatchersService } from './task-dispatchers.service';
+import { TaskWorkerJobProcessor } from './task-worker-job.processor';
 
-export abstract class TaskWorkersService {
+export class TaskWorkersService {
   constructor(
     protected readonly logger: LoggerService,
     protected readonly workerQueue: Queue<QueueTaskConfig>,
     protected readonly taskDispatchersService: TaskDispatchersService,
-    protected readonly dockerTasksService: DockerTasksService,
-    protected readonly dockerImageName: string,
     protected readonly taskMethods: MetaWorker.Enums.TaskMethod[],
+    protected readonly jobProcessor: TaskWorkerJobProcessor,
   ) {
-    logger.verbose('taskMethods', taskMethods, this.constructor.name);
+    logger.debug(`taskMethods ${taskMethods}`, this.constructor.name);
     this.registerTaskMethods(taskMethods);
     for (const taskMethod of taskMethods) {
       this.workerQueue.process(
         taskMethod,
-        async (job) => await this.process(job),
+        async (job) => await jobProcessor.process(job),
       );
     }
     this.workerQueue.on(
@@ -50,38 +49,14 @@ export abstract class TaskWorkersService {
     });
     this.logger.verbose(
       `Successfully add task ${job.name}, taskId: ${job.data.taskId} jobId ${job.id}`,
-      TaskWorkersService.name,
+      this.constructor.name,
     );
-    this.logger.verbose(
+    this.logger.debug(
       `Queue: ${
         this.workerQueue.name
       } active: ${await this.workerQueue.getActiveCount()} complete: ${await this.workerQueue.getCompletedCount()} delayed: ${await this.workerQueue.getDelayedCount()} failed: ${await this.workerQueue.getFailedCount()}`,
+      this.constructor.name,
     );
-  }
-
-  protected async process(job) {
-    // await this.dockerTasksService.startDockerContainer(
-    //   this.dockerImageName,
-    //   job.id,
-    // );
-    // return job.id;
-
-    setTimeout(() => job.progress(42), 500);
-    setTimeout(() => {
-      job.progress(88);
-      this.logger.debug(
-        `Executing task ${job.data.taskId} method ${job.data.taskMethod}`,
-        this.constructor.name,
-      );
-    }, 1000);
-    return await new Promise((resolve, reject) => {
-      const rnd = Math.random();
-
-      setTimeout(
-        () => (rnd < 0.8 ? resolve(job.id) : reject(new Error('Random Error'))),
-        1500,
-      );
-    });
   }
 
   protected async onProgress(job, progress) {
@@ -101,8 +76,7 @@ export abstract class TaskWorkersService {
 
       this.constructor.name,
     );
-    // console.log(job);
-    // console.log(job.data);
+
     job &&
       job.data &&
       job.data.taskId &&
@@ -113,7 +87,10 @@ export abstract class TaskWorkersService {
   }
 
   protected async onFailed(job, err) {
-    this.logger.error(job, err);
+    this.logger.error(
+      `Task ${job.data.taskId} ${job.name} ${job.id} failed `,
+      err,
+    );
     job &&
       job.data &&
       job.data.taskId &&

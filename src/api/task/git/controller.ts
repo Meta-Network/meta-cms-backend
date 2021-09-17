@@ -13,7 +13,7 @@ import {
 import { Queue } from 'bull';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
-import { BullQueueType } from '../../../constants';
+import { TaskWorkerType } from '../../../constants';
 import { BasicAuth, SkipUCenterAuth } from '../../../decorators';
 import { DataNotFoundException } from '../../../exceptions';
 import { QueueTaskConfig } from '../../../types';
@@ -22,7 +22,7 @@ import { AppCacheService } from '../../cache/service';
 @Controller('task/git')
 export class GitWorkerTaskController {
   constructor(
-    @InjectQueue(BullQueueType.WORKER_GIT)
+    @InjectQueue(TaskWorkerType.WORKER_GIT)
     private readonly gitQueue: Queue<QueueTaskConfig>,
     @Inject(WINSTON_MODULE_NEST_PROVIDER)
     private readonly logger: LoggerService,

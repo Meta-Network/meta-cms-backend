@@ -6,10 +6,9 @@ import { TasksController } from './controller';
 import { DockerTasksModule } from './docker/module';
 import { GitWorkerTasksModule } from './git/module';
 import { HexoWorkerTasksModule } from './hexo/module';
-import { TasksService } from './service';
 import { Tasks2Controller } from './tasks.controller';
 import { Tasks2Service } from './tasks.service';
-import { TaskWorkersModule } from './wokers/module';
+import { TaskWorkersModule } from './workers/module';
 
 @Module({
   imports: [

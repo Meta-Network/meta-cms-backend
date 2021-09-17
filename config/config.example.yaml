@@ -1,0 +1,79 @@
+app:
+  name:
+  port:
+
+db:
+  host:
+  username:
+  password:
+  database:
+
+redis:
+  host:
+  port:
+  user:
+  pass:
+
+cors:
+  origins:
+    - 'http://127.0.0.1:8000'
+
+jwt:
+  cookieName:
+  verify:
+    issuer:
+    audience:
+
+swagger:
+  enable: true
+
+microservice:
+  server:
+    transport:
+    options:
+      servers:
+  clients:
+    ucenter:
+      transport:
+      options:
+        servers:
+
+task:
+  docker:
+    env:
+      backend:
+        host:
+        port:
+      loki:
+        url:
+      7zip:
+        bin-name: 7zz
+    volumes:
+      tmp:
+
+  worker:
+    git:
+      # BullModuleOptions
+      queue:
+        limiter:
+          max: 5
+          duration: 2000
+      # MOCK | DOCKER |
+      processor-type:
+      docker:
+        image:
+        app:
+          name:
+
+    hexo:
+      # BullModuleOptions
+      queue:
+        limiter:
+          max: 10
+          duration: 2000
+      # MOCK | DOCKER |
+      processor-type:
+      docker:
+        image:
+        app:
+          name:

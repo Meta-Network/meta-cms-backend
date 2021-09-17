@@ -5,7 +5,7 @@ import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { DataNotFoundException } from '../../exceptions';
 import { StorageService } from '../provider/storage/service';
 import { SiteService } from '../site/service';
-import { TaskDispatchersService } from './wokers/task-dispatchers.service';
+import { TaskDispatchersService } from './workers/task-dispatchers.service';
 
 @Injectable()
 export class Tasks2Service {
@@ -27,24 +27,22 @@ export class Tasks2Service {
 
     this.logger.verbose(`Adding storage worker to queue`, Tasks2Service.name);
     if (repoSize > 0) {
-      // skip ?
+      taskSteps.push(MetaWorker.Enums.TaskMethod.GIT_CLONE_CHECKOUT);
     } else {
-      const createSiteTaskMethods = [
-        MetaWorker.Enums.TaskMethod.GIT_INIT_PUSH,
+      taskSteps.push(MetaWorker.Enums.TaskMethod.GIT_INIT_PUSH);
+    }
+    taskSteps.push(
+      ...[
         MetaWorker.Enums.TaskMethod.HEXO_UPDATE_CONFIG,
         MetaWorker.Enums.TaskMethod.GIT_COMMIT_PUSH,
-      ];
-      taskSteps.push(...createSiteTaskMethods);
-    }
+      ],
+    );
 
     this.logger.verbose(`Adding CICD worker to queue`, Tasks2Service.name);
 
     this.logger.verbose(`Adding publisher worker to queue`, Tasks2Service.name);
 
     this.logger.verbose(`Adding CDN worker to queue`, Tasks2Service.name);
-
-    // TODO: How to sync all worker
-    // TODO: Response deploy status
 
     return await this.taskDispatchersService.dispatchTask(
       taskSteps,

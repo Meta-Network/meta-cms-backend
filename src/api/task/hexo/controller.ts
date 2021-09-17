@@ -13,7 +13,7 @@ import {
 import { Queue } from 'bull';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
-import { BullQueueType } from '../../../constants';
+import { TaskWorkerType } from '../../../constants';
 import { BasicAuth, SkipUCenterAuth } from '../../../decorators';
 import { DataNotFoundException } from '../../../exceptions';
 import { AppCacheService } from '../../cache/service';
@@ -21,7 +21,7 @@ import { AppCacheService } from '../../cache/service';
 @Controller('task/hexo')
 export class HexoWorkerTaskController {
   constructor(
-    @InjectQueue(BullQueueType.WORKER_HEXO)
+    @InjectQueue(TaskWorkerType.WORKER_HEXO)
     private readonly queue: Queue<MetaWorker.Configs.DeployTaskConfig>,
     @Inject(WINSTON_MODULE_NEST_PROVIDER)
     private readonly logger: LoggerService,

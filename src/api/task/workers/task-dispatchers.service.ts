@@ -18,7 +18,6 @@ export class TaskDispatchersService {
   constructor(
     @Inject(WINSTON_MODULE_NEST_PROVIDER)
     private readonly logger: LoggerService,
-
     private readonly cache: AppCacheService,
   ) {}
 
@@ -55,15 +54,20 @@ export class TaskDispatchersService {
     if (cfg.taskStepIndex < cfg.taskSteps.length - 1) {
       cfg.taskStepIndex += 1;
       cfg.taskMethod = cfg.taskSteps[cfg.taskStepIndex];
-      this.logger.debug(
-        'next task step',
-        cfg.taskId,
-        cfg.taskMethod,
-        cfg.taskStepResults,
+      this.logger.verbose(
+        `next task step taskId ${cfg.taskId}, taskMethod ${
+          cfg.taskMethod
+        } taskStepResults ${JSON.stringify(cfg.taskStepResults)}`,
+        this.constructor.name,
       );
       await this.invokeTaskMethod(cfg);
     } else {
-      this.logger.debug('last task step', cfg.taskId, cfg.taskStepResults);
+      this.logger.verbose(
+        `last task step taskId ${cfg.taskId}, taskStepResults ${JSON.stringify(
+          cfg.taskStepResults,
+        )}`,
+        this.constructor.name,
+      );
       await this.resolveTask(cfg.taskId, cfg.taskStepResults);
     }
   }
