@@ -2,11 +2,13 @@ import {
   Controller,
   DefaultValuePipe,
   Get,
+  Inject,
   Param,
   ParseIntPipe,
   Post,
   Query,
 } from '@nestjs/common';
+import { ClientProxy } from '@nestjs/microservices';
 import {
   ApiBadRequestResponse,
   ApiCookieAuth,
@@ -19,6 +21,7 @@ import {
 } from '@nestjs/swagger';
 import { IPaginationOptions } from 'nestjs-typeorm-paginate';
 
+import { MetaMicroserviceClient } from '../../constants';
 import { User } from '../../decorators';
 import { PostEntity } from '../../entities/post.entity';
 import { PostState } from '../../enums/postState';
@@ -53,6 +56,8 @@ export class PostController {
   constructor(
     private readonly postService: PostService,
     private readonly accessTokenService: AccessTokenService,
+    @Inject(MetaMicroserviceClient.UCenter)
+    private readonly microserviceClient: ClientProxy,
   ) {}
 
   @Get()
@@ -129,5 +134,7 @@ export class PostController {
     if (!hasAnyToken) {
       throw new EmptyAccessTokenException();
     }
+
+    this.microserviceClient.emit('cms.post.sync', uid);
   }
 }
