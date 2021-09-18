@@ -31,4 +31,21 @@ export class AccessTokenService {
 
     return token;
   }
+
+  async hasAny(userId: number, platform?: string) {
+    const where = !platform ? { userId } : { userId, platform };
+
+    return (await this.repository.count({ where })) > 0;
+  }
+
+  async remove(userId: number, platform: string) {
+    const entity = await this.repository.findOne({
+      where: { userId, platform },
+    });
+    if (!entity) {
+      return;
+    }
+
+    await this.repository.remove(entity);
+  }
 }
