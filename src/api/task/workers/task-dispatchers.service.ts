@@ -124,25 +124,54 @@ export class TaskDispatchersService {
     return taskConfig;
   }
 
-  protected async getTaskWorkspace(taskId, configId) {
-    const confIdStr = configId.toString(); // cache unique key
-
-    let taskWorkspace = await this.cache.get<string>(confIdStr);
-    this.logger.verbose(
-      `Get config ${confIdStr} task workspace from cache ${taskWorkspace}`,
-      TaskDispatchersService.name,
+  protected async getTaskWorkspace(taskId: string, siteConfigId: number) {
+    let taskWorkspace = await this.tryGetSiteConfigTaskWorkspaceLock(
+      siteConfigId,
     );
+
     if (taskWorkspace) {
       return taskWorkspace;
     }
     const taskIdHash = crypto.createHash('sha256').update(taskId).digest('hex');
     taskWorkspace = taskIdHash.substring(taskIdHash.length - 16);
-    const _cache = await this.cache.set(confIdStr, taskWorkspace, 60 * 10); // 10min cache
+    const _cache = await this.renewSiteConfigTaskWorkspaceLock(
+      siteConfigId,
+      taskWorkspace,
+    );
     this.logger.verbose(
-      `Can not get task workspace from cache, generate new ${taskWorkspace} for config ${confIdStr} ${_cache}`,
+      `Can not get task workspace from cache, generate new ${taskWorkspace} for config ${siteConfigId} ${_cache}`,
       TaskDispatchersService.name,
     );
 
     return taskWorkspace;
+  }
+
+  async tryGetSiteConfigTaskWorkspaceLock(
+    siteConfigId: number,
+  ): Promise<string> {
+    const confIdStr = siteConfigId.toString();
+    const siteConfigTaskWorkspaceKey = `SITE_CONFIG_${confIdStr}`;
+
+    const taskWorkspace = await this.cache.get<string>(
+      siteConfigTaskWorkspaceKey,
+    );
+    this.logger.verbose(
+      `Get config ${confIdStr} task workspace from cache ${taskWorkspace}`,
+      TaskDispatchersService.name,
+    );
+    return taskWorkspace;
+  }
+
+  async renewSiteConfigTaskWorkspaceLock(
+    siteConfigId: number,
+    taskWorkspace: string,
+  ) {
+    const confIdStr = siteConfigId.toString();
+    const siteConfigTaskWorkspaceKey = `SITE_CONFIG_${confIdStr}`;
+    return await this.cache.set(
+      siteConfigTaskWorkspaceKey,
+      taskWorkspace,
+      60 * 2,
+    );
   }
 }

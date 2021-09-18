@@ -1,8 +1,9 @@
 import { MetaWorker } from '@metaio/worker-model';
 import { LoggerService } from '@nestjs/common';
-import { Job, Queue } from 'bull';
+import { Queue } from 'bull';
 import { v4 as uuid } from 'uuid';
 
+import { DataNotFoundException } from '../../../exceptions';
 import { QueueTaskConfig } from '../../../types';
 import { TaskDispatchersService } from './task-dispatchers.service';
 import { TaskWorkerJobProcessor } from './task-worker-job.processor';
@@ -43,6 +44,19 @@ export class TaskWorkersService {
     this.workerQueue.on('error', async (err) => await this.onError(err));
   }
 
+  async findOneTaskForWorker(
+    jobId: string,
+    workerName: string,
+  ): Promise<QueueTaskConfig> {
+    const job = await this.workerQueue.getJob(jobId);
+    this.logger.verbose(
+      `Worker ${workerName} get task ${job.name}`,
+      this.constructor.name,
+    );
+    if (job) return job.data;
+    throw new DataNotFoundException('job data not found');
+  }
+
   async addTask(taskMethod: MetaWorker.Enums.TaskMethod, cfg: QueueTaskConfig) {
     const job = await this.workerQueue.add(taskMethod, cfg, {
       jobId: uuid(),
@@ -57,6 +71,27 @@ export class TaskWorkersService {
       } active: ${await this.workerQueue.getActiveCount()} complete: ${await this.workerQueue.getCompletedCount()} delayed: ${await this.workerQueue.getDelayedCount()} failed: ${await this.workerQueue.getFailedCount()}`,
       this.constructor.name,
     );
+  }
+
+  async updateTaskForWorker(
+    jobId: string,
+    workerName: string,
+    taskReport: MetaWorker.Info.TaskReport,
+  ): Promise<void> {
+    this.logger.verbose(
+      `Worker ${workerName} report ${taskReport.reason} reason on ${taskReport.timestamp}`,
+      this.constructor.name,
+    );
+
+    if (taskReport.reason === MetaWorker.Enums.TaskReportReason.HEALTH_CHECK) {
+      const job = await this.workerQueue.getJob(jobId);
+      if (job && job.data) {
+        this.taskDispatchersService.renewSiteConfigTaskWorkspaceLock(
+          job.data.configId,
+          job.data.taskWorkspace,
+        );
+      }
+    }
   }
 
   protected async onProgress(job, progress) {

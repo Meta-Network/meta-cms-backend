@@ -3,15 +3,13 @@ import { LoggerService, Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
-import { TaskWorkerJobProcessorType, TaskWorkerType } from '../../../constants';
+import { TaskWorkerType } from '../../../constants';
 import { AppCacheModule } from '../../cache/module';
 import { DockerTasksModule } from '../docker/module';
 import { DockerTasksService } from '../docker/service';
-import { TaskWorkerJobProcessorDockerImpl } from '../docker/task-worker-job.processor.docker.impl';
 import { buildProcessor } from '../task-worker-job.processor-factory';
 import { TaskWorkersModule } from '../workers/module';
-import { TaskWorkerJobProcessorMockImpl } from '../workers/task-worker-job.processor.mock.impl';
-import { GitWorkerTaskController } from './controller';
+import { GitWorkersController } from './controller';
 import { GitWorkersService } from './git-workers.service';
 
 @Module({
@@ -26,7 +24,7 @@ import { GitWorkersService } from './git-workers.service';
     DockerTasksModule,
     AppCacheModule,
   ],
-  controllers: [GitWorkerTaskController],
+  controllers: [GitWorkersController],
   providers: [
     GitWorkersService,
     {

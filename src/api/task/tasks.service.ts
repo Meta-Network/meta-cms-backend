@@ -1,5 +1,10 @@
 import { MetaWorker } from '@metaio/worker-model';
-import { Inject, Injectable, LoggerService } from '@nestjs/common';
+import {
+  ConflictException,
+  Inject,
+  Injectable,
+  LoggerService,
+} from '@nestjs/common';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
 import { DataNotFoundException } from '../../exceptions';
@@ -17,12 +22,12 @@ export class Tasks2Service {
     private readonly taskDispatchersService: TaskDispatchersService,
   ) {}
 
-  async deploySite(user: any, cid: number): Promise<any> {
+  async deploySite(user: any, siteConfigId: number): Promise<any> {
     const { deployConfig, repoSize } = await this.generateRepoAndDeployInfo(
       user,
-      cid,
+      siteConfigId,
     );
-
+    await this.checkSiteConfigTaskWorkspace(siteConfigId);
     const taskSteps = [] as MetaWorker.Enums.TaskMethod[];
 
     this.logger.verbose(`Adding storage worker to queue`, Tasks2Service.name);
@@ -40,14 +45,50 @@ export class Tasks2Service {
 
     this.logger.verbose(`Adding CICD worker to queue`, Tasks2Service.name);
 
-    this.logger.verbose(`Adding publisher worker to queue`, Tasks2Service.name);
+    const deploySiteTaskStepResults =
+      (await this.taskDispatchersService.dispatchTask(
+        taskSteps,
+        deployConfig,
+      )) as string[];
 
+    const publishTaskSteps = [];
+    const publishConfig = {} as MetaWorker.Configs.PublishConfig;
+    const publishSiteTaskStepResults = await this.doPublish(
+      publishTaskSteps,
+      publishConfig,
+    );
+    return [...deploySiteTaskStepResults, ...publishSiteTaskStepResults];
+  }
+
+  protected async doPublish(
+    publishTaskSteps: any[],
+    publishConfig: MetaWorker.Configs.PublishConfig,
+  ): Promise<string[]> {
+    this.logger.verbose(`Adding publisher worker to queue`, Tasks2Service.name);
+    publishTaskSteps.push(MetaWorker.Enums.TaskMethod.HEXO_GENERATE_DEPLOY);
+    this.logger.verbose(`Adding DNS worker to queue`, Tasks2Service.name);
     this.logger.verbose(`Adding CDN worker to queue`, Tasks2Service.name);
 
-    return await this.taskDispatchersService.dispatchTask(
-      taskSteps,
-      deployConfig,
-    );
+    const publishSiteTaskStepResults =
+      (await this.taskDispatchersService.dispatchTask(
+        publishTaskSteps,
+        publishConfig,
+      )) as string[];
+    return publishSiteTaskStepResults;
+  }
+
+  protected async checkSiteConfigTaskWorkspace(siteConfigId: number) {
+    // check task workspace is existed
+
+    if (
+      await this.taskDispatchersService.tryGetSiteConfigTaskWorkspaceLock(
+        siteConfigId,
+      )
+    ) {
+      throw new ConflictException(
+        `Task workspace is existed:  site config ${siteConfigId}`,
+      );
+    }
   }
 
   protected async generateRepoAndDeployInfo(user: any, cid: number) {
