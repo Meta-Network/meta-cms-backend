@@ -2,6 +2,7 @@ import { MetaWorker } from '@metaio/worker-model';
 import { LoggerService } from '@nestjs/common';
 import { Queue } from 'bull';
 import { v4 as uuid } from 'uuid';
+import { runInThisContext } from 'vm';
 
 import { DataNotFoundException } from '../../../exceptions';
 import { QueueTaskConfig } from '../../../types';
@@ -19,10 +20,31 @@ export class TaskWorkersService {
     logger.debug(`taskMethods ${taskMethods}`, this.constructor.name);
     this.registerTaskMethods(taskMethods);
     for (const taskMethod of taskMethods) {
-      this.workerQueue.process(
-        taskMethod,
-        async (job) => await jobProcessor.process(job),
-      );
+      this.workerQueue.process(taskMethod, async (job) => {
+        logger.verbose(
+          `Set renew site config task workspace lock timer siteConfigId: ${job.data.configId}`,
+          this.constructor.name,
+        );
+        const timer = setInterval(
+          () =>
+            this.taskDispatchersService.renewSiteConfigTaskWorkspaceLock(
+              job.data.configId,
+              job.data.taskWorkspace,
+            ),
+          5000,
+        );
+        try {
+          const result = await jobProcessor.process(job);
+
+          return result;
+        } finally {
+          logger.verbose(
+            `Clear renew site config task workspace lock timer siteConfigId: ${job.data.configId}`,
+            this.constructor.name,
+          );
+          clearInterval(timer);
+        }
+      });
     }
     this.workerQueue.on(
       'progress',

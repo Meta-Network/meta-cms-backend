@@ -23,11 +23,11 @@ export class Tasks2Service {
   ) {}
 
   async deploySite(user: any, siteConfigId: number): Promise<any> {
+    await this.checkSiteConfigTaskWorkspace(siteConfigId);
     const { deployConfig, repoSize } = await this.generateRepoAndDeployInfo(
       user,
       siteConfigId,
     );
-    await this.checkSiteConfigTaskWorkspace(siteConfigId);
     const taskSteps = [] as MetaWorker.Enums.TaskMethod[];
 
     this.logger.verbose(`Adding storage worker to queue`, Tasks2Service.name);
@@ -36,13 +36,12 @@ export class Tasks2Service {
     } else {
       taskSteps.push(MetaWorker.Enums.TaskMethod.GIT_INIT_PUSH);
     }
+
     taskSteps.push(
-      ...[
-        MetaWorker.Enums.TaskMethod.HEXO_UPDATE_CONFIG,
-        MetaWorker.Enums.TaskMethod.GIT_COMMIT_PUSH,
-      ],
+      ...this.getDeployTaskMethodsByTemplateType(deployConfig.templateType),
     );
 
+    taskSteps.push(MetaWorker.Enums.TaskMethod.GIT_COMMIT_PUSH);
     this.logger.verbose(`Adding CICD worker to queue`, Tasks2Service.name);
 
     const deploySiteTaskStepResults =
@@ -53,28 +52,44 @@ export class Tasks2Service {
 
     const publishTaskSteps = [];
     const publishConfig = {} as MetaWorker.Configs.PublishConfig;
+    this.logger.verbose(`Adding publisher worker to queue`, Tasks2Service.name);
+
+    publishTaskSteps.push(
+      ...this.getPublishTaskMethodsByTemplateType(deployConfig.templateType),
+    );
     const publishSiteTaskStepResults = await this.doPublish(
       publishTaskSteps,
       publishConfig,
     );
-    return [...deploySiteTaskStepResults, ...publishSiteTaskStepResults];
-  }
-
-  protected async doPublish(
-    publishTaskSteps: any[],
-    publishConfig: MetaWorker.Configs.PublishConfig,
-  ): Promise<string[]> {
-    this.logger.verbose(`Adding publisher worker to queue`, Tasks2Service.name);
-    publishTaskSteps.push(MetaWorker.Enums.TaskMethod.HEXO_GENERATE_DEPLOY);
     this.logger.verbose(`Adding DNS worker to queue`, Tasks2Service.name);
     this.logger.verbose(`Adding CDN worker to queue`, Tasks2Service.name);
 
+    return [...deploySiteTaskStepResults, ...publishSiteTaskStepResults];
+  }
+  protected getDeployTaskMethodsByTemplateType(
+    templateType: MetaWorker.Enums.TemplateType,
+  ): MetaWorker.Enums.TaskMethod[] {
+    // HEXO
+    return [MetaWorker.Enums.TaskMethod.HEXO_UPDATE_CONFIG];
+  }
+
+  protected async doPublish(
+    publishTaskSteps: MetaWorker.Enums.TaskMethod[],
+    publishConfig: MetaWorker.Configs.PublishConfig,
+  ): Promise<string[]> {
     const publishSiteTaskStepResults =
       (await this.taskDispatchersService.dispatchTask(
         publishTaskSteps,
         publishConfig,
       )) as string[];
     return publishSiteTaskStepResults;
+  }
+
+  protected getPublishTaskMethodsByTemplateType(
+    templateType: MetaWorker.Enums.TemplateType,
+  ): MetaWorker.Enums.TaskMethod[] {
+    // HEXO
+    return [MetaWorker.Enums.TaskMethod.HEXO_GENERATE_DEPLOY];
   }
 
   protected async checkSiteConfigTaskWorkspace(siteConfigId: number) {
