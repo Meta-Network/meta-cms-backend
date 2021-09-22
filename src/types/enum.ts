@@ -18,3 +18,16 @@ export enum DomainvalidateStatus {
   Reserve = 'RESERVE',
   Disable = 'DISABLE',
 }
+
+export enum SiteStatus {
+  /** SiteConfig generated */
+  Configured = 'CONFIGURED',
+  /** Deploy worker running */
+  Deploying = 'DEPLOYING',
+  /** Site deployed, e.g. repo init & push */
+  Deployed = 'DEPLOYED',
+  /** Publish worker running */
+  Publishing = 'PUBLISHING',
+  /** Site published, can be visit */
+  Published = 'PUBLISHED',
+}

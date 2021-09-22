@@ -10,6 +10,7 @@ import {
 } from 'class-validator';
 import { Column, Entity, Index, ManyToOne } from 'typeorm';
 
+import { SiteStatus } from '../types/enum';
 import { BaseEntity } from './base.entity';
 import { SiteInfoEntity } from './siteInfo.entity';
 
@@ -194,6 +195,13 @@ export class SiteConfigEntity extends BaseEntity {
   @ApiHideProperty()
   @ApiResponseProperty({ example: null })
   cdnProviderId?: number | null = null;
+
+  @Column({ comment: 'Site status', default: SiteStatus.Configured })
+  @IsEnum(SiteStatus)
+  @IsOptional()
+  @ApiHideProperty()
+  @ApiResponseProperty({ example: SiteStatus.Configured })
+  status?: SiteStatus = SiteStatus.Configured;
 
   @ManyToOne(() => SiteInfoEntity, (info) => info.configs)
   @ApiHideProperty()

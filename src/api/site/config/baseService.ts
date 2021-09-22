@@ -29,7 +29,7 @@ export class SiteConfigBaseService {
 
   async readOne(
     cid: number,
-    options: FindOneOptions<SiteConfigEntity>,
+    options?: FindOneOptions<SiteConfigEntity>,
   ): Promise<SiteConfigEntity> {
     return await this.siteConfigRepository.findOne(cid, options);
   }
