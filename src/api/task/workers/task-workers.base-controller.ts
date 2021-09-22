@@ -1,14 +1,5 @@
 import { MetaWorker } from '@metaio/worker-model';
-import {
-  Body,
-  Controller,
-  Get,
-  Inject,
-  LoggerService,
-  Param,
-  ParseUUIDPipe,
-  Patch,
-} from '@nestjs/common';
+import { Body, Get, Param, ParseUUIDPipe, Patch } from '@nestjs/common';
 
 import { BasicAuth, SkipUCenterAuth } from '../../../decorators';
 import { QueueTaskConfig } from '../../../types';

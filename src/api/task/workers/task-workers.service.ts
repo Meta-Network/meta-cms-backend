@@ -86,10 +86,12 @@ export class TaskWorkersService {
       `Successfully add task ${job.name}, taskId: ${job.data.task.taskId} jobId ${job.id}`,
       this.constructor.name,
     );
+    const active = await this.workerQueue.getActiveCount();
+    const complete = await await this.workerQueue.getCompletedCount();
+    const delayed = await this.workerQueue.getDelayedCount();
+    const failed = await this.workerQueue.getFailedCount();
     this.logger.debug(
-      `Queue: ${
-        this.workerQueue.name
-      } active: ${await this.workerQueue.getActiveCount()} complete: ${await this.workerQueue.getCompletedCount()} delayed: ${await this.workerQueue.getDelayedCount()} failed: ${await this.workerQueue.getFailedCount()}`,
+      `Queue: ${this.workerQueue.name} active: ${active} complete: ${complete} delayed: ${delayed} failed: ${failed}`,
       this.constructor.name,
     );
   }
