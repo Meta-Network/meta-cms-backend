@@ -14,7 +14,7 @@ import { BasicAuth, SkipUCenterAuth } from '../../../decorators';
 import { QueueTaskConfig } from '../../../types';
 import { TaskWorkersService } from './task-workers.service';
 
-export class TaskWorksBaseController {
+export class TaskWorkersBaseController {
   constructor(protected readonly taskWorkersService: TaskWorkersService) {}
 
   @Get(':name')

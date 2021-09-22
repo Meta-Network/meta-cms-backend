@@ -29,6 +29,8 @@ export class TemplateLogicService {
   }
 
   async getTemplateById(tid: number): Promise<ThemeTemplateEntity> {
-    return await this.templateRepository.findOne(tid);
+    return await this.templateRepository.findOne(tid, {
+      relations: ['theme'],
+    });
   }
 }

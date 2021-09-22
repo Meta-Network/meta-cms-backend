@@ -13,7 +13,7 @@ import { SiteService } from '../site/service';
 import { TaskDispatchersService } from './workers/task-dispatchers.service';
 
 @Injectable()
-export class Tasks2Service {
+export class TasksService {
   constructor(
     @Inject(WINSTON_MODULE_NEST_PROVIDER)
     private readonly logger: LoggerService,
@@ -24,25 +24,24 @@ export class Tasks2Service {
 
   async deploySite(user: any, siteConfigId: number): Promise<any> {
     await this.checkSiteConfigTaskWorkspace(siteConfigId);
-    const { deployConfig, repoSize } = await this.generateRepoAndDeployInfo(
+    const { deployConfig, gitRepoSize } = await this.generateRepoAndDeployInfo(
       user,
       siteConfigId,
     );
     const taskSteps = [] as MetaWorker.Enums.TaskMethod[];
 
-    this.logger.verbose(`Adding storage worker to queue`, Tasks2Service.name);
-    if (repoSize > 0) {
+    this.logger.verbose(`Adding storage worker to queue`, TasksService.name);
+    if (gitRepoSize > 0) {
       taskSteps.push(MetaWorker.Enums.TaskMethod.GIT_CLONE_CHECKOUT);
     } else {
       taskSteps.push(MetaWorker.Enums.TaskMethod.GIT_INIT_PUSH);
     }
 
-    taskSteps.push(
-      ...this.getDeployTaskMethodsByTemplateType(deployConfig.templateType),
-    );
+    const { templateType } = deployConfig.template;
+    taskSteps.push(...this.getDeployTaskMethodsByTemplateType(templateType));
 
     taskSteps.push(MetaWorker.Enums.TaskMethod.GIT_COMMIT_PUSH);
-    this.logger.verbose(`Adding CICD worker to queue`, Tasks2Service.name);
+    this.logger.verbose(`Adding CICD worker to queue`, TasksService.name);
 
     const deploySiteTaskStepResults =
       (await this.taskDispatchersService.dispatchTask(
@@ -51,20 +50,23 @@ export class Tasks2Service {
       )) as string[];
 
     const publishTaskSteps = [];
-    const publishConfig = {} as MetaWorker.Configs.PublishConfig;
-    this.logger.verbose(`Adding publisher worker to queue`, Tasks2Service.name);
+    const publishConfig = {
+      site: deployConfig.site,
+      git: deployConfig.git,
+    } as MetaWorker.Configs.PublishConfig;
+    this.logger.verbose(`Adding publisher worker to queue`, TasksService.name);
 
     publishTaskSteps.push(
-      ...this.getPublishTaskMethodsByTemplateType(deployConfig.templateType),
+      ...this.getPublishTaskMethodsByTemplateType(templateType),
     );
     const publishSiteTaskStepResults = await this.doPublish(
       publishTaskSteps,
       publishConfig,
     );
-    this.logger.verbose(`Adding DNS worker to queue`, Tasks2Service.name);
-    this.logger.verbose(`Adding CDN worker to queue`, Tasks2Service.name);
+    this.logger.verbose(`Adding DNS worker to queue`, TasksService.name);
+    this.logger.verbose(`Adding CDN worker to queue`, TasksService.name);
 
-    return [...deploySiteTaskStepResults, ...publishSiteTaskStepResults];
+    return Object.assign(deploySiteTaskStepResults, publishSiteTaskStepResults);
   }
   protected getDeployTaskMethodsByTemplateType(
     templateType: MetaWorker.Enums.TemplateType,
@@ -106,29 +108,44 @@ export class Tasks2Service {
     }
   }
 
-  protected async generateRepoAndDeployInfo(user: any, cid: number) {
-    this.logger.verbose(`Generate meta worker user info`, Tasks2Service.name);
+  protected async generateRepoAndDeployInfo(
+    user: any,
+    configId: number,
+  ): Promise<{
+    deployConfig: MetaWorker.Configs.DeployConfig;
+    gitRepoSize: number;
+  }> {
+    this.logger.verbose(`Generate meta worker user info`, TasksService.name);
     const userInfo: MetaWorker.Info.UCenterUser = {
       username: user.username,
       nickname: user.nickname,
     };
 
-    const { siteInfo, storage } =
-      await this.siteService.generateMetaWorkerSiteInfo(user.id, cid);
+    const { site, template, theme, storage } =
+      await this.siteService.generateMetaWorkerSiteInfo(user.id, configId);
 
-    const { sId, sType } = storage;
-    if (!sId) throw new DataNotFoundException('storage provider id not found');
+    const { storageProviderId, storageType } = storage;
+    if (!storageProviderId)
+      throw new DataNotFoundException('storage provider id not found');
     const { gitInfo, repoSize } =
-      await this.storageService.generateMetaWorkerGitInfo(sType, user.id, sId);
-
+      await this.storageService.generateMetaWorkerGitInfo(
+        storageType,
+        user.id,
+        storageProviderId,
+      );
+    // console.log('gitInfo', gitInfo);
     const deployConfig: MetaWorker.Configs.DeployConfig = {
-      ...userInfo,
-      ...siteInfo,
-      ...gitInfo,
+      user: userInfo,
+      site,
+      template,
+      theme,
+      git: gitInfo,
     };
+    // for hexo update config
+    deployConfig.site.domain = `https://${deployConfig.site.domain}`;
     return {
       deployConfig,
-      repoSize,
+      gitRepoSize: repoSize,
     };
   }
 }

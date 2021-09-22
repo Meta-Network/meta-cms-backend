@@ -1,26 +1,26 @@
 import { InternalServerErrorException, LoggerService } from '@nestjs/common';
 import { Container } from 'dockerode';
 
-import { TaskWorkerJobProcessor } from '../workers/task-worker-job.processor';
-import { DockerTasksService } from './service';
+import { TaskStepsJobProcessor } from '../task-steps.job-processor';
+import { DockerProcessorsService } from './docker-processors.service';
 
-export class TaskWorkerJobProcessorDockerImpl
-  implements TaskWorkerJobProcessor
-{
+export class TaskWorkerJobProcessorDockerImpl implements TaskStepsJobProcessor {
   constructor(
     protected readonly logger: LoggerService,
-    private readonly dockerTasksService: DockerTasksService,
+    private readonly dockerTasksService: DockerProcessorsService,
+    private readonly appName: string,
     private readonly image: string,
   ) {}
   async process(job) {
     const data = await this.dockerTasksService.runDockerContainer(
+      this.appName,
       this.image,
       job.id,
     );
     const output = data[0];
     const container = data[1] as Container;
     this.logger.log(
-      `Task ${job.data.taskId} ${job.data.taskMethod} ${job.id} StatusCode: ${output.StatusCode}`,
+      `Task ${job.data.task.taskId} step ${job.data.task.taskMethod} ${job.id} StatusCode: ${output.StatusCode}`,
       this.constructor.name,
     );
     await container.remove();
@@ -28,7 +28,7 @@ export class TaskWorkerJobProcessorDockerImpl
       return job.id;
     }
     throw new InternalServerErrorException(
-      'Task Worker: Docker Runner Exception',
+      'Task step processor: Docker Exception',
     );
   }
 }

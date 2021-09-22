@@ -20,7 +20,7 @@ import { DomainModule } from '../domain/module';
 import { PostModule } from '../post/post.module';
 import { StorageModule } from '../provider/storage/module';
 import { SiteModule } from '../site/module';
-import { TasksModule } from '../task/module';
+import { TasksModule } from '../task/tasks.module';
 import { ThemeTemplateModule } from '../theme/template/module';
 import { TokenModule } from '../token/token.module';
 

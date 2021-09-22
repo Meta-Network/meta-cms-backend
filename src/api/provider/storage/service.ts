@@ -31,8 +31,8 @@ export class StorageService implements OnApplicationBootstrap {
 
   async generateMetaWorkerGitInfo(
     type: MetaWorker.Enums.StorageType,
-    uid: number,
-    sid: number,
+    userId: number,
+    storageProviderId: number,
   ): Promise<GenerateMetaWorkerGitInfo> {
     if (type === MetaWorker.Enums.StorageType.GITHUB) {
       this.logger.verbose(`Generate meta worker Git info`, StorageService.name);
@@ -45,7 +45,7 @@ export class StorageService implements OnApplicationBootstrap {
         );
         const gitTokenFromUCenter = this.ucenterClient.send(
           'getSocialAuthTokenByUserId',
-          { userId: uid, platform: 'github' },
+          { userId: userId, platform: 'github' },
         );
         const result = await firstValueFrom(gitTokenFromUCenter);
         const token = new MetaInternalResult(result);
@@ -70,7 +70,9 @@ export class StorageService implements OnApplicationBootstrap {
         `Get storage config from GitHubStorageLogicService`,
         StorageService.name,
       );
-      const github = await this.githubService.getStorageConfigById(sid);
+      const github = await this.githubService.getStorageConfigById(
+        storageProviderId,
+      );
 
       this.logger.verbose(
         `Create GitHub repo from config`,

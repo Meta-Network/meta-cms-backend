@@ -6,15 +6,15 @@ import { TemplateLogicService } from '../theme/template/logicService';
 import { SiteConfigLogicService } from './config/logicService';
 
 type MetaWorkerSiteInfo = MetaWorker.Info.CmsSiteInfo &
-  MetaWorker.Info.CmsSiteConfig &
-  MetaWorker.Info.Template &
-  MetaWorker.Info.Theme;
+  MetaWorker.Info.CmsSiteConfig;
 
 type GenerateMetaWorkerSiteInfo = {
-  siteInfo: MetaWorkerSiteInfo;
+  site: MetaWorkerSiteInfo;
+  template: MetaWorker.Info.Template;
+  theme: MetaWorker.Info.Theme;
   storage: {
-    sType: MetaWorker.Enums.StorageType;
-    sId: number;
+    storageType: MetaWorker.Enums.StorageType;
+    storageProviderId: number;
   };
 };
 
@@ -28,8 +28,8 @@ export class SiteService {
   ) {}
 
   async generateMetaWorkerSiteInfo(
-    uid: number,
-    cid: number,
+    userId: number,
+    siteConfigId: number,
   ): Promise<GenerateMetaWorkerSiteInfo> {
     this.logger.verbose(`Generate meta worker site info`, SiteService.name);
 
@@ -38,8 +38,8 @@ export class SiteService {
       SiteService.name,
     );
     const config = await this.siteConfigService.validateSiteConfigUserId(
-      cid,
-      uid,
+      siteConfigId,
+      userId,
     );
     const { language, timezone, domain, templateId } = config;
     const siteConfig: MetaWorker.Info.CmsSiteConfig = {
@@ -55,7 +55,7 @@ export class SiteService {
     );
     const { title, subtitle, description, author, keywords, favicon } =
       config.siteInfo;
-    const _siteInfo: MetaWorker.Info.CmsSiteInfo = {
+    const siteInfo: MetaWorker.Info.CmsSiteInfo = {
       title,
       subtitle,
       description,
@@ -69,6 +69,7 @@ export class SiteService {
       SiteService.name,
     );
     const template = await this.templateService.getTemplateById(templateId);
+    // console.log(`template`, template);
     const { templateName, templateRepo, templateBranch, templateType, theme } =
       template;
     const templateInfo: MetaWorker.Info.Template = {
@@ -77,12 +78,16 @@ export class SiteService {
       templateBranchName: templateBranch,
       templateType,
     };
-
-    const siteInfo = { ..._siteInfo, ...siteConfig, ...templateInfo, ...theme };
+    // console.log(`theme`, theme);
 
     return {
-      siteInfo,
-      storage: { sId: config.storeProviderId, sType: config.storeType },
+      site: { ...siteInfo, ...siteConfig },
+      template: templateInfo,
+      theme,
+      storage: {
+        storageProviderId: config.storeProviderId,
+        storageType: config.storeType,
+      },
     };
   }
 }

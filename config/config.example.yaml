@@ -39,18 +39,34 @@ microservice:
         servers:
 
 task:
-  docker:
-    env:
-      backend:
-        host:
-        port:
-      loki:
-        url:
-      7zip:
-        bin-name: 7zz
-    volumes:
-      tmp:
-
+  processor:
+    # Docker processor config
+    docker:
+      env:
+        backend:
+          #  'Meta-CMS-BE' server url
+          url:
+        loki:
+          # Loki server url
+          url: host.docker.internal:3100
+        # For decompressing archived files
+        7zip:
+          bin-name: 7zz
+      volumes:
+        # Mounts the volume into the /tmp in the container. For example: /var/docker/meta-cms-workspaces
+        tmp:
+    mock:
+      # mock progresss
+      progress:
+        - value: 5
+          timeout: 200
+        - value: 20
+          timeout: 1000
+        - value: 66
+          timeout: 2000
+      # Success rate of completing task steps
+      success-rate: 0.9
+      timeout: 2500
   worker:
     git:
       # BullModuleOptions
@@ -58,22 +74,35 @@ task:
         limiter:
           max: 5
           duration: 2000
-      # MOCK | DOCKER |
-      processor-type:
-      docker:
-        image:
-        app:
-          name:
-
+      processor:
+        type: DOCKER
+        docker:
+          image: 'meta-cms-worker-git:0.0.3'
+          app:
+            name: meta-cms-worker-git
     hexo:
       # BullModuleOptions
       queue:
         limiter:
           max: 10
           duration: 2000
-      # MOCK | DOCKER |
-      processor-type:
-      docker:
-        image:
-        app:
-          name:
+      processor:
+        type: DOCKER
+        docker:
+          image: 'meta-cms-worker-hexo:0.0.3'
+          app:
+            name: meta-cms-worker-hexo
+    dns:
+      # BullModuleOptions
+      queue:
+        limiter:
+          max: 100
+          duration: 2000
+      processor:
+        type: MOCK
+        docker:
+          image: meta-cms-worker-dns
+          app:
+            name: meta-cms-worker-dns
+  workspace:
+    ttl: 60

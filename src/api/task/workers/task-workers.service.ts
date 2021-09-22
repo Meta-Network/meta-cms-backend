@@ -2,12 +2,11 @@ import { MetaWorker } from '@metaio/worker-model';
 import { LoggerService } from '@nestjs/common';
 import { Queue } from 'bull';
 import { v4 as uuid } from 'uuid';
-import { runInThisContext } from 'vm';
 
 import { DataNotFoundException } from '../../../exceptions';
 import { QueueTaskConfig } from '../../../types';
+import { TaskStepsJobProcessor } from '../processors/task-steps.job-processor';
 import { TaskDispatchersService } from './task-dispatchers.service';
-import { TaskWorkerJobProcessor } from './task-worker-job.processor';
 
 export class TaskWorkersService {
   constructor(
@@ -15,21 +14,21 @@ export class TaskWorkersService {
     protected readonly workerQueue: Queue<QueueTaskConfig>,
     protected readonly taskDispatchersService: TaskDispatchersService,
     protected readonly taskMethods: MetaWorker.Enums.TaskMethod[],
-    protected readonly jobProcessor: TaskWorkerJobProcessor,
+    protected readonly jobProcessor: TaskStepsJobProcessor,
   ) {
     logger.debug(`taskMethods ${taskMethods}`, this.constructor.name);
     this.registerTaskMethods(taskMethods);
     for (const taskMethod of taskMethods) {
       this.workerQueue.process(taskMethod, async (job) => {
         logger.verbose(
-          `Set renew site config task workspace lock timer siteConfigId: ${job.data.configId}`,
+          `Set renew site config task workspace lock timer siteConfigId: ${job.data.site.configId}`,
           this.constructor.name,
         );
         const timer = setInterval(
           () =>
             this.taskDispatchersService.renewSiteConfigTaskWorkspaceLock(
-              job.data.configId,
-              job.data.taskWorkspace,
+              job.data.site.configId,
+              job.data.task.taskWorkspace,
             ),
           5000,
         );
@@ -39,7 +38,7 @@ export class TaskWorkersService {
           return result;
         } finally {
           logger.verbose(
-            `Clear renew site config task workspace lock timer siteConfigId: ${job.data.configId}`,
+            `Clear renew site config task workspace lock timer siteConfigId: ${job.data.site.configId}`,
             this.constructor.name,
           );
           clearInterval(timer);
@@ -84,7 +83,7 @@ export class TaskWorkersService {
       jobId: uuid(),
     });
     this.logger.verbose(
-      `Successfully add task ${job.name}, taskId: ${job.data.taskId} jobId ${job.id}`,
+      `Successfully add task ${job.name}, taskId: ${job.data.task.taskId} jobId ${job.id}`,
       this.constructor.name,
     );
     this.logger.debug(
@@ -109,8 +108,8 @@ export class TaskWorkersService {
       const job = await this.workerQueue.getJob(jobId);
       if (job && job.data) {
         this.taskDispatchersService.renewSiteConfigTaskWorkspaceLock(
-          job.data.configId,
-          job.data.taskWorkspace,
+          job.data.site.configId,
+          job.data.task.taskWorkspace,
         );
       }
     }
@@ -134,24 +133,21 @@ export class TaskWorkersService {
       this.constructor.name,
     );
 
-    job &&
-      job.data &&
-      job.data.taskId &&
-      job.data.taskSteps &&
-      job.data.taskStepIndex !== undefined &&
-      job.data.taskStepIndex !== null &&
-      (await this.taskDispatchersService.nextTaskStep(job.data, result));
+    if (job && job.data && job.data.task && job.data.taskStepChain) {
+      await this.taskDispatchersService.nextTaskStep(job.data, result);
+    }
   }
 
   protected async onFailed(job, err) {
     this.logger.error(
-      `Task ${job.data.taskId} ${job.name} ${job.id} failed `,
+      `Task ${job.data.task.taskId} ${job.name} ${job.id} failed `,
       err,
     );
     job &&
       job.data &&
-      job.data.taskId &&
-      (await this.taskDispatchersService.rejectTask(job.data.taskId, err));
+      job.data.task &&
+      job.data.task.taskId &&
+      (await this.taskDispatchersService.rejectTask(job.data.task.taskId, err));
   }
 
   protected async onError(err) {

@@ -3,13 +3,13 @@ import { LoggerService, Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
-import { TaskWorkerType } from '../../../constants';
-import { AppCacheModule } from '../../cache/module';
-import { DockerTasksModule } from '../docker/module';
-import { DockerTasksService } from '../docker/service';
-import { buildProcessor } from '../task-worker-job.processor-factory';
-import { TaskWorkersModule } from '../workers/module';
-import { HexoWorkersController } from './controller';
+import { TaskWorkerType } from '../../../../constants';
+import { AppCacheModule } from '../../../cache/module';
+import { DockerProcessorsModule } from '../../processors/docker/docker-processors.module';
+import { DockerProcessorsService } from '../../processors/docker/docker-processors.service';
+import { buildProcessor } from '../../processors/task-steps.job-processor.factory';
+import { TaskWorkersModule } from '../task-workers.module';
+import { HexoWorkersController } from './hexo-workers.controller';
 import { HexoWorkersService } from './hexo-workers.service';
 
 @Module({
@@ -21,7 +21,7 @@ import { HexoWorkersService } from './hexo-workers.service';
       inject: [ConfigService],
     }),
     TaskWorkersModule,
-    DockerTasksModule,
+    DockerProcessorsModule,
     AppCacheModule,
   ],
   controllers: [HexoWorkersController],
@@ -33,7 +33,7 @@ import { HexoWorkersService } from './hexo-workers.service';
       useFactory: (
         logger: LoggerService,
         configService: ConfigService,
-        dockerTasksService: DockerTasksService,
+        dockerTasksService: DockerProcessorsService,
       ) =>
         buildProcessor(
           TaskWorkerType.WORKER_HEXO,
@@ -41,9 +41,13 @@ import { HexoWorkersService } from './hexo-workers.service';
           configService,
           dockerTasksService,
         ),
-      inject: [WINSTON_MODULE_NEST_PROVIDER, ConfigService, DockerTasksService],
+      inject: [
+        WINSTON_MODULE_NEST_PROVIDER,
+        ConfigService,
+        DockerProcessorsService,
+      ],
     },
   ],
   exports: [HexoWorkersService],
 })
-export class HexoWorkerTasksModule {}
+export class HexoWorkersModule {}

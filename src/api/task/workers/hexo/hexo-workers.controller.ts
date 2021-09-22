@@ -10,11 +10,11 @@ import {
   Patch,
 } from '@nestjs/common';
 
-import { TaskWorksBaseController } from '../workers/task-workers.base-controller';
+import { TaskWorkersBaseController } from '../task-workers.base-controller';
 import { HexoWorkersService } from './hexo-workers.service';
 
 @Controller('task/hexo')
-export class HexoWorkersController extends TaskWorksBaseController {
+export class HexoWorkersController extends TaskWorkersBaseController {
   constructor(private readonly hexoWorksService: HexoWorkersService) {
     super(hexoWorksService);
   }

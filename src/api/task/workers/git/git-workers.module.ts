@@ -3,13 +3,13 @@ import { LoggerService, Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
-import { TaskWorkerType } from '../../../constants';
-import { AppCacheModule } from '../../cache/module';
-import { DockerTasksModule } from '../docker/module';
-import { DockerTasksService } from '../docker/service';
-import { buildProcessor } from '../task-worker-job.processor-factory';
-import { TaskWorkersModule } from '../workers/module';
-import { GitWorkersController } from './controller';
+import { TaskWorkerType } from '../../../../constants';
+import { AppCacheModule } from '../../../cache/module';
+import { DockerProcessorsModule } from '../../processors/docker/docker-processors.module';
+import { DockerProcessorsService } from '../../processors/docker/docker-processors.service';
+import { buildProcessor } from '../../processors/task-steps.job-processor.factory';
+import { TaskWorkersModule } from '../task-workers.module';
+import { GitWorkersController } from './git-workers.controller';
 import { GitWorkersService } from './git-workers.service';
 
 @Module({
@@ -21,7 +21,7 @@ import { GitWorkersService } from './git-workers.service';
       inject: [ConfigService],
     }),
     TaskWorkersModule,
-    DockerTasksModule,
+    DockerProcessorsModule,
     AppCacheModule,
   ],
   controllers: [GitWorkersController],
@@ -33,7 +33,7 @@ import { GitWorkersService } from './git-workers.service';
       useFactory: (
         logger: LoggerService,
         configService: ConfigService,
-        dockerTasksService: DockerTasksService,
+        dockerTasksService: DockerProcessorsService,
       ) =>
         buildProcessor(
           TaskWorkerType.WORKER_GIT,
@@ -42,9 +42,13 @@ import { GitWorkersService } from './git-workers.service';
           dockerTasksService,
         ),
 
-      inject: [WINSTON_MODULE_NEST_PROVIDER, ConfigService, DockerTasksService],
+      inject: [
+        WINSTON_MODULE_NEST_PROVIDER,
+        ConfigService,
+        DockerProcessorsService,
+      ],
     },
   ],
   exports: [GitWorkersService],
 })
-export class GitWorkerTasksModule {}
+export class GitWorkersModule {}

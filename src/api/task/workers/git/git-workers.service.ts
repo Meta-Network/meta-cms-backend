@@ -4,11 +4,11 @@ import { Inject, Injectable, LoggerService } from '@nestjs/common';
 import { Queue } from 'bull';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
-import { TaskWorkerType } from '../../../constants';
-import { QueueTaskConfig } from '../../../types';
-import { TaskDispatchersService } from '../workers/task-dispatchers.service';
-import { TaskWorkerJobProcessor } from '../workers/task-worker-job.processor';
-import { TaskWorkersService } from '../workers/task-workers.service';
+import { TaskWorkerType } from '../../../../constants';
+import { QueueTaskConfig } from '../../../../types';
+import { TaskStepsJobProcessor } from '../../processors/task-steps.job-processor';
+import { TaskDispatchersService } from '../task-dispatchers.service';
+import { TaskWorkersService } from '../task-workers.service';
 
 @Injectable()
 export class GitWorkersService extends TaskWorkersService {
@@ -19,7 +19,7 @@ export class GitWorkersService extends TaskWorkersService {
     protected readonly workerQueue: Queue<QueueTaskConfig>,
     protected readonly taskDispatchersService: TaskDispatchersService,
     @Inject('TASK_WORKER_JOB_PROCESSOR_GIT')
-    protected readonly taskWorkerJobProcessor: TaskWorkerJobProcessor,
+    protected readonly taskWorkerJobProcessor: TaskStepsJobProcessor,
   ) {
     super(
       logger,
