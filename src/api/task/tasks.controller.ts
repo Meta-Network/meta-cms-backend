@@ -3,6 +3,8 @@ import {
   Controller,
   Inject,
   LoggerService,
+  Param,
+  ParseIntPipe,
   Post,
   UsePipes,
   ValidationPipe,
@@ -49,13 +51,15 @@ export class TasksController {
   }
 
   @SkipUCenterAuth(true)
-  @Post('deploy-sample')
+  @Post('deploy-sample/:userId')
   @UsePipes(new ValidationPipe(PostMethodValidation))
-  async deploySiteFromConfig2() {
-    const siteConfigId = 20,
-      userId = 14;
+  async deploySiteFromConfig2(
+    @Body() body: DeploySiteFromConfigDto,
+    @Param('userId', ParseIntPipe) userId: number,
+  ) {
+    const { configId } = body;
     this.logger.verbose(
-      `User ${userId} request deploy site from config ${siteConfigId}`,
+      `User ${userId} request deploy site from config ${configId}`,
       TasksController.name,
     );
 
@@ -65,7 +69,7 @@ export class TasksController {
         username: 'test-deploy',
         nickname: 'test-deploy',
       },
-      siteConfigId,
+      configId,
     );
   }
 }
