@@ -210,7 +210,8 @@ export class TaskDispatchersService {
   ) {
     const confIdStr = siteConfigId.toString();
     const siteConfigTaskWorkspaceKey = `SITE_CONFIG_${confIdStr}`;
-    if ((await this.cache.get(siteConfigTaskWorkspaceKey)) === taskWorkspace) {
+    const cackeValue = await this.cache.get(siteConfigTaskWorkspaceKey);
+    if (cackeValue === taskWorkspace) {
       return await this.cache.del(siteConfigTaskWorkspaceKey);
     }
   }

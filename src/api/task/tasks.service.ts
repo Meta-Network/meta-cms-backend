@@ -28,7 +28,7 @@ export class TasksService {
       user,
       siteConfigId,
     );
-    const taskSteps = [] as MetaWorker.Enums.TaskMethod[];
+    const taskSteps: MetaWorker.Enums.TaskMethod[] = [];
 
     this.logger.verbose(`Adding storage worker to queue`, TasksService.name);
     if (gitRepoSize > 0) {
@@ -50,10 +50,10 @@ export class TasksService {
       )) as string[];
 
     const publishTaskSteps = [];
-    const publishConfig = {
+    const publishConfig: MetaWorker.Configs.PublishConfig = {
       site: deployConfig.site,
       git: deployConfig.git,
-    } as MetaWorker.Configs.PublishConfig;
+    };
     this.logger.verbose(`Adding publisher worker to queue`, TasksService.name);
 
     publishTaskSteps.push(
@@ -68,6 +68,7 @@ export class TasksService {
 
     return Object.assign(deploySiteTaskStepResults, publishSiteTaskStepResults);
   }
+
   protected getDeployTaskMethodsByTemplateType(
     templateType: MetaWorker.Enums.TemplateType,
   ): MetaWorker.Enums.TaskMethod[] {
