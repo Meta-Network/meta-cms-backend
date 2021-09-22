@@ -43,6 +43,8 @@ task:
     # Docker processor config
     docker:
       env:
+        logging:
+          level: debug
         backend:
           #  'Meta-CMS-BE' server url
           url:
