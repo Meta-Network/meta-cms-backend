@@ -1,6 +1,8 @@
 import { Inject, Injectable, LoggerService } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Cron, Interval } from '@nestjs/schedule';
 import Docker, { Container, ContainerCreateOptions } from 'dockerode';
+import findRemoveSync from 'find-remove';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
 @Injectable()
@@ -52,6 +54,36 @@ export class DockerProcessorsService {
       ['node', 'dist/main.js'],
       process.stdout,
       this.buildCreateDockerOptions(appName, image, secret, options),
+    );
+  }
+
+  @Cron('0 10 * * * *')
+  async cleanTempDir() {
+    this.logger.log('Clean temp dir', this.constructor.name);
+    const tempDir = this.configService.get<string>(
+      'task.processor.docker.volumes.tmp',
+    );
+    const tempDirFileMaxAge = this.configService.get<number>(
+      'task.processor.docker.gc.tmp.max-age',
+    );
+
+    this.logger.verbose(
+      `Temp directory file max age: ${tempDirFileMaxAge}`,
+      this.constructor.name,
+    );
+    const deletedPaths = findRemoveSync(tempDir, {
+      age: {
+        seconds: tempDirFileMaxAge,
+      },
+      dir: '*',
+      test: this.configService.get<boolean>(
+        'task.processor.docker.gc.tmp.dry-run',
+        true,
+      ),
+    });
+    this.logger.verbose(
+      `Deleted paths: ${JSON.stringify(deletedPaths)}`,
+      this.constructor.name,
     );
   }
 

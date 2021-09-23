@@ -3366,6 +3366,14 @@ finalhandler@~1.1.2:
     statuses "~1.5.0"
     unpipe "~1.0.0"
 
+find-remove@^3.1.0:
+  version "3.1.0"
+  resolved "https://registry.yarnpkg.com/find-remove/-/find-remove-3.1.0.tgz#08f8a63ce5d9a6b759962095ef578ebb5639fe8b"
+  integrity sha512-F4DAR/JnsadDA9KZRWLZXNZjaQ9X6KJ1OcHFz1cXq4OCm1v2hxu7+hbgxIaqUzU3dzYNP5npJ/dQzaR6pEf3EQ==
+  dependencies:
+    fmerge "1.2.0"
+    rimraf "3.0.2"
+
 find-up@^2.0.0, find-up@^2.1.0:
   version "2.1.0"
   resolved "https://registry.yarnpkg.com/find-up/-/find-up-2.1.0.tgz#45d1b7e506c717ddd482775a2b77920a3c0c57a7"
@@ -3393,6 +3401,11 @@ flatted@^3.1.0:
   version "3.2.2"
   resolved "https://registry.yarnpkg.com/flatted/-/flatted-3.2.2.tgz#64bfed5cb68fe3ca78b3eb214ad97b63bedce561"
   integrity sha512-JaTY/wtrcSyvXJl4IMFHPKyFur1sE9AUqc0QnhOaJ0CxHtAoIV8pYDzeEfAaNEtGkOfq4gr3LBFmdXW5mOQFnA==
+
+fmerge@1.2.0:
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/fmerge/-/fmerge-1.2.0.tgz#36e99d2ae255e3ee1af666b4df780553671cf692"
+  integrity sha1-NumdKuJV4+4a9ma033gFU2cc9pI=
 
 fn.name@1.x.x:
   version "1.1.0"

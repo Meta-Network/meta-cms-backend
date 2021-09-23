@@ -57,6 +57,14 @@ task:
       volumes:
         # Mounts the volume into the /tmp in the container. For example: /var/docker/meta-cms-workspaces
         tmp:
+      # Gabbage collection
+      gc:
+        # Volume /tmp
+        tmp:
+          # Set to true for a dry run, meaning it does not delete anything but returns a JSON of files/directories it would have deleted
+          dry-run: false
+          # Files and directories whose age (in seconds) is above this value will be deleted
+          max-age: 604800
     mock:
       # mock progresss
       progress:
