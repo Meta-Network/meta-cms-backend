@@ -186,6 +186,22 @@ export class DataAlreadyExistsException extends ConflictException {
   readonly message: string;
 }
 
+export class InvalidStatusException extends ConflictException {
+  constructor(msg = 'invalid status') {
+    super(
+      {
+        statusCode: HttpStatus.CONFLICT,
+        message: `Conflict: ${msg}`,
+      },
+      'Conflict',
+    );
+  }
+  @ApiProperty({ example: HttpStatus.CONFLICT })
+  readonly statusCode: string;
+  @ApiProperty({ example: 'Conflict: data already exists' })
+  readonly message: string;
+}
+
 export const validationErrorToBadRequestException = (
   errors: unknown[],
 ): BadRequestException => {

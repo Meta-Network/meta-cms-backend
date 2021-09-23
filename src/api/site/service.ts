@@ -2,6 +2,8 @@ import { MetaWorker } from '@metaio/worker-model';
 import { Inject, Injectable, LoggerService } from '@nestjs/common';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
+import { InvalidStatusException } from '../../exceptions';
+import { SiteStatus } from '../../types/enum';
 import { TemplateLogicService } from '../theme/template/logicService';
 import { SiteConfigLogicService } from './config/logicService';
 
@@ -30,6 +32,7 @@ export class SiteService {
   async generateMetaWorkerSiteInfo(
     userId: number,
     siteConfigId: number,
+    validSiteStatus?: SiteStatus[],
   ): Promise<GenerateMetaWorkerSiteInfo> {
     this.logger.verbose(`Generate meta worker site info`, SiteService.name);
 
@@ -41,6 +44,11 @@ export class SiteService {
       siteConfigId,
       userId,
     );
+    if (validSiteStatus) {
+      if (!validSiteStatus.includes(config.status)) {
+        throw new InvalidStatusException();
+      }
+    }
     const { language, timezone, domain, templateId } = config;
     const siteConfig: MetaWorker.Info.CmsSiteConfig = {
       configId: config.id,

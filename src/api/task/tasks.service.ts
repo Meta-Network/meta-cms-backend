@@ -7,7 +7,10 @@ import {
 } from '@nestjs/common';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
-import { DataNotFoundException } from '../../exceptions';
+import {
+  DataNotFoundException,
+  InvalidStatusException,
+} from '../../exceptions';
 import { SiteStatus } from '../../types/enum';
 import { StorageService } from '../provider/storage/service';
 import { SiteConfigLogicService } from '../site/config/logicService';
@@ -31,10 +34,8 @@ export class TasksService {
       siteConfigId,
       SiteStatus.Deploying,
     );
-    const { deployConfig, gitRepoSize } = await this.generateRepoAndDeployInfo(
-      user,
-      siteConfigId,
-    );
+    const { deployConfig, gitRepoSize } =
+      await this.generateDeployConfigAndRepoSize(user, siteConfigId);
     const taskSteps: MetaWorker.Enums.TaskMethod[] = [];
 
     this.logger.verbose(`Adding storage worker to queue`, TasksService.name);
@@ -73,11 +74,22 @@ export class TasksService {
       publishTaskSteps,
       publishConfig,
     );
-    this.logger.verbose(`Adding DNS worker to queue`, TasksService.name);
-    this.logger.verbose(`Adding CDN worker to queue`, TasksService.name);
 
-    //TODO notify Meta-Network-BE
     return Object.assign(deploySiteTaskStepResults, publishSiteTaskStepResults);
+  }
+
+  async publishSite(user: any, siteConfigId: number) {
+    const { publishConfig, template } =
+      await this.generatePublishConfigAndTemplate(user, siteConfigId);
+    const templateType = template.templateType;
+    const publishTaskSteps = [];
+
+    this.logger.verbose(`Adding publisher worker to queue`, TasksService.name);
+
+    publishTaskSteps.push(
+      ...this.getPublishTaskMethodsByTemplateType(templateType),
+    );
+    return await this.doPublish(publishTaskSteps, publishConfig);
   }
 
   protected getDeployTaskMethodsByTemplateType(
@@ -104,6 +116,10 @@ export class TasksService {
       publishConfig.site.configId,
       SiteStatus.Published,
     );
+    this.logger.verbose(`Adding DNS worker to queue`, TasksService.name);
+    this.logger.verbose(`Adding CDN worker to queue`, TasksService.name);
+
+    //TODO notify Meta-Network-BE
     return publishSiteTaskStepResults;
   }
 
@@ -128,7 +144,7 @@ export class TasksService {
     }
   }
 
-  protected async generateRepoAndDeployInfo(
+  protected async generateDeployConfigAndRepoSize(
     user: any,
     configId: number,
   ): Promise<{
@@ -166,6 +182,45 @@ export class TasksService {
     return {
       deployConfig,
       gitRepoSize: repoSize,
+    };
+  }
+
+  protected async generatePublishConfigAndTemplate(
+    user: any,
+    configId: number,
+  ): Promise<{
+    publishConfig: MetaWorker.Configs.PublishConfig;
+    template: MetaWorker.Info.Template;
+  }> {
+    this.logger.verbose(`Generate meta worker user info`, TasksService.name);
+    const userInfo: MetaWorker.Info.UCenterUser = {
+      username: user.username,
+      nickname: user.nickname,
+    };
+
+    const { site, template, theme, storage } =
+      await this.siteService.generateMetaWorkerSiteInfo(user.id, configId, [
+        SiteStatus.Deployed,
+        SiteStatus.Publishing,
+        SiteStatus.Published,
+      ]);
+
+    const { storageProviderId, storageType } = storage;
+    if (!storageProviderId)
+      throw new DataNotFoundException('storage provider id not found');
+    const { gitInfo } = await this.storageService.generateMetaWorkerGitInfo(
+      storageType,
+      user.id,
+      storageProviderId,
+    );
+    const publishConfig: MetaWorker.Configs.PublishConfig = {
+      site,
+      git: gitInfo,
+    };
+
+    return {
+      publishConfig,
+      template,
     };
   }
 }
