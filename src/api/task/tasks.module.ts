@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 
 import { StorageModule } from '../provider/storage/module';
+import { SiteConfigModule } from '../site/config/module';
+import { SiteInfoModule } from '../site/info/module';
 import { SiteModule } from '../site/module';
 import { DockerProcessorsModule } from './processors/docker/docker-processors.module';
 import { TasksController } from './tasks.controller';
@@ -16,6 +18,8 @@ import { TaskWorkersModule } from './workers/task-workers.module';
     HexoWorkersModule,
     DockerProcessorsModule,
     SiteModule,
+    SiteInfoModule,
+    SiteConfigModule,
     StorageModule,
   ],
   controllers: [TasksController],

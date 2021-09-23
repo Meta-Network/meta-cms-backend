@@ -8,7 +8,9 @@ import {
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
 import { DataNotFoundException } from '../../exceptions';
+import { SiteStatus } from '../../types/enum';
 import { StorageService } from '../provider/storage/service';
+import { SiteConfigLogicService } from '../site/config/logicService';
 import { SiteService } from '../site/service';
 import { TaskDispatchersService } from './workers/task-dispatchers.service';
 
@@ -18,12 +20,17 @@ export class TasksService {
     @Inject(WINSTON_MODULE_NEST_PROVIDER)
     private readonly logger: LoggerService,
     private readonly siteService: SiteService,
+    private readonly siteConfigLogicService: SiteConfigLogicService,
     private readonly storageService: StorageService,
     private readonly taskDispatchersService: TaskDispatchersService,
   ) {}
 
   async deploySite(user: any, siteConfigId: number): Promise<any> {
     await this.checkSiteConfigTaskWorkspace(siteConfigId);
+    this.siteConfigLogicService.updateSiteConfigStatus(
+      siteConfigId,
+      SiteStatus.Deploying,
+    );
     const { deployConfig, gitRepoSize } = await this.generateRepoAndDeployInfo(
       user,
       siteConfigId,
@@ -48,7 +55,10 @@ export class TasksService {
         taskSteps,
         deployConfig,
       )) as string[];
-
+    this.siteConfigLogicService.updateSiteConfigStatus(
+      siteConfigId,
+      SiteStatus.Deployed,
+    );
     const publishTaskSteps = [];
     const publishConfig: MetaWorker.Configs.PublishConfig = {
       site: deployConfig.site,
@@ -66,6 +76,7 @@ export class TasksService {
     this.logger.verbose(`Adding DNS worker to queue`, TasksService.name);
     this.logger.verbose(`Adding CDN worker to queue`, TasksService.name);
 
+    //TODO notify Meta-Network-BE
     return Object.assign(deploySiteTaskStepResults, publishSiteTaskStepResults);
   }
 
@@ -80,11 +91,19 @@ export class TasksService {
     publishTaskSteps: MetaWorker.Enums.TaskMethod[],
     publishConfig: MetaWorker.Configs.PublishConfig,
   ): Promise<string[]> {
+    this.siteConfigLogicService.updateSiteConfigStatus(
+      publishConfig.site.configId,
+      SiteStatus.Publishing,
+    );
     const publishSiteTaskStepResults =
       (await this.taskDispatchersService.dispatchTask(
         publishTaskSteps,
         publishConfig,
       )) as string[];
+    this.siteConfigLogicService.updateSiteConfigStatus(
+      publishConfig.site.configId,
+      SiteStatus.Published,
+    );
     return publishSiteTaskStepResults;
   }
 
