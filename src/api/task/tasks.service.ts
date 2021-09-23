@@ -83,7 +83,7 @@ export class TasksService {
       await this.generatePublishConfigAndTemplate(user, siteConfigId);
     const templateType = template.templateType;
     const publishTaskSteps = [];
-
+    publishTaskSteps.push(MetaWorker.Enums.TaskMethod.GIT_CLONE_CHECKOUT);
     this.logger.verbose(`Adding publisher worker to queue`, TasksService.name);
 
     publishTaskSteps.push(
