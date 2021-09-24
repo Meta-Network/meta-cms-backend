@@ -1222,6 +1222,11 @@
     "@types/qs" "*"
     "@types/serve-static" "*"
 
+"@types/find-remove@^2.0.1":
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/@types/find-remove/-/find-remove-2.0.1.tgz#d0ff099a0d9d6e2aa9d3d3736593b8f122fb4a33"
+  integrity sha512-x5dgfuPpdD7Knfu1aN/iaO0JiC2c5rpGFrq/k6H0gDrrTtTBt+e047k3OSEhXJFFggE/RN9SbqTEDoxDn2BoFA==
+
 "@types/graceful-fs@^4.1.2":
   version "4.1.5"
   resolved "https://registry.yarnpkg.com/@types/graceful-fs/-/graceful-fs-4.1.5.tgz#21ffba0d98da4350db64891f92a9e5db3cdb4e15"
