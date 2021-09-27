@@ -64,7 +64,7 @@ export class SiteConfigEntity extends BaseEntity {
    * Meta space prefix
    * @type varchar(255)
    * @default ''
-   * @example 'www.example.com'
+   * @example 'example'
    */
   @Column({ comment: 'Meta space prefix', nullable: true })
   @IsString()
