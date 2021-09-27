@@ -7,7 +7,6 @@ import { UCenterMicroserviceConfigService } from '../configs/microservices/ucent
 import { MetaMicroserviceClient } from '../constants';
 import { AccessTokenEntity } from '../entities/accessToken.entity';
 import { AccessTokenService } from './access-token.service';
-import { MatatakiModule } from './matataki/matataki.module';
 import { SynchronizerController } from './synchronizer.controller';
 
 @Module({
@@ -20,7 +19,6 @@ import { SynchronizerController } from './synchronizer.controller';
         useClass: UCenterMicroserviceConfigService,
       },
     ]),
-    MatatakiModule,
   ],
   providers: [AccessTokenService],
   controllers: [SynchronizerController],
