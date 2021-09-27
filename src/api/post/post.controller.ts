@@ -103,7 +103,7 @@ export class PostController {
   ) {
     await this.postService.publish(postId);
 
-    return await this.postService.setPostState(postId, PostState.Pending);
+    return await this.postService.setPostState(postId, PostState.Published);
   }
 
   @Post(':postId/ignore')
