@@ -114,5 +114,11 @@ task:
           image: meta-cms-worker-dns
           app:
             name: meta-cms-worker-dns
+      provider-type: CLOUDFLARE
   workspace:
     ttl: 60
+cloudflare:
+  api:
+    dns:
+      token:
+      zone-id:
