@@ -101,7 +101,9 @@ export class PostController {
     @User('id', ParseIntPipe) uid: number,
     @Param('postId', ParseIntPipe) postId: number,
   ) {
-    return await this.postService.setPostState(postId, PostState.Published);
+    await this.postService.publish(postId);
+
+    return await this.postService.setPostState(postId, PostState.Pending);
   }
 
   @Post(':postId/ignore')

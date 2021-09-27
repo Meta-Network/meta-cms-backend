@@ -11,6 +11,7 @@ import { AccessTokenService } from '../../synchronizer/access-token.service';
 import { PostController } from './post.controller';
 import { PostService } from './post.service';
 import { PreprocessorModule } from './preprocessor/preprocessor.module';
+import { MatatakiSourceModule } from './sources/matataki/matataki.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { PreprocessorModule } from './preprocessor/preprocessor.module';
       },
     ]),
     PreprocessorModule,
+    MatatakiSourceModule,
   ],
   controllers: [PostController],
   providers: [PostService, AccessTokenService],
