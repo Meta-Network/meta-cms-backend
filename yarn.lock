@@ -626,6 +626,13 @@
   resolved "https://registry.yarnpkg.com/@metaio/worker-model/-/worker-model-1.2.1.tgz#5e1d79b68e1715f8060e595b8aa6f439c3c6167b"
   integrity sha512-dO3gOgD76LrWzX4MGYIeH5ChlnbxBebSGzaVg0S/ub8e1Izs9B0z1ADkHh2r1QYutINE4PNfojZgNgKsldnysw==
 
+"@nestjs/axios@^0.0.1":
+  version "0.0.1"
+  resolved "https://registry.yarnpkg.com/@nestjs/axios/-/axios-0.0.1.tgz#c32a1c11e25765a69f3f9012ea5b8f49915db7cb"
+  integrity sha512-6H06VmDp5mmjjjLgglEdtzwtmli5pz5UdcY7E9v5SPoz5KeM4uLQvOF5ZJ1S/R4wub0WAqXUQL8mwuXxdjKIQQ==
+  dependencies:
+    axios "0.21.1"
+
 "@nestjs/bull@^0.4.1":
   version "0.4.1"
   resolved "https://registry.yarnpkg.com/@nestjs/bull/-/bull-0.4.1.tgz#86ea1f0d92130b2ef28cb990ce1d2d259eecba72"
