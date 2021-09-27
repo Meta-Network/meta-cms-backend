@@ -7,8 +7,10 @@ import { SiteModule } from '../site/module';
 import { DockerProcessorsModule } from './processors/docker/docker-processors.module';
 import { TasksController } from './tasks.controller';
 import { TasksService } from './tasks.service';
+import { DnsWorkersModule } from './workers/dns/dns-workers.module';
 import { GitWorkersModule } from './workers/git/git-workers.module';
 import { HexoWorkersModule } from './workers/hexo/hexo-workers.module';
+import { PublisherWorkersModule } from './workers/publisher/publisher-workers.module';
 import { TaskWorkersModule } from './workers/task-workers.module';
 
 @Module({
@@ -16,6 +18,8 @@ import { TaskWorkersModule } from './workers/task-workers.module';
     TaskWorkersModule,
     GitWorkersModule,
     HexoWorkersModule,
+    PublisherWorkersModule,
+    DnsWorkersModule,
     DockerProcessorsModule,
     SiteModule,
     SiteInfoModule,

@@ -5,16 +5,17 @@ import {
   Injectable,
   LoggerService,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
-import {
-  DataNotFoundException,
-  InvalidStatusException,
-} from '../../exceptions';
+import { DataNotFoundException, ValidationException } from '../../exceptions';
 import { SiteStatus } from '../../types/enum';
 import { StorageService } from '../provider/storage/service';
 import { SiteConfigLogicService } from '../site/config/logicService';
 import { SiteService } from '../site/service';
+import { DnsWorkersService } from './workers/dns/dns-workers.service';
+import { DnsRecordType } from './workers/dns/provider/dns.provider';
+import { PublisherWorkersService } from './workers/publisher/publisher-workers.service';
 import { TaskDispatchersService } from './workers/task-dispatchers.service';
 
 @Injectable()
@@ -22,10 +23,13 @@ export class TasksService {
   constructor(
     @Inject(WINSTON_MODULE_NEST_PROVIDER)
     private readonly logger: LoggerService,
+    private readonly configService: ConfigService,
     private readonly siteService: SiteService,
     private readonly siteConfigLogicService: SiteConfigLogicService,
     private readonly storageService: StorageService,
     private readonly taskDispatchersService: TaskDispatchersService,
+    private readonly dnsWorkersService: DnsWorkersService,
+    private readonly publisherWorkersService: PublisherWorkersService,
   ) {}
 
   async deploySite(user: any, siteConfigId: number): Promise<any> {
@@ -77,6 +81,9 @@ export class TasksService {
 
     return Object.assign(deploySiteTaskStepResults, publishSiteTaskStepResults);
   }
+  getTargetDomain(publishConfig: MetaWorker.Configs.PublishConfig): string {
+    return this.publisherWorkersService.getTargetOriginDomain(publishConfig);
+  }
 
   async publishSite(user: any, siteConfigId: number) {
     const { publishConfig, template } =
@@ -103,6 +110,17 @@ export class TasksService {
     publishTaskSteps: MetaWorker.Enums.TaskMethod[],
     publishConfig: MetaWorker.Configs.PublishConfig,
   ): Promise<string[]> {
+    // default publisher type
+    console.log(publishConfig.site.publisherType);
+    if (
+      publishConfig.site.publisherType === undefined ||
+      publishConfig.site.publisherType === null
+    ) {
+      publishConfig.site.publisherType = MetaWorker.Enums.PublisherType.GITHUB;
+    } else {
+      publishConfig.site.publisherType =
+        MetaWorker.Enums.PublisherType[publishConfig.site.publisherType];
+    }
     this.siteConfigLogicService.updateSiteConfigStatus(
       publishConfig.site.configId,
       SiteStatus.Publishing,
@@ -116,11 +134,29 @@ export class TasksService {
       publishConfig.site.configId,
       SiteStatus.Published,
     );
-    this.logger.verbose(`Adding DNS worker to queue`, TasksService.name);
-    this.logger.verbose(`Adding CDN worker to queue`, TasksService.name);
+    await this.doUpdateDns(publishConfig);
+    await this.doUpdatePublisherDomainName(publishConfig);
+    // this.logger.verbose(`Adding CDN worker to queue`, TasksService.name);
 
     //TODO notify Meta-Network-BE
     return publishSiteTaskStepResults;
+  }
+  protected async doUpdatePublisherDomainName(
+    publishConfig: MetaWorker.Configs.PublishConfig,
+  ) {
+    this.logger.verbose(`Adding Publisher worker to queue`, TasksService.name);
+
+    await this.publisherWorkersService.updateDomainName(publishConfig);
+  }
+
+  protected async doUpdateDns(publishConfig: MetaWorker.Configs.PublishConfig) {
+    this.logger.verbose(`Adding DNS worker to queue`, TasksService.name);
+    const dnsRecord = {
+      type: DnsRecordType.CNAME,
+      name: publishConfig.site.metaSpacePrefix,
+      content: this.getTargetDomain(publishConfig),
+    };
+    await this.dnsWorkersService.updateDnsRecord(dnsRecord);
   }
 
   protected getPublishTaskMethodsByTemplateType(

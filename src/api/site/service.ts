@@ -18,6 +18,7 @@ type GenerateMetaWorkerSiteInfo = {
     storageType: MetaWorker.Enums.StorageType;
     storageProviderId: number;
   };
+  metaSpacePrefix: string;
 };
 
 @Injectable()
@@ -55,6 +56,8 @@ export class SiteService {
       language,
       timezone,
       domain,
+      metaSpacePrefix: config.metaSpacePrefix,
+      publisherType: config.publisherType,
     };
 
     this.logger.verbose(
@@ -96,6 +99,7 @@ export class SiteService {
         storageProviderId: config.storeProviderId,
         storageType: config.storeType,
       },
+      metaSpacePrefix: config.metaSpacePrefix,
     };
   }
 }
