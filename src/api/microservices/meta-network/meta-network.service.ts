@@ -14,7 +14,8 @@ export class MetaNetworkService implements OnApplicationBootstrap {
   ) {}
 
   async notifyMetaSpaceSiteCreated(
-    site: MetaWorker.Info.CmsSiteInfo & MetaWorker.Info.CmsSiteConfig,
+    site: MetaWorker.Info.CmsSiteInfo &
+      MetaWorker.Info.CmsSiteConfig & { userId: number },
   ) {
     this.logger.verbose(
       `Notify site created ${JSON.stringify(site)} `,

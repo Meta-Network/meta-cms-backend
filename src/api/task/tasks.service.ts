@@ -137,6 +137,7 @@ export class TasksService {
     const { publisherType, publishConfig, template } =
       await this.generatePublishConfigAndTemplate(user, siteConfigId);
     return await this.doPublish(
+      user,
       template.templateType,
       publisherType,
       publishConfig,
@@ -144,6 +145,7 @@ export class TasksService {
   }
 
   protected async doPublish(
+    user: Partial<UCenterJWTPayload>,
     templateType: MetaWorker.Enums.TemplateType,
     publisherType: MetaWorker.Enums.PublisherType,
     publishConfig: MetaWorker.Configs.PublishConfig,
@@ -177,7 +179,10 @@ export class TasksService {
     // this.logger.verbose(`Adding CDN worker to queue`, TasksService.name);
 
     // notify Meta-Network-BE
-    this.metaNetworkService.notifyMetaSpaceSiteCreated(publishConfig.site);
+    this.metaNetworkService.notifyMetaSpaceSiteCreated({
+      ...publishConfig.site,
+      userId: user.id,
+    });
     return publishSiteTaskStepResults;
   }
 
