@@ -1,15 +1,11 @@
-import { MetaInternalResult } from '@metaio/microservice-model';
 import { MetaWorker } from '@metaio/worker-model';
 import { Inject, Injectable, LoggerService } from '@nestjs/common';
-import { ClientProxy } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { Octokit } from 'octokit';
-import { firstValueFrom } from 'rxjs';
 import { DeleteResult } from 'typeorm';
 import { Repository } from 'typeorm/repository/Repository';
 
-import { MetaMicroserviceClient } from '../../../../constants';
 import { GitHubPublisherProviderEntity } from '../../../../entities/provider/publisher/github.entity';
 import {
   AccessDeniedException,
@@ -17,8 +13,8 @@ import {
   DataNotFoundException,
 } from '../../../../exceptions';
 import { GenerateMetaWorkerGitInfo } from '../../../../types';
+import { MetaUCenterService } from '../../../microservices/meta-ucenter/meta-ucenter.service';
 import { SiteConfigLogicService } from '../../../site/config/logicService';
-import { UCenterService } from '../../../ucenter/ucenter.service';
 import {
   registerSpecificPublisherService,
   SpecificPublisherService,
@@ -44,7 +40,7 @@ export class GitHubPublisherService implements SpecificPublisherService {
     @InjectRepository(GitHubPublisherProviderEntity)
     private readonly publisherRepository: Repository<GitHubPublisherProviderEntity>,
     private readonly siteConfigLogicService: SiteConfigLogicService,
-    private readonly ucenterService: UCenterService,
+    private readonly ucenterService: MetaUCenterService,
   ) {
     registerSpecificPublisherService(
       MetaWorker.Enums.PublisherType.GITHUB,

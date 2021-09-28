@@ -11,6 +11,7 @@ import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { DataNotFoundException, ValidationException } from '../../exceptions';
 import { UCenterJWTPayload } from '../../types';
 import { SiteStatus } from '../../types/enum';
+import { MetaNetworkService } from '../microservices/meta-network/meta-network.service';
 import { DnsService } from '../provider/dns/dns.service';
 import { PublisherService } from '../provider/publisher/publisher.service';
 import { StorageService } from '../provider/storage/service';
@@ -30,6 +31,7 @@ export class TasksService {
     private readonly publisherService: PublisherService,
     private readonly taskDispatchersService: TaskDispatchersService,
     private readonly dnsService: DnsService,
+    private readonly metaNetworkService: MetaNetworkService,
   ) {}
 
   async deploySite(
@@ -174,7 +176,8 @@ export class TasksService {
     );
     // this.logger.verbose(`Adding CDN worker to queue`, TasksService.name);
 
-    //TODO notify Meta-Network-BE
+    // notify Meta-Network-BE
+    this.metaNetworkService.notifyMetaSpaceSiteCreated(publishConfig.site);
     return publishSiteTaskStepResults;
   }
 

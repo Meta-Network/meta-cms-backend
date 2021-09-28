@@ -2,8 +2,8 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { GitHubPublisherProviderEntity } from '../../../../entities/provider/publisher/github.entity';
+import { MetaUCenterModule } from '../../../microservices/meta-ucenter/meta-ucenter.module';
 import { SiteConfigModule } from '../../../site/config/module';
-import { UCenterModule } from '../../../ucenter/ucenter.module';
 import { GitHubPublisherController } from './github.publisher.controller';
 import { GitHubPublisherProvider } from './github.publisher.provider';
 import { GitHubPublisherService } from './github.publisher.service';
@@ -12,7 +12,7 @@ import { GitHubPublisherService } from './github.publisher.service';
   imports: [
     TypeOrmModule.forFeature([GitHubPublisherProviderEntity]),
     SiteConfigModule,
-    UCenterModule,
+    MetaUCenterModule,
   ],
   controllers: [GitHubPublisherController],
   providers: [GitHubPublisherService, GitHubPublisherProvider],

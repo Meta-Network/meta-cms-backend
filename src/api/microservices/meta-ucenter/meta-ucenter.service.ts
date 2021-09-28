@@ -4,10 +4,10 @@ import { ClientProxy } from '@nestjs/microservices';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { firstValueFrom } from 'rxjs';
 
-import { MetaMicroserviceClient } from '../../constants';
-import { DataNotFoundException } from '../../exceptions';
+import { MetaMicroserviceClient } from '../../../constants';
+import { DataNotFoundException } from '../../../exceptions';
 
-export class UCenterService implements OnApplicationBootstrap {
+export class MetaUCenterService implements OnApplicationBootstrap {
   constructor(
     @Inject(WINSTON_MODULE_NEST_PROVIDER)
     private readonly logger: LoggerService,

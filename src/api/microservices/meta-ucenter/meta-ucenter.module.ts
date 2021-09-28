@@ -2,9 +2,9 @@ import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ClientsModule } from '@nestjs/microservices';
 
-import { UCenterMicroserviceConfigService } from '../../configs/microservices/ucenter';
-import { MetaMicroserviceClient } from '../../constants';
-import { UCenterService } from './ucenter.service';
+import { UCenterMicroserviceConfigService } from '../../../configs/microservices/ucenter';
+import { MetaMicroserviceClient } from '../../../constants';
+import { MetaUCenterService } from './meta-ucenter.service';
 
 @Module({
   imports: [
@@ -16,7 +16,7 @@ import { UCenterService } from './ucenter.service';
       },
     ]),
   ],
-  providers: [UCenterService],
-  exports: [UCenterService],
+  providers: [MetaUCenterService],
+  exports: [MetaUCenterService],
 })
-export class UCenterModule {}
+export class MetaUCenterModule {}

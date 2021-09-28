@@ -1,12 +1,9 @@
-import { MetaInternalResult } from '@metaio/microservice-model';
 import { MetaWorker } from '@metaio/worker-model';
 import { Inject, Injectable, LoggerService } from '@nestjs/common';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
-import { firstValueFrom } from 'rxjs';
 
-import { DataNotFoundException } from '../../../exceptions';
 import { GenerateMetaWorkerGitInfo } from '../../../types';
-import { UCenterService } from '../../ucenter/ucenter.service';
+import { MetaUCenterService } from '../../microservices/meta-ucenter/meta-ucenter.service';
 import { GitHubStorageLogicService } from './github/logicService';
 
 @Injectable()
@@ -15,7 +12,7 @@ export class StorageService {
     @Inject(WINSTON_MODULE_NEST_PROVIDER)
     private readonly logger: LoggerService,
 
-    private readonly ucenterService: UCenterService,
+    private readonly ucenterService: MetaUCenterService,
     private readonly githubService: GitHubStorageLogicService,
   ) {}
 
