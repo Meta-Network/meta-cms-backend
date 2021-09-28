@@ -125,7 +125,11 @@ export class TaskDispatchersService {
   }
   protected async initQueueTaskConfig(
     taskSteps: MetaWorker.Enums.TaskMethod[],
-    cfg: MetaWorker.Configs.DeployConfig | MetaWorker.Configs.PublishConfig,
+    cfg:
+      | MetaWorker.Configs.DeployConfig
+      | MetaWorker.Configs.PublishConfig
+      | MetaWorker.Configs.PostConfig
+      | MetaWorker.Configs.DnsConfig,
   ) {
     const taskId = uuid(); // taskId and taskWorkspace hash
     const taskWorkspace = await this.getTaskWorkspace(
