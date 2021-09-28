@@ -6,10 +6,10 @@ import { Octokit } from 'octokit';
 import {
   PublisherProvider,
   registerPublisherProvider,
-} from './publisher.provider';
+} from '../publisher.provider';
 
 @Injectable()
-export class GithubPublisherProvider implements PublisherProvider {
+export class GitHubPublisherProvider implements PublisherProvider {
   constructor(
     @Inject(WINSTON_MODULE_NEST_PROVIDER)
     private readonly logger: LoggerService,
@@ -26,16 +26,24 @@ export class GithubPublisherProvider implements PublisherProvider {
     const octokit = new Octokit({
       auth: publishConfig.git.gitToken,
     });
+    let siteInfo;
     try {
-      await this.getSiteInfo(publishConfig);
+      siteInfo = await (await this.getSiteInfo(publishConfig)).data;
     } catch (err) {
       await this.createSite(publishConfig);
     }
-    await octokit.request('PUT /repos/{owner}/{repo}/pages', {
-      owner: publishConfig.git.gitUsername,
-      repo: publishConfig.git.gitReponame,
-      cname: publishConfig.site.domain,
-    });
+    if (siteInfo.cname !== publishConfig.site.domain) {
+      const data = {
+        owner: publishConfig.git.gitUsername,
+        repo: publishConfig.git.gitReponame,
+        cname: publishConfig.site.domain,
+      };
+      this.logger.verbose(
+        `update cname ${data.owner}.github.io/${data.repo} : ${data.cname}`,
+        this.constructor.name,
+      );
+      await octokit.request('PUT /repos/{owner}/{repo}/pages', data);
+    }
   }
   async getSiteInfo(publishConfig: MetaWorker.Configs.PublishConfig) {
     const octokit = new Octokit({

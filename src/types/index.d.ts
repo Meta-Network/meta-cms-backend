@@ -47,3 +47,8 @@ export type RemoveIndex<Q> = {
 export type QueueTaskConfig =
   | MetaWorker.Configs.DeployTaskConfig
   | MetaWorker.Configs.PublishTaskConfig;
+export type GenerateMetaWorkerGitInfo = {
+  gitInfo: MetaWorker.Info.Git;
+  publishInfo?: MetaWorker.Info.Publish;
+  repoSize: number;
+};

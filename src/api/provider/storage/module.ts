@@ -4,20 +4,12 @@ import { ClientsModule } from '@nestjs/microservices';
 
 import { UCenterMicroserviceConfigService } from '../../../configs/microservices/ucenter';
 import { MetaMicroserviceClient } from '../../../constants';
+import { UCenterModule } from '../../ucenter/ucenter.module';
 import { GitHubStorageModule } from './github/module';
 import { StorageService } from './service';
 
 @Module({
-  imports: [
-    ClientsModule.registerAsync([
-      {
-        name: MetaMicroserviceClient.UCenter,
-        inject: [ConfigService],
-        useClass: UCenterMicroserviceConfigService,
-      },
-    ]),
-    GitHubStorageModule,
-  ],
+  imports: [UCenterModule, GitHubStorageModule],
   providers: [StorageService],
   exports: [StorageService],
 })

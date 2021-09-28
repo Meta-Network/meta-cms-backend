@@ -1,31 +1,21 @@
 import { MetaInternalResult } from '@metaio/microservice-model';
 import { MetaWorker } from '@metaio/worker-model';
-import {
-  Inject,
-  Injectable,
-  LoggerService,
-  OnApplicationBootstrap,
-} from '@nestjs/common';
-import { ClientProxy } from '@nestjs/microservices';
+import { Inject, Injectable, LoggerService } from '@nestjs/common';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { firstValueFrom } from 'rxjs';
 
-import { MetaMicroserviceClient } from '../../../constants';
 import { DataNotFoundException } from '../../../exceptions';
+import { GenerateMetaWorkerGitInfo } from '../../../types';
+import { UCenterService } from '../../ucenter/ucenter.service';
 import { GitHubStorageLogicService } from './github/logicService';
 
-type GenerateMetaWorkerGitInfo = {
-  gitInfo: MetaWorker.Info.Git;
-  repoSize: number;
-};
-
 @Injectable()
-export class StorageService implements OnApplicationBootstrap {
+export class StorageService {
   constructor(
     @Inject(WINSTON_MODULE_NEST_PROVIDER)
     private readonly logger: LoggerService,
-    @Inject(MetaMicroserviceClient.UCenter)
-    private readonly ucenterClient: ClientProxy,
+
+    private readonly ucenterService: UCenterService,
     private readonly githubService: GitHubStorageLogicService,
   ) {}
 
@@ -37,34 +27,9 @@ export class StorageService implements OnApplicationBootstrap {
     if (type === MetaWorker.Enums.StorageType.GITHUB) {
       this.logger.verbose(`Generate meta worker Git info`, StorageService.name);
 
-      let gitToken = '';
-      try {
-        this.logger.verbose(
-          `Get user GitHub OAuth token from UCenter microservice`,
-          StorageService.name,
-        );
-        const gitTokenFromUCenter = this.ucenterClient.send(
-          'getSocialAuthTokenByUserId',
-          { userId: userId, platform: 'github' },
-        );
-        const result = await firstValueFrom(gitTokenFromUCenter);
-        const token = new MetaInternalResult(result);
-        if (!token.isSuccess()) {
-          this.logger.error(
-            `User GitHub OAuth token not found: ${token.message}, code: ${token.code}`,
-            StorageService.name,
-          );
-          throw new DataNotFoundException('user GitHub OAuth token not found');
-        }
-        gitToken = token.data;
-      } catch (err) {
-        this.logger.error(
-          err,
-          `Get user GitHub OAuth token error:`,
-          StorageService.name,
-        );
-        throw new DataNotFoundException('user GitHub OAuth token not found');
-      }
+      const gitToken = await this.ucenterService.getGitHubAuthTokenByUserId(
+        userId,
+      );
 
       this.logger.verbose(
         `Get storage config from GitHubStorageLogicService`,
@@ -99,13 +64,5 @@ export class StorageService implements OnApplicationBootstrap {
 
       return { gitInfo, repoSize: size };
     }
-  }
-
-  async onApplicationBootstrap() {
-    await this.ucenterClient.connect();
-    this.logger.verbose(
-      `Connect UCenter microservice client`,
-      StorageService.name,
-    );
   }
 }

@@ -5,7 +5,7 @@ import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import {
   PublisherProvider,
   registerPublisherProvider,
-} from './publisher.provider';
+} from '../publisher.provider';
 
 @Injectable()
 export class GiteePublisherProvider implements PublisherProvider {

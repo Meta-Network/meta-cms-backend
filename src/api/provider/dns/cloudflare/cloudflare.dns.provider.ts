@@ -1,14 +1,9 @@
+import { MetaWorker } from '@metaio/worker-model';
 import { Inject, Injectable, LoggerService } from '@nestjs/common';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import superagent from 'superagent';
 
-import {
-  DnsConfig,
-  DnsProvider,
-  DnsProviderType,
-  DnsRecord,
-  registerDnsProvider,
-} from './dns.provider';
+import { DnsProvider, registerDnsProvider } from '../dns.provider';
 
 @Injectable()
 export class CloudFlareDnsProvider implements DnsProvider {
@@ -16,16 +11,16 @@ export class CloudFlareDnsProvider implements DnsProvider {
     @Inject(WINSTON_MODULE_NEST_PROVIDER)
     private readonly logger: LoggerService,
   ) {
-    registerDnsProvider(DnsProviderType.CLOUDFLARE, this);
+    registerDnsProvider(MetaWorker.Enums.DnsProviderType.CLOUDFLARE, this);
   }
 
-  async updateDnsRecord(dnsConfig: DnsConfig, dnsRecord: DnsRecord) {
-    console.log(dnsRecord);
+  async updateDnsRecord(dns: MetaWorker.Info.Dns) {
+    const dnsRecord = dns.record;
     const res = await superagent
       .get(
-        `https://api.cloudflare.com/client/v4/zones/${dnsConfig.env.zoneId}/dns_records`,
+        `https://api.cloudflare.com/client/v4/zones/${dns.env.zoneId}/dns_records`,
       )
-      .set('Authorization', `Bearer ${dnsConfig.env.token}`);
+      .set('Authorization', `Bearer ${dns.env.token}`);
     this.logger.verbose(
       `List dns records: ${JSON.stringify(res.body)}`,
       this.constructor.name,
@@ -40,13 +35,13 @@ export class CloudFlareDnsProvider implements DnsProvider {
         const dnsRecordId = existingDnsRecords[0].id;
         const patchRes = await superagent
           .patch(
-            `https://api.cloudflare.com/client/v4/zones/${dnsConfig.env.zoneId}/dns_records/${dnsRecordId}`,
+            `https://api.cloudflare.com/client/v4/zones/${dns.env.zoneId}/dns_records/${dnsRecordId}`,
           )
           .send({
             name: dnsRecord.name,
             proxied: true,
           })
-          .set('Authorization', `Bearer ${dnsConfig.env.token}`);
+          .set('Authorization', `Bearer ${dns.env.token}`);
         this.logger.verbose(
           `Patch dns record: ${JSON.stringify(patchRes.body)}`,
           this.constructor.name,
@@ -60,10 +55,10 @@ export class CloudFlareDnsProvider implements DnsProvider {
       else {
         const postRes = await superagent
           .post(
-            `https://api.cloudflare.com/client/v4/zones/${dnsConfig.env.zoneId}/dns_records`,
+            `https://api.cloudflare.com/client/v4/zones/${dns.env.zoneId}/dns_records`,
           )
           .send(dnsRecord)
-          .set('Authorization', `Bearer ${dnsConfig.env.token}`);
+          .set('Authorization', `Bearer ${dns.env.token}`);
         this.logger.verbose(
           `Post dns record: ${JSON.stringify(postRes.body)}`,
           this.constructor.name,

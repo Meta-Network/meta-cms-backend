@@ -18,6 +18,10 @@ type GenerateMetaWorkerSiteInfo = {
     storageType: MetaWorker.Enums.StorageType;
     storageProviderId: number;
   };
+  publisher: {
+    publisherType: MetaWorker.Enums.PublisherType;
+    publisherProviderId: number;
+  };
   metaSpacePrefix: string;
 };
 
@@ -57,7 +61,6 @@ export class SiteService {
       timezone,
       domain,
       metaSpacePrefix: config.metaSpacePrefix,
-      publisherType: config.publisherType,
     };
 
     this.logger.verbose(
@@ -98,6 +101,10 @@ export class SiteService {
       storage: {
         storageProviderId: config.storeProviderId,
         storageType: config.storeType,
+      },
+      publisher: {
+        publisherType: config.publisherType,
+        publisherProviderId: config.publisherProviderId,
       },
       metaSpacePrefix: config.metaSpacePrefix,
     };

@@ -44,7 +44,7 @@ lerna-debug.log*
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
-src/api/task/workers/publisher/provider/github.publisher.provider.spec.ts
-src/api/task/workers/publisher/publisher-workers.service.spec.ts
-src/api/task/workers/dns/provider/cloudflare.dns.provider.spec.ts
-src/api/task/workers/dns/dns-workers.service.spec.ts
+github.publisher.provider.spec.ts
+publisher.service.spec.ts
+cloudflare.dns.provider.spec.ts
+dns.service.spec.ts

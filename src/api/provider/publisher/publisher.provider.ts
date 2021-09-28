@@ -1,6 +1,6 @@
 import { MetaWorker } from '@metaio/worker-model';
 
-import { ValidationException } from '../../../../../exceptions';
+import { ValidationException } from '../../../exceptions';
 
 const publisherProviderMap = {};
 export function registerPublisherProvider(
@@ -8,11 +8,13 @@ export function registerPublisherProvider(
   publisherProvider,
 ) {
   publisherProviderMap[publisherType] = publisherProvider;
+  console.log(`Register publisher provider: ${publisherType}`);
 }
 export function getPublisherProvider(
   publisherType: MetaWorker.Enums.PublisherType,
 ): PublisherProvider {
-  console.log(publisherType, publisherProviderMap);
+  // console.log(publisherType, publisherProviderMap);
+
   const instance = publisherProviderMap[publisherType];
   if (!instance) {
     throw new ValidationException('Invalid publisher type');

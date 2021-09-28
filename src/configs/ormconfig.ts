@@ -3,6 +3,7 @@ import { ConnectionOptions } from 'typeorm';
 import { AccessTokenEntity } from '../entities/accessToken.entity';
 import { MatatakiSyncEntity } from '../entities/matatakiSync.entity';
 import { PostEntity } from '../entities/post.entity';
+import { GitHubPublisherProviderEntity } from '../entities/provider/publisher/github.entity';
 import { GitHubStorageProviderEntity } from '../entities/provider/storage/github.entity';
 import { SiteConfigEntity } from '../entities/siteConfig.entity';
 import { SiteInfoEntity } from '../entities/siteInfo.entity';
@@ -37,6 +38,7 @@ const options: ConnectionOptions = {
     ThemeTemplateEntity,
     ThemeEntity,
     GitHubStorageProviderEntity,
+    GitHubPublisherProviderEntity,
     AccessTokenEntity,
     PostEntity,
     SynchronizerEntity,

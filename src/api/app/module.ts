@@ -18,6 +18,8 @@ import { SynchronizerModule } from '../../synchronizer/synchronizer.module';
 import { AppCacheModule } from '../cache/module';
 import { DomainModule } from '../domain/module';
 import { PostModule } from '../post/post.module';
+import { GitHubPublisherModule } from '../provider/publisher/github/github.publisher.module';
+import { PublisherModule } from '../provider/publisher/publisher.module';
 import { StorageModule } from '../provider/storage/module';
 import { SiteModule } from '../site/module';
 import { TasksModule } from '../task/tasks.module';
@@ -48,6 +50,8 @@ import { TokenModule } from '../token/token.module';
     ThemeTemplateModule,
     SiteModule,
     StorageModule,
+    PublisherModule,
+
     TasksModule,
     SynchronizerModule,
     PostModule,

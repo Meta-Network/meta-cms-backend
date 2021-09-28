@@ -10,12 +10,11 @@ import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
 import { DataNotFoundException, ValidationException } from '../../exceptions';
 import { SiteStatus } from '../../types/enum';
+import { DnsService } from '../provider/dns/dns.service';
+import { PublisherService } from '../provider/publisher/publisher.service';
 import { StorageService } from '../provider/storage/service';
 import { SiteConfigLogicService } from '../site/config/logicService';
 import { SiteService } from '../site/service';
-import { DnsWorkersService } from './workers/dns/dns-workers.service';
-import { DnsRecordType } from './workers/dns/provider/dns.provider';
-import { PublisherWorkersService } from './workers/publisher/publisher-workers.service';
 import { TaskDispatchersService } from './workers/task-dispatchers.service';
 
 @Injectable()
@@ -27,9 +26,9 @@ export class TasksService {
     private readonly siteService: SiteService,
     private readonly siteConfigLogicService: SiteConfigLogicService,
     private readonly storageService: StorageService,
+    private readonly publisherService: PublisherService,
     private readonly taskDispatchersService: TaskDispatchersService,
-    private readonly dnsWorkersService: DnsWorkersService,
-    private readonly publisherWorkersService: PublisherWorkersService,
+    private readonly dnsService: DnsService,
   ) {}
 
   async deploySite(user: any, siteConfigId: number): Promise<any> {
@@ -56,71 +55,85 @@ export class TasksService {
     this.logger.verbose(`Adding CICD worker to queue`, TasksService.name);
 
     const deploySiteTaskStepResults =
-      (await this.taskDispatchersService.dispatchTask(
-        taskSteps,
-        deployConfig,
-      )) as string[];
+      await this.taskDispatchersService.dispatchTask(taskSteps, deployConfig);
     this.siteConfigLogicService.updateSiteConfigStatus(
       siteConfigId,
       SiteStatus.Deployed,
     );
-    const publishTaskSteps = [];
-    const publishConfig: MetaWorker.Configs.PublishConfig = {
-      site: deployConfig.site,
-      git: deployConfig.git,
-    };
     this.logger.verbose(`Adding publisher worker to queue`, TasksService.name);
+    const publishTaskSteps = [];
+    const { publisherType, publishConfig } =
+      await this.generatePublishConfigAndTemplate(user, siteConfigId);
 
     publishTaskSteps.push(
       ...this.getPublishTaskMethodsByTemplateType(templateType),
+      ...this.getPublishTaskMethodsByPublisherType(publisherType),
     );
     const publishSiteTaskStepResults = await this.doPublish(
       publishTaskSteps,
+      publisherType,
       publishConfig,
     );
 
     return Object.assign(deploySiteTaskStepResults, publishSiteTaskStepResults);
   }
-  getTargetDomain(publishConfig: MetaWorker.Configs.PublishConfig): string {
-    return this.publisherWorkersService.getTargetOriginDomain(publishConfig);
-  }
-
   async publishSite(user: any, siteConfigId: number) {
-    const { publishConfig, template } =
+    await this.checkSiteConfigTaskWorkspace(siteConfigId);
+    this.siteConfigLogicService.updateSiteConfigStatus(
+      siteConfigId,
+      SiteStatus.Publishing,
+    );
+    const { deployConfig } = await this.generateDeployConfigAndRepoSize(
+      user,
+      siteConfigId,
+    );
+    const deployTaskSteps: MetaWorker.Enums.TaskMethod[] = [];
+    this.logger.verbose(`Adding CICD worker to queue`, TasksService.name);
+    // if (gitRepoSize > 0) {
+    deployTaskSteps.push(MetaWorker.Enums.TaskMethod.GIT_CLONE_CHECKOUT);
+    // } else {
+    //   deployTaskSteps.push(MetaWorker.Enums.TaskMethod.GIT_INIT_PUSH);
+    // }
+    const deploySiteTaskStepResults =
+      await this.taskDispatchersService.dispatchTask(
+        deployTaskSteps,
+        deployConfig,
+      );
+    this.logger.verbose(
+      `Adding publisher worker to queue`,
+      this.constructor.name,
+    );
+
+    const { publisherType, publishConfig, template } =
       await this.generatePublishConfigAndTemplate(user, siteConfigId);
     const templateType = template.templateType;
     const publishTaskSteps = [];
-    publishTaskSteps.push(MetaWorker.Enums.TaskMethod.GIT_CLONE_CHECKOUT);
-    this.logger.verbose(`Adding publisher worker to queue`, TasksService.name);
 
     publishTaskSteps.push(
       ...this.getPublishTaskMethodsByTemplateType(templateType),
+      ...this.getPublishTaskMethodsByPublisherType(publisherType),
     );
-    return await this.doPublish(publishTaskSteps, publishConfig);
+    const publishSiteTaskStepResults = await this.doPublish(
+      publishTaskSteps,
+      publisherType,
+      publishConfig,
+    );
+    return Object.assign(deploySiteTaskStepResults, publishSiteTaskStepResults);
   }
-
-  protected getDeployTaskMethodsByTemplateType(
-    templateType: MetaWorker.Enums.TemplateType,
+  getPublishTaskMethodsByPublisherType(
+    publisherType: MetaWorker.Enums.PublisherType,
   ): MetaWorker.Enums.TaskMethod[] {
-    // HEXO
-    return [MetaWorker.Enums.TaskMethod.HEXO_UPDATE_CONFIG];
+    if (MetaWorker.Enums.PublisherType.GITHUB === publisherType) {
+      return [MetaWorker.Enums.TaskMethod.PUBLISH_GITHUB_PAGES];
+    }
+    throw new ValidationException(`invalid publisher type: ${publisherType}`);
   }
 
   protected async doPublish(
     publishTaskSteps: MetaWorker.Enums.TaskMethod[],
+    publisherType: MetaWorker.Enums.PublisherType,
     publishConfig: MetaWorker.Configs.PublishConfig,
   ): Promise<string[]> {
-    // default publisher type
-    console.log(publishConfig.site.publisherType);
-    if (
-      publishConfig.site.publisherType === undefined ||
-      publishConfig.site.publisherType === null
-    ) {
-      publishConfig.site.publisherType = MetaWorker.Enums.PublisherType.GITHUB;
-    } else {
-      publishConfig.site.publisherType =
-        MetaWorker.Enums.PublisherType[publishConfig.site.publisherType];
-    }
     this.siteConfigLogicService.updateSiteConfigStatus(
       publishConfig.site.configId,
       SiteStatus.Publishing,
@@ -134,29 +147,28 @@ export class TasksService {
       publishConfig.site.configId,
       SiteStatus.Published,
     );
-    await this.doUpdateDns(publishConfig);
-    await this.doUpdatePublisherDomainName(publishConfig);
+    await this.doUpdateDns(publisherType, publishConfig);
+    await this.publisherService.updateDomainName(publisherType, publishConfig);
     // this.logger.verbose(`Adding CDN worker to queue`, TasksService.name);
 
     //TODO notify Meta-Network-BE
     return publishSiteTaskStepResults;
   }
-  protected async doUpdatePublisherDomainName(
+
+  protected async doUpdateDns(
+    publisherType: MetaWorker.Enums.PublisherType,
     publishConfig: MetaWorker.Configs.PublishConfig,
   ) {
-    this.logger.verbose(`Adding Publisher worker to queue`, TasksService.name);
-
-    await this.publisherWorkersService.updateDomainName(publishConfig);
-  }
-
-  protected async doUpdateDns(publishConfig: MetaWorker.Configs.PublishConfig) {
-    this.logger.verbose(`Adding DNS worker to queue`, TasksService.name);
+    this.logger.verbose(`Adding DNS worker to queue`, this.constructor.name);
     const dnsRecord = {
-      type: DnsRecordType.CNAME,
+      type: MetaWorker.Enums.DnsRecordType.CNAME,
       name: publishConfig.site.metaSpacePrefix,
-      content: this.getTargetDomain(publishConfig),
+      content: this.publisherService.getTargetOriginDomain(
+        publisherType,
+        publishConfig,
+      ),
     };
-    await this.dnsWorkersService.updateDnsRecord(dnsRecord);
+    await this.dnsService.updateDnsRecord(dnsRecord);
   }
 
   protected getPublishTaskMethodsByTemplateType(
@@ -164,6 +176,56 @@ export class TasksService {
   ): MetaWorker.Enums.TaskMethod[] {
     // HEXO
     return [MetaWorker.Enums.TaskMethod.HEXO_GENERATE_DEPLOY];
+  }
+
+  protected async generatePublishConfigAndTemplate(
+    user: any,
+    configId: number,
+  ): Promise<{
+    publisherType: MetaWorker.Enums.PublisherType;
+    publishConfig: MetaWorker.Configs.PublishConfig;
+    template: MetaWorker.Info.Template;
+  }> {
+    this.logger.verbose(
+      `Generate meta worker user info`,
+      this.constructor.name,
+    );
+
+    const { site, template, theme, publisher } =
+      await this.siteService.generateMetaWorkerSiteInfo(user.id, configId, [
+        SiteStatus.Deployed,
+        SiteStatus.Publishing,
+        SiteStatus.Published,
+      ]);
+
+    const { publisherProviderId, publisherType } = publisher;
+
+    if (!publisherProviderId)
+      throw new DataNotFoundException('publisher provider id not found');
+    const { gitInfo, publishInfo } =
+      await this.publisherService.generateMetaWorkerGitInfo(
+        publisherType,
+        user.id,
+        publisherProviderId,
+      );
+    const publishConfig: MetaWorker.Configs.PublishConfig = {
+      site,
+      git: gitInfo,
+      publish: publishInfo,
+    };
+
+    return {
+      publisherType,
+      publishConfig,
+      template,
+    };
+  }
+
+  protected getDeployTaskMethodsByTemplateType(
+    templateType: MetaWorker.Enums.TemplateType,
+  ): MetaWorker.Enums.TaskMethod[] {
+    // HEXO
+    return [MetaWorker.Enums.TaskMethod.HEXO_UPDATE_CONFIG];
   }
 
   protected async checkSiteConfigTaskWorkspace(siteConfigId: number) {
@@ -214,49 +276,10 @@ export class TasksService {
       git: gitInfo,
     };
     // for hexo update config
-    deployConfig.site.domain = `https://${deployConfig.site.domain}`;
+    // deployConfig.site.domain = `https://${deployConfig.site.domain}`;
     return {
       deployConfig,
       gitRepoSize: repoSize,
-    };
-  }
-
-  protected async generatePublishConfigAndTemplate(
-    user: any,
-    configId: number,
-  ): Promise<{
-    publishConfig: MetaWorker.Configs.PublishConfig;
-    template: MetaWorker.Info.Template;
-  }> {
-    this.logger.verbose(`Generate meta worker user info`, TasksService.name);
-    const userInfo: MetaWorker.Info.UCenterUser = {
-      username: user.username,
-      nickname: user.nickname,
-    };
-
-    const { site, template, theme, storage } =
-      await this.siteService.generateMetaWorkerSiteInfo(user.id, configId, [
-        SiteStatus.Deployed,
-        SiteStatus.Publishing,
-        SiteStatus.Published,
-      ]);
-
-    const { storageProviderId, storageType } = storage;
-    if (!storageProviderId)
-      throw new DataNotFoundException('storage provider id not found');
-    const { gitInfo } = await this.storageService.generateMetaWorkerGitInfo(
-      storageType,
-      user.id,
-      storageProviderId,
-    );
-    const publishConfig: MetaWorker.Configs.PublishConfig = {
-      site,
-      git: gitInfo,
-    };
-
-    return {
-      publishConfig,
-      template,
     };
   }
 }
