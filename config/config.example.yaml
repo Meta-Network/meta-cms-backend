@@ -37,7 +37,10 @@ microservice:
       transport:
       options:
         servers:
-
+    network:
+      transport:
+      options:
+        servers:
 provider:
   dns:
     type:
