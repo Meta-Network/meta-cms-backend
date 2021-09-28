@@ -56,29 +56,6 @@ export class TasksController {
     return await this.service.deploySite(user, siteConfigId);
   }
 
-  @SkipUCenterAuth(true)
-  @Post('deploy-sample/:userId')
-  @UsePipes(new ValidationPipe(PostMethodValidation))
-  async deploySiteFromConfig2(
-    @Body() body: DeploySiteFromConfigDto,
-    @Param('userId', ParseIntPipe) userId: number,
-  ) {
-    const { configId } = body;
-    this.logger.verbose(
-      `User ${userId} request deploy site from config ${configId}`,
-      TasksController.name,
-    );
-
-    return await this.service.deploySite(
-      {
-        id: userId,
-        username: 'test-deploy',
-        nickname: 'test-deploy',
-      },
-      configId,
-    );
-  }
-
   @Post('publish')
   @UsePipes(new ValidationPipe(PostMethodValidation))
   async publishSiteFromConfig(
@@ -95,26 +72,19 @@ export class TasksController {
     return await this.service.publishSite(user, siteConfigId);
   }
 
-  @SkipUCenterAuth(true)
-  @Post('publish-sample/:userId')
+  @Post('deploy-publish')
   @UsePipes(new ValidationPipe(PostMethodValidation))
-  async publishSiteFromConfig2(
+  async deployAndPublishSiteFromConfig(
+    @User() user: UCenterJWTPayload,
     @Body() body: PublishSiteFromConfigDto,
-    @Param('userId', ParseIntPipe) userId: number,
   ) {
-    const { configId } = body;
+    if (!body && !body.configId)
+      throw new ValidationException('request body does not contain configId');
+    const siteConfigId = body.configId;
     this.logger.verbose(
-      `User ${userId} request publish site from config ${configId}`,
+      `User ${user.id} request deploy&publish site from config ${siteConfigId}`,
       TasksController.name,
     );
-
-    return await this.service.publishSite(
-      {
-        id: userId,
-        username: 'test-deploy',
-        nickname: 'test-deploy',
-      },
-      configId,
-    );
+    return await this.service.deployAndPublishSite(user, siteConfigId);
   }
 }

@@ -128,54 +128,6 @@ export class GitHubPublisherController {
     );
   }
 
-  @ApiCreatedResponse({ type: GitHubPublisherResponse })
-  @ApiNotFoundResponse({
-    type: DataNotFoundException,
-    description: 'When request site config not found',
-  })
-  @ApiNotFoundResponse({
-    type: RelationNotFoundException,
-    description: 'When site info relation not found',
-  })
-  @ApiForbiddenResponse({
-    type: AccessDeniedException,
-    description: 'When request `userId` not match',
-  })
-  @ApiConflictResponse({
-    type: DataAlreadyExistsException,
-    description: 'When Publisher type and provider id already exists',
-  })
-  @ApiBadRequestResponse({
-    type: ValidationException,
-    description:
-      'When the fields in the request body does not pass type validation',
-  })
-  @ApiQuery({
-    name: 'userId',
-    type: Number,
-    example: 1,
-    description: 'User id',
-  })
-  @ApiQuery({
-    name: 'configId',
-    type: Number,
-    example: 1,
-    description: 'Site config id',
-  })
-  @SkipUCenterAuth(true)
-  @Post('sample')
-  async createPublisherConfig2(
-    @Query('userId', ParseIntPipe) userId: number,
-    @Query('configId', ParseIntPipe) siteConfigId: number,
-    @Body() createDto: GitHubPublisherProviderEntity,
-  ) {
-    return await this.publisherService.createPublisherConfig(
-      userId,
-      siteConfigId,
-      createDto,
-    );
-  }
-
   @ApiOkResponse({ type: GitHubPublisherResponse })
   @ApiNotFoundResponse({
     type: DataNotFoundException,
