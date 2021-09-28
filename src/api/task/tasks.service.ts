@@ -33,7 +33,7 @@ export class TasksService {
 
   async deploySite(user: any, siteConfigId: number): Promise<any> {
     await this.checkSiteConfigTaskWorkspace(siteConfigId);
-    this.siteConfigLogicService.updateSiteConfigStatus(
+    await this.siteConfigLogicService.updateSiteConfigStatus(
       siteConfigId,
       SiteStatus.Deploying,
     );
@@ -56,7 +56,7 @@ export class TasksService {
 
     const deploySiteTaskStepResults =
       await this.taskDispatchersService.dispatchTask(taskSteps, deployConfig);
-    this.siteConfigLogicService.updateSiteConfigStatus(
+    await this.siteConfigLogicService.updateSiteConfigStatus(
       siteConfigId,
       SiteStatus.Deployed,
     );
@@ -79,7 +79,7 @@ export class TasksService {
   }
   async publishSite(user: any, siteConfigId: number) {
     await this.checkSiteConfigTaskWorkspace(siteConfigId);
-    this.siteConfigLogicService.updateSiteConfigStatus(
+    await this.siteConfigLogicService.updateSiteConfigStatus(
       siteConfigId,
       SiteStatus.Publishing,
     );
@@ -134,7 +134,7 @@ export class TasksService {
     publisherType: MetaWorker.Enums.PublisherType,
     publishConfig: MetaWorker.Configs.PublishConfig,
   ): Promise<string[]> {
-    this.siteConfigLogicService.updateSiteConfigStatus(
+    await this.siteConfigLogicService.updateSiteConfigStatus(
       publishConfig.site.configId,
       SiteStatus.Publishing,
     );
@@ -143,12 +143,13 @@ export class TasksService {
         publishTaskSteps,
         publishConfig,
       )) as string[];
-    this.siteConfigLogicService.updateSiteConfigStatus(
+
+    await this.doUpdateDns(publisherType, publishConfig);
+    await this.publisherService.updateDomainName(publisherType, publishConfig);
+    await this.siteConfigLogicService.updateSiteConfigStatus(
       publishConfig.site.configId,
       SiteStatus.Published,
     );
-    await this.doUpdateDns(publisherType, publishConfig);
-    await this.publisherService.updateDomainName(publisherType, publishConfig);
     // this.logger.verbose(`Adding CDN worker to queue`, TasksService.name);
 
     //TODO notify Meta-Network-BE
