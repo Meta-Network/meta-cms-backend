@@ -8,6 +8,7 @@ import {
 import { DeleteResult, FindOneOptions, MoreThan, Repository } from 'typeorm';
 
 import { SiteConfigEntity } from '../../../entities/siteConfig.entity';
+import { SiteStatus } from '../../../types/enum';
 
 @Injectable()
 export class SiteConfigBaseService {
@@ -29,7 +30,10 @@ export class SiteConfigBaseService {
 
   async readByModifedAfter(modifiedAfter: Date): Promise<SiteConfigEntity[]> {
     return await this.siteConfigRepository.find({
-      where: { updated_at: MoreThan(modifiedAfter) },
+      where: {
+        updatedAt: MoreThan(modifiedAfter),
+        status: SiteStatus.Published,
+      },
       relations: ['siteInfo'],
     });
   }
