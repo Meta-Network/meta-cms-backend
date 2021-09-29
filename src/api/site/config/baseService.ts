@@ -5,7 +5,7 @@ import {
   paginate,
   Pagination,
 } from 'nestjs-typeorm-paginate';
-import { DeleteResult, FindOneOptions, Repository } from 'typeorm';
+import { DeleteResult, FindOneOptions, MoreThan, Repository } from 'typeorm';
 
 import { SiteConfigEntity } from '../../../entities/siteConfig.entity';
 
@@ -25,6 +25,13 @@ export class SiteConfigBaseService {
       options,
       { where: { siteInfo: { id: sid } } },
     );
+  }
+
+  async readByModifedAfter(modifiedAfter: Date): Promise<SiteConfigEntity[]> {
+    return await this.siteConfigRepository.find({
+      where: { updated_at: MoreThan(modifiedAfter) },
+      relations: ['siteInfo'],
+    });
   }
 
   async readOne(

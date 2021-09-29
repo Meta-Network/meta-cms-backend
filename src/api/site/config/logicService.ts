@@ -1,3 +1,4 @@
+import { MetaInternalResult, ServiceCode } from '@metaio/microservice-model';
 import { Injectable } from '@nestjs/common';
 import { IPaginationOptions, Pagination } from 'nestjs-typeorm-paginate';
 import { DeleteResult, FindOneOptions } from 'typeorm';
@@ -115,5 +116,28 @@ export class SiteConfigLogicService {
       status,
     });
     return update;
+  }
+
+  async fetchSiteInfos(queries: {
+    modifiedAfter: Date;
+  }): Promise<MetaInternalResult> {
+    const siteConfigs = await this.siteConfigBaseService.readByModifedAfter(
+      queries.modifiedAfter,
+    );
+    const result = new MetaInternalResult({
+      serviceCode: ServiceCode.CMS,
+    });
+
+    result.data = siteConfigs.map((config) => ({
+      configId: config.id,
+      userId: config.siteInfo.userId,
+      title: config.siteInfo.title,
+      subtitle: config.siteInfo.subtitle,
+      description: config.siteInfo.description,
+      domain: config.domain,
+      metaSpacePrefix: config.metaSpacePrefix,
+    }));
+
+    return result;
   }
 }
