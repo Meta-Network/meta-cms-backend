@@ -137,6 +137,6 @@ export class PostController {
       throw new EmptyAccessTokenException();
     }
 
-    this.microserviceClient.emit('cms.post.sync', uid);
+    this.microserviceClient.emit(`cms.post.sync.${platform}`, uid);
   }
 }
