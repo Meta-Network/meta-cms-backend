@@ -2,6 +2,7 @@ import { MetaWorker } from '@metaio/worker-model';
 import { Inject, Injectable, LoggerService } from '@nestjs/common';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { Octokit } from 'octokit';
+import { publish } from 'rxjs';
 
 import {
   PublisherProvider,
@@ -64,7 +65,7 @@ export class GitHubPublisherProvider implements PublisherProvider {
       owner: publishConfig.git.gitUsername,
       repo: publishConfig.git.gitReponame,
       source: {
-        branch: 'gh-pages',
+        branch: publishConfig.publish.publishBranch,
         path: '/',
       },
       mediaType: {
