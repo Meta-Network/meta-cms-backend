@@ -1,6 +1,6 @@
 import path from 'path';
 
-export const configPath =
+export const CONFIG_PATH =
   process.env.CONFIG_PATH || path.join(__dirname, '..', '..', 'config');
 
 export enum TaskWorkerType {
