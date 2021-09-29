@@ -609,11 +609,12 @@
     "@types/yargs" "^16.0.0"
     chalk "^4.0.0"
 
-"@meta-network/auth-sdk@^0.1.1":
-  version "0.1.1"
-  resolved "https://registry.yarnpkg.com/@meta-network/auth-sdk/-/auth-sdk-0.1.1.tgz#5c1e8d7ff2f049f3325be73347caed8bac653a23"
-  integrity sha512-2C1fca0Oa9xpWTOUieyzUqHLcNsdivHavmwczzaRY07bKehAElgz855FXywnOA4Yvs6bIS6bKjCCedpHjLl3xA==
+"@metaio/auth-sdk@^0.2.2":
+  version "0.2.2"
+  resolved "https://registry.yarnpkg.com/@metaio/auth-sdk/-/auth-sdk-0.2.2.tgz#9968638bdb200dba0dd55d670478f84398d1249e"
+  integrity sha512-FMmILonlsFityD5fld/alBWEGmV+5PJUzqIrOJhpF+NcyWl0l6PzP4FLhTy4e3MX532fwmf5MKeEb8jLO2K2sQ==
   dependencies:
+    dotenv "^10.0.0"
     jsonwebtoken "^8.5.1"
 
 "@metaio/microservice-model@^1.0.1":
@@ -2789,7 +2790,7 @@ dotenv-expand@5.1.0:
   resolved "https://registry.yarnpkg.com/dotenv-expand/-/dotenv-expand-5.1.0.tgz#3fbaf020bfd794884072ea26b1e9791d45a629f0"
   integrity sha512-YXQl1DSa4/PQyRfgrv6aoNjhasp/p4qs9FjJ4q4cQk+8m4r6k4ZSiEyytKG8f8W9gi8WsQtIObNmKd+tMzNTmA==
 
-dotenv@10.0.0:
+dotenv@10.0.0, dotenv@^10.0.0:
   version "10.0.0"
   resolved "https://registry.yarnpkg.com/dotenv/-/dotenv-10.0.0.tgz#3d4227b8fb95f81096cdd2b66653fb2c7085ba81"
   integrity sha512-rlBi9d8jpv9Sf1klPjNfFAuWDjKLwTIJJ/VxtoTwIR6hnZxcEOQCZg2oIL3MWBYw5GpUDKOEnND7LXTbIpQ03Q==

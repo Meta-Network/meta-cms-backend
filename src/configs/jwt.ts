@@ -1,4 +1,4 @@
-import { PUBLIC_KEYS } from '@meta-network/auth-sdk';
+import { PUBLIC_KEY } from '@metaio/auth-sdk';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtModuleOptions, JwtOptionsFactory } from '@nestjs/jwt';
@@ -9,7 +9,7 @@ export class JwtConfigService implements JwtOptionsFactory {
 
   createJwtOptions(): Promise<JwtModuleOptions> | JwtModuleOptions {
     return {
-      publicKey: PUBLIC_KEYS.DEVELOPMENT,
+      publicKey: PUBLIC_KEY,
       verifyOptions: {
         issuer: this.configService.get<string>('jwt.verify.issuer'),
         audience: this.configService.get<string>('jwt.verify.audience'),

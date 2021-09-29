@@ -1,4 +1,4 @@
-import { PUBLIC_KEYS } from '@meta-network/auth-sdk';
+import { PUBLIC_KEY } from '@metaio/auth-sdk';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
@@ -12,7 +12,7 @@ export class UCenterJwtStrategy extends PassportStrategy(Strategy) {
   constructor(private readonly configService: ConfigService) {
     super({
       jwtFromRequest: (req: Request) => req.cookies[cookieName],
-      secretOrKey: PUBLIC_KEYS.DEVELOPMENT,
+      secretOrKey: PUBLIC_KEY,
       ignoreExpiration: process.env.NODE_ENV !== 'production',
     });
 
