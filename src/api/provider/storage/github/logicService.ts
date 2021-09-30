@@ -149,6 +149,7 @@ export class GitHubStorageLogicService {
   async createGitHubRepoFromConfig(
     token: string,
     cfg: GitHubStorageProviderEntity,
+    privateRepo = false,
   ): Promise<CreateGitHubRepoFromConfig> {
     const octokit = new Octokit({ auth: token });
     const { data: authData } = await octokit.rest.users.getAuthenticated();
@@ -224,7 +225,7 @@ export class GitHubStorageLogicService {
           const { data: repoData } =
             await octokit.rest.repos.createForAuthenticatedUser({
               name: repoName,
-              private: true,
+              private: privateRepo,
               auto_init: false,
             });
           const { pull, push } = repoData?.permissions;
