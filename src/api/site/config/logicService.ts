@@ -149,7 +149,7 @@ export class SiteConfigLogicService {
       },
       relations: ['siteInfo'],
     });
-    const rand = conf[Math.random() * (conf.length | 0)];
+    const rand = conf[(Math.random() * conf.length) >> 0];
     return rand;
   }
 }
