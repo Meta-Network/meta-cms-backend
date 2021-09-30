@@ -26,7 +26,7 @@ import {
 } from '@nestjs/swagger';
 import { DeleteResult } from 'typeorm';
 
-import { User } from '../../../decorators';
+import { SkipUCenterAuth, User } from '../../../decorators';
 import { SiteConfigEntity } from '../../../entities/siteConfig.entity';
 import {
   AccessDeniedException,
@@ -178,6 +178,7 @@ export class SiteConfigController {
 
   @ApiOkResponse({ type: SiteConfigResponse })
   @Get('random')
+  @SkipUCenterAuth(true)
   async getRandomSiteConfig() {
     return await this.service.findRandomSiteConfig();
   }
