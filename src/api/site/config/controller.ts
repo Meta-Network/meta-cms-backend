@@ -175,4 +175,10 @@ export class SiteConfigController {
   ) {
     return await this.service.deleteSiteConfig(uid, configId);
   }
+
+  @ApiOkResponse({ type: SiteConfigResponse })
+  @Get('random')
+  async getRandomSiteConfig() {
+    return await this.service.findRandomSiteConfig();
+  }
 }

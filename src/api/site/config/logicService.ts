@@ -1,7 +1,7 @@
 import { MetaInternalResult, ServiceCode } from '@metaio/microservice-model';
 import { Injectable } from '@nestjs/common';
 import { IPaginationOptions, Pagination } from 'nestjs-typeorm-paginate';
-import { DeleteResult, FindOneOptions } from 'typeorm';
+import { DeleteResult, Equal, FindOneOptions, IsNull, Not } from 'typeorm';
 
 import { SiteConfigEntity } from '../../../entities/siteConfig.entity';
 import {
@@ -139,5 +139,17 @@ export class SiteConfigLogicService {
     }));
 
     return result;
+  }
+
+  async findRandomSiteConfig(): Promise<SiteConfigEntity> {
+    const conf = await this.siteConfigBaseService.read({
+      where: {
+        metaSpacePrefix: Not(IsNull()),
+        status: Equal(SiteStatus.Published),
+      },
+      relations: ['siteInfo'],
+    });
+    const rand = conf[Math.random() * (conf.length | 0)];
+    return rand;
   }
 }

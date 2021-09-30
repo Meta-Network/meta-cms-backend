@@ -5,10 +5,21 @@ import {
   paginate,
   Pagination,
 } from 'nestjs-typeorm-paginate';
-import { DeleteResult, FindOneOptions, MoreThan, Repository } from 'typeorm';
+import {
+  DeleteResult,
+  FindConditions,
+  FindManyOptions,
+  FindOneOptions,
+  MoreThan,
+  Repository,
+} from 'typeorm';
 
 import { SiteConfigEntity } from '../../../entities/siteConfig.entity';
 import { SiteStatus } from '../../../types/enum';
+import {
+  isFindManyOptions,
+  isPaginationOptions,
+} from '../../../utils/typeGuard';
 
 @Injectable()
 export class SiteConfigBaseService {
@@ -18,14 +29,24 @@ export class SiteConfigBaseService {
   ) {}
 
   async read(
+    options: FindManyOptions<SiteConfigEntity>,
+  ): Promise<SiteConfigEntity[]>;
+  async read(
     options: IPaginationOptions,
     sid: number,
-  ): Promise<Pagination<SiteConfigEntity>> {
-    return await paginate<SiteConfigEntity>(
-      this.siteConfigRepository,
-      options,
-      { where: { siteInfo: { id: sid } } },
-    );
+  ): Promise<Pagination<SiteConfigEntity>>;
+  async read(
+    arg1: FindManyOptions<SiteConfigEntity> | IPaginationOptions,
+    arg2?: number,
+  ): Promise<SiteConfigEntity[] | Pagination<SiteConfigEntity>> {
+    if (isPaginationOptions(arg1) && typeof arg2 === 'number') {
+      return await paginate<SiteConfigEntity>(this.siteConfigRepository, arg1, {
+        where: { siteInfo: { id: arg2 } },
+      });
+    }
+    if (isFindManyOptions<SiteConfigEntity>(arg1)) {
+      return await this.siteConfigRepository.find(arg1);
+    }
   }
 
   async readByModifedAfter(modifiedAfter: Date): Promise<SiteConfigEntity[]> {
@@ -39,10 +60,20 @@ export class SiteConfigBaseService {
   }
 
   async readOne(
+    options?: FindOneOptions<SiteConfigEntity>,
+  ): Promise<SiteConfigEntity>;
+  async readOne(
     cid: number,
     options?: FindOneOptions<SiteConfigEntity>,
+  ): Promise<SiteConfigEntity>;
+  async readOne(
+    arg1: number | FindOneOptions<SiteConfigEntity>,
+    arg2?: FindOneOptions<SiteConfigEntity>,
   ): Promise<SiteConfigEntity> {
-    return await this.siteConfigRepository.findOne(cid, options);
+    if (typeof arg1 === 'number') {
+      return await this.siteConfigRepository.findOne(arg1, arg2);
+    }
+    return await this.siteConfigRepository.findOne(arg1);
   }
 
   async create(config: SiteConfigEntity): Promise<SiteConfigEntity> {
