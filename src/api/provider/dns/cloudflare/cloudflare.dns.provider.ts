@@ -20,18 +20,19 @@ export class CloudFlareDnsProvider implements DnsProvider {
       .get(
         `https://api.cloudflare.com/client/v4/zones/${dns.env.zoneId}/dns_records`,
       )
+      .query({
+        type: dns.record.type,
+        content: dns.record.content,
+      })
       .set('Authorization', `Bearer ${dns.env.token}`);
     this.logger.verbose(
       `List dns records: ${JSON.stringify(res.body)}`,
       this.constructor.name,
     );
     if (res.body.success) {
-      const dnsRecords: any[] = res.body.result;
-      const existingDnsRecords = dnsRecords.filter(
-        (r) => r.type === dnsRecord.type && r.content === dnsRecord.content,
-      );
+      const existingDnsRecords: any[] = res.body.result;
       //put
-      if (existingDnsRecords.length > 0) {
+      if (existingDnsRecords && existingDnsRecords.length > 0) {
         const dnsRecordId = existingDnsRecords[0].id;
         const patchRes = await superagent
           .patch(
@@ -39,7 +40,6 @@ export class CloudFlareDnsProvider implements DnsProvider {
           )
           .send({
             name: dnsRecord.name,
-            proxied: true,
           })
           .set('Authorization', `Bearer ${dns.env.token}`);
         this.logger.verbose(
