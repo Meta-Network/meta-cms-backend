@@ -19,6 +19,7 @@ import {
   ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
+import { Redis } from 'ioredis';
 import { IPaginationOptions } from 'nestjs-typeorm-paginate';
 
 import { MetaMicroserviceClient } from '../../constants';
@@ -49,6 +50,11 @@ class PostEntityResponse extends TransformResponse<PostEntity> {
   readonly data: PostEntity;
 }
 
+class SyncStateResponse extends TransformResponse<'idle' | 'syncing' | number> {
+  @ApiProperty({ type: String, example: 'idle | syncing | 1' })
+  readonly data: 'idle' | 'syncing' | number;
+}
+
 @ApiTags('post')
 @ApiCookieAuth()
 @Controller('post')
@@ -58,6 +64,8 @@ export class PostController {
     private readonly accessTokenService: AccessTokenService,
     @Inject(MetaMicroserviceClient.UCenter)
     private readonly microserviceClient: ClientProxy,
+    @Inject('REDIS')
+    private readonly redisClient: Redis,
   ) {}
 
   @Get()
@@ -137,6 +145,28 @@ export class PostController {
       throw new EmptyAccessTokenException();
     }
 
+    await this.redisClient.set(`cms:post:sync_state:${uid}`, 'syncing');
+
     this.microserviceClient.emit(`cms.post.sync.${platform}`, uid);
+  }
+
+  @Get('sync/state')
+  @ApiOkResponse({
+    type: SyncStateResponse,
+  })
+  @ApiBadRequestResponse({
+    type: RequirdHttpHeadersNotFoundException,
+    description: 'When cookie with access token not provided',
+  })
+  async getSyncState(@User('id', ParseIntPipe) uid: number) {
+    const result =
+      (await this.redisClient.get(`cms:post:sync_state:${uid}`)) ?? 'idle';
+    const numberResult = parseInt(result, 10);
+    if (!Number.isNaN(numberResult)) {
+      await this.redisClient.del(`cms:post:sync_state:${uid}`);
+      return numberResult;
+    }
+
+    return result;
   }
 }

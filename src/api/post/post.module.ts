@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ClientsModule } from '@nestjs/microservices';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import Redis from 'ioredis';
 
 import { UCenterMicroserviceConfigService } from '../../configs/microservices/ucenter';
 import { MetaMicroserviceClient } from '../../constants';
@@ -27,6 +28,20 @@ import { MatatakiSourceModule } from './sources/matataki/matataki.module';
     MatatakiSourceModule,
   ],
   controllers: [PostController],
-  providers: [PostService, AccessTokenService],
+  providers: [
+    PostService,
+    AccessTokenService,
+    {
+      provide: 'REDIS',
+      useFactory: (configService: ConfigService) =>
+        new Redis({
+          host: configService.get<string>('redis.host'),
+          port: +configService.get<number>('redis.port'),
+          username: configService.get<string>('redis.user'),
+          password: configService.get<string>('redis.pass'),
+        }),
+      inject: [ConfigService],
+    },
+  ],
 })
 export class PostModule {}
