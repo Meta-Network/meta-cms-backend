@@ -145,12 +145,15 @@ export class PostController {
       throw new EmptyAccessTokenException();
     }
 
-    await this.redisClient.set(`cms:post:sync_state:${uid}`, 'syncing');
+    await this.redisClient.set(
+      `cms:post:sync_state:${platform}:${uid}`,
+      'syncing',
+    );
 
     this.microserviceClient.emit(`cms.post.sync.${platform}`, uid);
   }
 
-  @Get('sync/state')
+  @Get('sync/:platform/state')
   @ApiOkResponse({
     type: SyncStateResponse,
   })
@@ -158,12 +161,16 @@ export class PostController {
     type: RequirdHttpHeadersNotFoundException,
     description: 'When cookie with access token not provided',
   })
-  async getSyncState(@User('id', ParseIntPipe) uid: number) {
+  async getSyncState(
+    @User('id', ParseIntPipe) uid: number,
+    @Param('platform') platform: string,
+  ) {
     const result =
-      (await this.redisClient.get(`cms:post:sync_state:${uid}`)) ?? 'idle';
+      (await this.redisClient.get(`cms:post:sync_state:${platform}:${uid}`)) ??
+      'idle';
     const numberResult = parseInt(result, 10);
     if (!Number.isNaN(numberResult)) {
-      await this.redisClient.del(`cms:post:sync_state:${uid}`);
+      await this.redisClient.del(`cms:post:sync_state:${platform}:${uid}`);
       return numberResult;
     }
 
