@@ -71,6 +71,16 @@ class SiteConfigDeleteResponse extends TransformResponse<DeleteResult> {
 export class SiteConfigController {
   constructor(private readonly service: SiteConfigLogicService) {}
 
+  @ApiOkResponse({ type: SiteConfigResponse })
+  @ApiNotFoundResponse({
+    type: DataNotFoundException,
+    description: 'When the user does not have a default site configuration',
+  })
+  @Get('default')
+  async getUserDefaultSiteConfig(@User('id', ParseIntPipe) uid: number) {
+    return await this.service.getUserDefaultSiteConfig(uid);
+  }
+
   @ApiOkResponse({ type: SiteConfigWithPaginationResponse })
   @ApiNotFoundResponse({
     type: DataNotFoundException,

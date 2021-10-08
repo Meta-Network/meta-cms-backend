@@ -152,4 +152,18 @@ export class SiteConfigLogicService {
     const rand = conf[(Math.random() * conf.length) >> 0];
     return rand;
   }
+
+  async getUserDefaultSiteConfig(userId: number): Promise<SiteConfigEntity> {
+    return await this.siteConfigBaseService.readOne({
+      where: {
+        siteInfo: {
+          userId,
+        },
+      },
+      order: {
+        id: 'DESC',
+      },
+      relations: ['siteInfo'],
+    });
+  }
 }
