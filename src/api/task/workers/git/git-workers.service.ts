@@ -28,6 +28,7 @@ export class GitWorkersService extends TaskWorkersService {
       [
         MetaWorker.Enums.TaskMethod.GIT_INIT_PUSH,
         MetaWorker.Enums.TaskMethod.GIT_OVERWRITE_PUSH,
+        MetaWorker.Enums.TaskMethod.GIT_OVERWRITE_THEME,
         MetaWorker.Enums.TaskMethod.GIT_COMMIT_PUSH,
         MetaWorker.Enums.TaskMethod.GIT_CLONE_CHECKOUT,
         MetaWorker.Enums.TaskMethod.PUBLISH_GITHUB_PAGES,
