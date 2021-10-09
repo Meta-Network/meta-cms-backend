@@ -121,6 +121,10 @@ export class PostService {
     await this.postSiteConfigRepository.save(relas);
 
     for (const postSiteConfigRela of relas) {
+      this.logger.verbose(
+        ` post to site: ${JSON.stringify(postSiteConfigRela)}`,
+        this.constructor.name,
+      );
       const postInfo = {
         title: post.title,
         source: processedContent,
