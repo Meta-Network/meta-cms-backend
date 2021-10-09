@@ -91,11 +91,12 @@ export class TaskDispatchersService {
   }
 
   async resolveTask(taskId: string, result: any) {
-    await this.resolveCallbacks[taskId](result);
+    this.resolveCallbacks[taskId] &&
+      (await this.resolveCallbacks[taskId](result));
     this.removeTaskPromise(taskId);
   }
   async rejectTask(taskId: string, err: Error) {
-    await this.rejectCallbacks[taskId](err);
+    this.rejectCallbacks[taskId] && (await this.rejectCallbacks[taskId](err));
     this.removeTaskPromise(taskId);
   }
 
