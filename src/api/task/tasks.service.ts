@@ -119,7 +119,7 @@ export class TasksService {
   protected async doCheckoutCommitPush(
     user: Partial<UCenterJWTPayload>,
     siteConfigId: number,
-    dispachTaskFunc: () => Promise<any>,
+    dispatchTaskFunc: () => Promise<any>,
   ) {
     const { deployConfig } = await this.generateDeployConfigAndRepoSize(
       user,
@@ -140,7 +140,7 @@ export class TasksService {
     const commitPushTaskSteps: MetaWorker.Enums.TaskMethod[] = [
       MetaWorker.Enums.TaskMethod.GIT_COMMIT_PUSH,
     ];
-    const taskStepResults = await dispachTaskFunc();
+    const taskStepResults = await dispatchTaskFunc();
     this.logger.verbose(
       `Adding commit&push worker to queue`,
       TasksService.name,
