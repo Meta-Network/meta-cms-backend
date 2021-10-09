@@ -77,16 +77,11 @@ export class TasksService {
     siteConfigId: number,
   ) {
     await this.checkSiteConfigTaskWorkspace(siteConfigId);
-    const deploySiteTaskStepResults = await this.doCheckoutForPublish(
+    return await this.doCheckoutCommitPush(
       user,
       siteConfigId,
+      async () => await this.doCreatePost(user, post, siteConfigId),
     );
-    const createPostTaskStepResults = await this.doCreatePost(
-      user,
-      post,
-      siteConfigId,
-    );
-    return Object.assign(deploySiteTaskStepResults, createPostTaskStepResults);
   }
 
   async updatePost(
@@ -95,16 +90,11 @@ export class TasksService {
     siteConfigId: number,
   ) {
     await this.checkSiteConfigTaskWorkspace(siteConfigId);
-    const deploySiteTaskStepResults = await this.doCheckoutForPublish(
+    return await this.doCheckoutCommitPush(
       user,
       siteConfigId,
+      async () => await this.doUpdatePost(user, post, siteConfigId),
     );
-    const createPostTaskStepResults = await this.doCreatePost(
-      user,
-      post,
-      siteConfigId,
-    );
-    return Object.assign(deploySiteTaskStepResults, createPostTaskStepResults);
   }
 
   protected async doCheckoutForPublish(
@@ -123,6 +113,48 @@ export class TasksService {
     return await this.taskDispatchersService.dispatchTask(
       deployTaskSteps,
       deployConfig,
+    );
+  }
+
+  protected async doCheckoutCommitPush(
+    user: Partial<UCenterJWTPayload>,
+    siteConfigId: number,
+    dispachTaskFunc: () => Promise<any>,
+  ) {
+    const { deployConfig } = await this.generateDeployConfigAndRepoSize(
+      user,
+      siteConfigId,
+      [SiteStatus.Deployed, SiteStatus.Publishing, SiteStatus.Published],
+    );
+    const checkoutTaskSteps: MetaWorker.Enums.TaskMethod[] = [
+      MetaWorker.Enums.TaskMethod.GIT_CLONE_CHECKOUT,
+    ];
+    this.logger.verbose(`Adding checkout worker to queue`, TasksService.name);
+
+    const checkoutTaskStepResults =
+      await this.taskDispatchersService.dispatchTask(
+        checkoutTaskSteps,
+        deployConfig,
+      );
+
+    const commitPushTaskSteps: MetaWorker.Enums.TaskMethod[] = [
+      MetaWorker.Enums.TaskMethod.GIT_COMMIT_PUSH,
+    ];
+    const taskStepResults = await dispachTaskFunc();
+    this.logger.verbose(
+      `Adding commit&push worker to queue`,
+      TasksService.name,
+    );
+
+    const commitPushTaskStepResults =
+      await this.taskDispatchersService.dispatchTask(
+        commitPushTaskSteps,
+        deployConfig,
+      );
+    return Object.assign(
+      checkoutTaskStepResults,
+      taskStepResults,
+      commitPushTaskStepResults,
     );
   }
   protected getPublishTaskMethodsByPublisherType(
