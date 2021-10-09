@@ -1,7 +1,7 @@
 import { MetaInternalResult, ServiceCode } from '@metaio/microservice-model';
 import { Injectable } from '@nestjs/common';
 import { IPaginationOptions, Pagination } from 'nestjs-typeorm-paginate';
-import { DeleteResult, Equal, FindOneOptions, IsNull, Not } from 'typeorm';
+import { DeleteResult, Equal, FindOneOptions, In, IsNull, Not } from 'typeorm';
 
 import { SiteConfigEntity } from '../../../entities/siteConfig.entity';
 import {
@@ -93,6 +93,26 @@ export class SiteConfigLogicService {
     if (config.siteInfo.userId !== uid)
       throw new AccessDeniedException('access denied, user id inconsistent');
     return config;
+  }
+
+  async validateSiteConfigsUserId(
+    configIds: number[],
+    uid: number,
+    options: FindOneOptions<SiteConfigEntity> = { relations: ['siteInfo'] },
+  ): Promise<SiteConfigEntity[]> {
+    const configs = await this.siteConfigBaseService.read({
+      ...options,
+      where: { id: In(configIds) },
+    });
+    if (!configs || configs.length == 0) {
+      throw new DataNotFoundException('site configs not found');
+    }
+    for (const config of configs) {
+      if (!config.siteInfo) throw new RelationNotFoundException();
+      if (config.siteInfo.userId !== uid)
+        throw new AccessDeniedException('access denied, user id inconsistent');
+    }
+    return configs;
   }
 
   /**

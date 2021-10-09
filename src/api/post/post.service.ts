@@ -8,9 +8,13 @@ import { Repository } from 'typeorm';
 import { PostEntity } from '../../entities/post.entity';
 import { PostSiteConfigRelaEntity } from '../../entities/postSiteConfigRela.entity';
 import { PostState } from '../../enums/postState';
-import { InvalidStatusException } from '../../exceptions';
+import {
+  AccessDeniedException,
+  InvalidStatusException,
+} from '../../exceptions';
 import { UCenterJWTPayload } from '../../types';
 import { TaskCommonState } from '../../types/enum';
+import { SiteConfigLogicService } from '../site/config/logicService';
 import { TasksService } from '../task/tasks.service';
 import { PublishPostDto } from './dto/publish-post.dto';
 import { PreProcessorService } from './preprocessor/preprocessor.service';
@@ -25,6 +29,7 @@ export class PostService {
     private readonly postRepository: Repository<PostEntity>,
     @InjectRepository(PostSiteConfigRelaEntity)
     private readonly postSiteConfigRepository: Repository<PostSiteConfigRelaEntity>,
+    private readonly siteConfigLogicService: SiteConfigLogicService,
     private readonly preprocessorService: PreProcessorService,
     private readonly matatakiSourceService: MatatakiSourceService,
     private readonly tasksService: TasksService,
@@ -68,9 +73,19 @@ export class PostService {
     );
 
     const post = await this.postRepository.findOneOrFail(postId);
+    if (post.userId !== user.id) {
+      throw new AccessDeniedException('access denied, user id inconsistent');
+    }
+
     if (post.state !== PostState.Pending) {
       throw new InvalidStatusException('invalid post state');
     }
+
+    await this.siteConfigLogicService.validateSiteConfigsUserId(
+      publishPostDto.configIds,
+      user.id,
+    );
+
     const sourceService = this.getSourceService(post.platform);
     this.logger.verbose(
       `Fetching source content postId: ${postId}`,
