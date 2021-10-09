@@ -10,6 +10,8 @@ import { AccessTokenEntity } from '../../entities/accessToken.entity';
 import { PostEntity } from '../../entities/post.entity';
 import { PostSiteConfigRelaEntity } from '../../entities/postSiteConfigRela.entity';
 import { AccessTokenService } from '../../synchronizer/access-token.service';
+import { SiteConfigLogicService } from '../site/config/logicService';
+import { SiteConfigModule } from '../site/config/module';
 import { TasksModule } from '../task/tasks.module';
 import { PostController } from './post.controller';
 import { PostService } from './post.service';
@@ -33,6 +35,7 @@ import { MatatakiSourceModule } from './sources/matataki/matataki.module';
     PreprocessorModule,
     MatatakiSourceModule,
     TasksModule,
+    SiteConfigModule,
   ],
   controllers: [PostController],
   providers: [
