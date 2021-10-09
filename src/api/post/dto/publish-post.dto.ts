@@ -1,8 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray } from 'class-validator';
+import { ArrayNotEmpty, IsArray, IsNumber } from 'class-validator';
 
 export class PublishPostDto {
   @ApiProperty({ description: 'Site config ids', example: [1, 2] })
   @IsArray()
+  @ArrayNotEmpty()
+  @IsNumber({}, { each: true })
   configIds: number[];
 }
