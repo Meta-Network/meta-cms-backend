@@ -8,7 +8,9 @@ import { UCenterMicroserviceConfigService } from '../../configs/microservices/uc
 import { MetaMicroserviceClient } from '../../constants';
 import { AccessTokenEntity } from '../../entities/accessToken.entity';
 import { PostEntity } from '../../entities/post.entity';
+import { PostSiteConfigRelaEntity } from '../../entities/postSiteConfigRela.entity';
 import { AccessTokenService } from '../../synchronizer/access-token.service';
+import { TasksModule } from '../task/tasks.module';
 import { PostController } from './post.controller';
 import { PostService } from './post.service';
 import { PreprocessorModule } from './preprocessor/preprocessor.module';
@@ -16,7 +18,11 @@ import { MatatakiSourceModule } from './sources/matataki/matataki.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([PostEntity, AccessTokenEntity]),
+    TypeOrmModule.forFeature([
+      PostEntity,
+      PostSiteConfigRelaEntity,
+      AccessTokenEntity,
+    ]),
     ClientsModule.registerAsync([
       {
         name: MetaMicroserviceClient.UCenter,
@@ -26,6 +32,7 @@ import { MatatakiSourceModule } from './sources/matataki/matataki.module';
     ]),
     PreprocessorModule,
     MatatakiSourceModule,
+    TasksModule,
   ],
   controllers: [PostController],
   providers: [

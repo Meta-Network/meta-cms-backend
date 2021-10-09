@@ -70,6 +70,42 @@ export class TasksService {
     return Object.assign(deploySiteTaskStepResults, publishSiteTaskStepResults);
   }
 
+  async createPost(
+    user: Partial<UCenterJWTPayload>,
+    post: MetaWorker.Info.Post,
+    siteConfigId: number,
+  ) {
+    await this.checkSiteConfigTaskWorkspace(siteConfigId);
+    const deploySiteTaskStepResults = await this.doCheckoutForPublish(
+      user,
+      siteConfigId,
+    );
+    const createPostTaskStepResults = await this.doCreatePost(
+      user,
+      post,
+      siteConfigId,
+    );
+    return Object.assign(deploySiteTaskStepResults, createPostTaskStepResults);
+  }
+
+  async updatePost(
+    user: Partial<UCenterJWTPayload>,
+    post: MetaWorker.Info.Post,
+    siteConfigId: number,
+  ) {
+    await this.checkSiteConfigTaskWorkspace(siteConfigId);
+    const deploySiteTaskStepResults = await this.doCheckoutForPublish(
+      user,
+      siteConfigId,
+    );
+    const createPostTaskStepResults = await this.doCreatePost(
+      user,
+      post,
+      siteConfigId,
+    );
+    return Object.assign(deploySiteTaskStepResults, createPostTaskStepResults);
+  }
+
   protected async doCheckoutForPublish(
     user: Partial<UCenterJWTPayload>,
     siteConfigId: number,
@@ -165,10 +201,10 @@ export class TasksService {
       SiteStatus.Publishing,
     );
     const publishSiteTaskStepResults =
-      (await this.taskDispatchersService.dispatchTask(
+      await this.taskDispatchersService.dispatchTask(
         publishTaskSteps,
         publishConfig,
-      )) as string[];
+      );
 
     await this.doUpdateDns(publisherType, publishConfig);
     await this.publisherService.updateDomainName(publisherType, publishConfig);
@@ -184,6 +220,60 @@ export class TasksService {
       userId: user.id,
     });
     return publishSiteTaskStepResults;
+  }
+
+  protected async doCreatePost(
+    user: Partial<UCenterJWTPayload>,
+    post: MetaWorker.Info.Post,
+    siteConfigId: number,
+  ) {
+    const { postConfig, template } = await this.generatePostConfigAndTemplate(
+      user,
+      post,
+      siteConfigId,
+    );
+    const templateType = template.templateType;
+    this.logger.verbose(
+      `Adding post creator worker to queue`,
+      this.constructor.name,
+    );
+    const postTaskSteps = [];
+
+    postTaskSteps.push(
+      ...this.getCreatePostTaskMethodsByTemplateType(templateType),
+    );
+
+    return await this.taskDispatchersService.dispatchTask(
+      postTaskSteps,
+      postConfig,
+    );
+  }
+
+  protected async doUpdatePost(
+    user: Partial<UCenterJWTPayload>,
+    post: MetaWorker.Info.Post,
+    siteConfigId: number,
+  ) {
+    const { postConfig, template } = await this.generatePostConfigAndTemplate(
+      user,
+      post,
+      siteConfigId,
+    );
+    const templateType = template.templateType;
+    this.logger.verbose(
+      `Adding post updater worker to queue`,
+      this.constructor.name,
+    );
+    const postTaskSteps = [];
+
+    postTaskSteps.push(
+      ...this.getUpdatePostTaskMethodsByTemplateType(templateType),
+    );
+
+    return await this.taskDispatchersService.dispatchTask(
+      postTaskSteps,
+      postConfig,
+    );
   }
 
   protected async doUpdateDns(
@@ -210,7 +300,7 @@ export class TasksService {
   }
 
   protected async generatePublishConfigAndTemplate(
-    user: any,
+    user: Partial<UCenterJWTPayload>,
     configId: number,
   ): Promise<{
     publisherType: MetaWorker.Enums.PublisherType;
@@ -218,7 +308,7 @@ export class TasksService {
     template: MetaWorker.Info.Template;
   }> {
     this.logger.verbose(
-      `Generate meta worker user info`,
+      `Generate meta worker site info`,
       this.constructor.name,
     );
 
@@ -252,6 +342,48 @@ export class TasksService {
     };
   }
 
+  protected async generatePostConfigAndTemplate(
+    user: Partial<UCenterJWTPayload>,
+    post: MetaWorker.Info.Post,
+    configId: number,
+  ): Promise<{
+    postConfig: MetaWorker.Configs.PostConfig;
+    template: MetaWorker.Info.Template;
+  }> {
+    this.logger.verbose(
+      `Generate meta worker site info`,
+      this.constructor.name,
+    );
+
+    const { site, template, storage } =
+      await this.siteService.generateMetaWorkerSiteInfo(user.id, configId, [
+        SiteStatus.Deployed,
+        SiteStatus.Publishing,
+        SiteStatus.Published,
+      ]);
+    const { storageProviderId, storageType } = storage;
+    if (!storageProviderId)
+      throw new DataNotFoundException('storage provider id not found');
+    const { gitInfo } = await this.storageService.generateMetaWorkerGitInfo(
+      storageType,
+      user.id,
+      storageProviderId,
+    );
+    const postConfig: MetaWorker.Configs.PostConfig = {
+      user: {
+        username: user.username,
+        nickname: user.nickname,
+      },
+      site,
+      post,
+      git: gitInfo,
+    };
+    return {
+      postConfig,
+      template,
+    };
+  }
+
   protected getDeployTaskMethodsByTemplateType(
     templateType: MetaWorker.Enums.TemplateType,
   ): MetaWorker.Enums.TaskMethod[] {
@@ -271,6 +403,19 @@ export class TasksService {
         `Task workspace is existed:  site config ${siteConfigId}`,
       );
     }
+  }
+
+  protected getCreatePostTaskMethodsByTemplateType(
+    templateType: MetaWorker.Enums.TemplateType,
+  ): MetaWorker.Enums.TaskMethod[] {
+    // HEXO
+    return [MetaWorker.Enums.TaskMethod.HEXO_CREATE_POST];
+  }
+  protected getUpdatePostTaskMethodsByTemplateType(
+    templateType: MetaWorker.Enums.TemplateType,
+  ): MetaWorker.Enums.TaskMethod[] {
+    // HEXO
+    return [MetaWorker.Enums.TaskMethod.HEXO_UPDATE_POST];
   }
 
   protected async generateDeployConfigAndRepoSize(

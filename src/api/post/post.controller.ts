@@ -1,4 +1,5 @@
 import {
+  Body,
   Controller,
   DefaultValuePipe,
   Get,
@@ -31,10 +32,12 @@ import {
   RequirdHttpHeadersNotFoundException,
 } from '../../exceptions';
 import { AccessTokenService } from '../../synchronizer/access-token.service';
+import { UCenterJWTPayload } from '../../types';
 import {
   PaginationResponse,
   TransformResponse,
 } from '../../utils/responseClass';
+import { PublishPostDto } from './dto/publish-post.dto';
 import { PostService } from './post.service';
 
 class PostPagination extends PaginationResponse<PostEntity> {
@@ -80,10 +83,13 @@ export class PostController {
   })
   @ApiQuery({ name: 'page', type: Number, example: 1 })
   @ApiQuery({ name: 'limit', type: Number, example: 10 })
+  @ApiQuery({ name: 'state', enum: PostState, example: 'pending' })
   async getPosts(
     @User('id', ParseIntPipe) uid: number,
-    @Query('page', ParseIntPipe, new DefaultValuePipe(1)) page: number,
+    @Query('page', ParseIntPipe, new DefaultValuePipe(1))
+    page: number,
     @Query('limit', ParseIntPipe, new DefaultValuePipe(10)) limit: number,
+    @Query('state', new DefaultValuePipe(PostState.Pending)) state: PostState,
   ) {
     const hasAnyToken = await this.accessTokenService.hasAny(uid);
     if (!hasAnyToken) {
@@ -96,7 +102,7 @@ export class PostController {
       route: '/post',
     } as IPaginationOptions;
 
-    return await this.postService.getPostsByUserId(uid, options);
+    return await this.postService.getPostsByUserId(uid, state, options);
   }
 
   @Post(':postId/publish')
@@ -105,13 +111,12 @@ export class PostController {
     type: RequirdHttpHeadersNotFoundException,
     description: 'When cookie with access token not provided',
   })
-  async setPostPublished(
-    @User('id', ParseIntPipe) uid: number,
+  async publishPost(
+    @User() user: UCenterJWTPayload,
     @Param('postId', ParseIntPipe) postId: number,
+    @Body() body: PublishPostDto,
   ) {
-    await this.postService.publish(postId);
-
-    return await this.postService.setPostState(postId, PostState.Published);
+    return await this.postService.publishPendingPost(user, postId, body);
   }
 
   @Post(':postId/ignore')

@@ -1,3 +1,4 @@
+import { ApiHideProperty, ApiResponseProperty } from '@nestjs/swagger';
 import {
   IsArray,
   IsEnum,
@@ -6,10 +7,11 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator';
-import { Column, Entity, Index } from 'typeorm';
+import { Column, Entity, Index, OneToMany } from 'typeorm';
 
 import { PostState } from '../enums/postState';
 import { BaseEntity } from './base.entity';
+import { PostSiteConfigRelaEntity } from './postSiteConfigRela.entity';
 
 @Entity()
 @Index(['userId', 'state'])
@@ -62,4 +64,11 @@ export class PostEntity extends BaseEntity {
   @IsArray()
   @IsOptional()
   tags?: Array<string>;
+
+  @OneToMany(() => PostSiteConfigRelaEntity, (rela) => rela.post, {
+    nullable: true,
+  })
+  @ApiHideProperty()
+  @ApiResponseProperty({ type: PostSiteConfigRelaEntity, example: null })
+  readonly siteConfigRelas?: PostSiteConfigRelaEntity[] | null;
 }

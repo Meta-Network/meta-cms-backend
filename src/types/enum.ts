@@ -31,3 +31,10 @@ export enum SiteStatus {
   /** Site published, can be visit */
   Published = 'PUBLISHED',
 }
+
+export enum TaskCommonState {
+  TODO = 'TODO',
+  DOING = 'DOING',
+  SUCCESS = 'SUCCESS',
+  FAIL = 'FAIL',
+}

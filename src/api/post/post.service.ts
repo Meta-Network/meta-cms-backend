@@ -1,10 +1,17 @@
+import { MetaWorker } from '@metaio/worker-model';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IPaginationOptions, paginate } from 'nestjs-typeorm-paginate';
 import { Repository } from 'typeorm';
 
 import { PostEntity } from '../../entities/post.entity';
+import { PostSiteConfigRelaEntity } from '../../entities/postSiteConfigRela.entity';
 import { PostState } from '../../enums/postState';
+import { InvalidStatusException } from '../../exceptions';
+import { UCenterJWTPayload } from '../../types';
+import { TaskCommonState } from '../../types/enum';
+import { TasksService } from '../task/tasks.service';
+import { PublishPostDto } from './dto/publish-post.dto';
 import { PreProcessorService } from './preprocessor/preprocessor.service';
 import { MatatakiSourceService } from './sources/matataki/matataki-source.service';
 
@@ -13,39 +20,97 @@ export class PostService {
   constructor(
     @InjectRepository(PostEntity)
     private readonly postRepository: Repository<PostEntity>,
+    @InjectRepository(PostSiteConfigRelaEntity)
+    private readonly postSiteConfigRepository: Repository<PostSiteConfigRelaEntity>,
     private readonly preprocessorService: PreProcessorService,
     private readonly matatakiSourceService: MatatakiSourceService,
+    private readonly tasksService: TasksService,
   ) {}
 
-  async getPostsByUserId(userId: number, options: IPaginationOptions) {
+  async getPostsByUserId(
+    userId: number,
+    state: PostState,
+    options: IPaginationOptions,
+  ) {
     return await paginate<PostEntity>(this.postRepository, options, {
       where: {
         userId,
-        state: PostState.Pending,
+        state,
       },
+      relations: ['siteConfigRelas'],
     });
+  }
+
+  async getPendingPostsByUserId(userId: number, options: IPaginationOptions) {
+    return await this.getPostsByUserId(userId, PostState.Pending, options);
   }
 
   async setPostState(postId: number, state: PostState) {
     const post = await this.postRepository.findOneOrFail(postId);
     post.state = state;
 
-    this.postRepository.save(post);
+    await this.postRepository.save(post);
 
     return post;
   }
 
-  async publish(postId: number) {
+  async publishPendingPost(
+    user: Partial<UCenterJWTPayload>,
+    postId: number,
+    publishPostDto: PublishPostDto,
+  ) {
     const post = await this.postRepository.findOneOrFail(postId);
+    if (post.state !== PostState.Pending) {
+      throw new InvalidStatusException('invalid post state');
+    }
     const sourceService = this.getSourceService(post.platform);
 
     const sourceContent = await sourceService.fetch(post.source);
     const processedContent = await this.preprocessorService.preprocess(
       sourceContent,
     );
+    const relas = publishPostDto.configIds.map(
+      (configId) =>
+        ({
+          siteConfig: {
+            id: configId,
+          },
+          post: {
+            id: postId,
+          },
+          state: TaskCommonState.DOING,
+        } as Partial<PostSiteConfigRelaEntity>),
+    );
+    await this.postSiteConfigRepository.save(relas);
 
-    // TODO: create hexo task
+    for (const postSiteConfigRela of relas) {
+      const postInfo = {
+        title: post.title,
+        source: processedContent,
+        cover: post.cover,
+        summary: post.summary,
+        category: post.category,
+        tags: post.tags,
+        createdAt: post.createdAt.toUTCString(),
+        updatedAt: post.updatedAt.toUTCString(),
+      } as MetaWorker.Info.Post;
+      try {
+        await this.tasksService.createPost(
+          user,
+          postInfo,
+          postSiteConfigRela.siteConfig.id,
+        );
+        postSiteConfigRela.state = TaskCommonState.SUCCESS;
+        await this.postSiteConfigRepository.save(postSiteConfigRela);
+      } catch (err) {
+        postSiteConfigRela.state = TaskCommonState.FAIL;
+        await this.postSiteConfigRepository.save(postSiteConfigRela);
+      }
+    }
+    post.state = PostState.Published;
+    return await this.postRepository.save(post);
   }
+
   getSourceService(platform: string) {
     switch (platform) {
       case 'matataki':
