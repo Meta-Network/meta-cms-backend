@@ -144,8 +144,14 @@ export class PostService {
         postSiteConfigRela.state = TaskCommonState.SUCCESS;
         await this.postSiteConfigRepository.save(postSiteConfigRela);
       } catch (err) {
+        this.logger.error(
+          `Create post fail: ${postId}`,
+          err,
+          this.constructor.name,
+        );
         postSiteConfigRela.state = TaskCommonState.FAIL;
         await this.postSiteConfigRepository.save(postSiteConfigRela);
+        throw err;
       }
     }
     post.state = PostState.Published;
