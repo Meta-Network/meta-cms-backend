@@ -9,17 +9,17 @@ export class SynchronizerController {
 
   @MessagePattern('user.socialauth.bound')
   async newAccessToken(
-    @Payload() payload: { uid: number; platform: string; accessToken: string },
+    @Payload() payload: { userId: number; platform: string; token: string },
   ) {
-    const { uid: userId, platform, accessToken } = payload;
-    await this.accessTokenService.save(userId, platform, accessToken);
+    const { userId, platform, token } = payload;
+    await this.accessTokenService.save(userId, platform, token);
   }
 
   @MessagePattern('user.socialauth.unbound')
   async removeAccessToken(
-    @Payload() payload: { uid: number; platform: string },
+    @Payload() payload: { userId: number; platform: string },
   ) {
-    const { uid: userId, platform } = payload;
+    const { userId, platform } = payload;
     await this.accessTokenService.remove(userId, platform);
   }
 }
