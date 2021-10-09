@@ -50,6 +50,7 @@ export class TasksService {
     const deploySiteTaskStepResults = await this.doDeploySite(
       user,
       siteConfigId,
+      true,
     );
     const publishSiteTaskStepResults = await this.doPublishSite(
       user,
@@ -135,6 +136,7 @@ export class TasksService {
   protected async doDeploySite(
     user: Partial<UCenterJWTPayload>,
     siteConfigId: number,
+    overwriteTheme = false,
   ) {
     await this.siteConfigLogicService.updateSiteConfigStatus(
       siteConfigId,
@@ -155,6 +157,9 @@ export class TasksService {
     taskSteps.push(...this.getDeployTaskMethodsByTemplateType(templateType));
 
     taskSteps.push(MetaWorker.Enums.TaskMethod.GIT_COMMIT_PUSH);
+    if (overwriteTheme) {
+      taskSteps.push(MetaWorker.Enums.TaskMethod.GIT_OVERWRITE_THEME);
+    }
     this.logger.verbose(`Adding CICD worker to queue`, TasksService.name);
 
     const deploySiteTaskStepResults =
