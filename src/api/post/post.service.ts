@@ -1,6 +1,7 @@
 import { MetaWorker } from '@metaio/worker-model';
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable, LoggerService } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { IPaginationOptions, paginate } from 'nestjs-typeorm-paginate';
 import { Repository } from 'typeorm';
 
@@ -18,6 +19,8 @@ import { MatatakiSourceService } from './sources/matataki/matataki-source.servic
 @Injectable()
 export class PostService {
   constructor(
+    @Inject(WINSTON_MODULE_NEST_PROVIDER)
+    private readonly logger: LoggerService,
     @InjectRepository(PostEntity)
     private readonly postRepository: Repository<PostEntity>,
     @InjectRepository(PostSiteConfigRelaEntity)
@@ -59,13 +62,27 @@ export class PostService {
     postId: number,
     publishPostDto: PublishPostDto,
   ) {
+    this.logger.verbose(
+      `Find the post to publish postId: ${postId}`,
+      this.constructor.name,
+    );
+
     const post = await this.postRepository.findOneOrFail(postId);
     if (post.state !== PostState.Pending) {
       throw new InvalidStatusException('invalid post state');
     }
     const sourceService = this.getSourceService(post.platform);
+    this.logger.verbose(
+      `Fetching source content postId: ${postId}`,
+      this.constructor.name,
+    );
 
     const sourceContent = await sourceService.fetch(post.source);
+    this.logger.verbose(
+      `Preprocess source content postId: ${postId}`,
+      this.constructor.name,
+    );
+
     const processedContent = await this.preprocessorService.preprocess(
       sourceContent,
     );
@@ -81,6 +98,11 @@ export class PostService {
           state: TaskCommonState.DOING,
         } as Partial<PostSiteConfigRelaEntity>),
     );
+    this.logger.verbose(
+      `Saving post site config relations postId: ${postId}`,
+      this.constructor.name,
+    );
+
     await this.postSiteConfigRepository.save(relas);
 
     for (const postSiteConfigRela of relas) {
@@ -95,6 +117,10 @@ export class PostService {
         updatedAt: post.updatedAt.toUTCString(),
       } as MetaWorker.Info.Post;
       try {
+        this.logger.verbose(
+          `Dispatching post site config relations postId: ${postId}`,
+          this.constructor.name,
+        );
         await this.tasksService.createPost(
           user,
           postInfo,
