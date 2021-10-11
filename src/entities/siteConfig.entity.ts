@@ -1,12 +1,15 @@
 import { MetaWorker } from '@metaio/worker-model';
 import { ApiHideProperty, ApiResponseProperty } from '@nestjs/swagger';
 import {
+  IsAlphanumeric,
   IsEnum,
   IsFQDN,
   IsInt,
   IsLocale,
   IsOptional,
   IsString,
+  Length,
+  Matches,
 } from 'class-validator';
 import { Column, Entity, Index, ManyToOne } from 'typeorm';
 
@@ -68,6 +71,8 @@ export class SiteConfigEntity extends BaseEntity {
    */
   @Column({ comment: 'Meta space prefix', nullable: true })
   @IsString()
+  @Length(3, 16)
+  @Matches('\\w{3,16}')
   @IsOptional()
   @Index({ unique: true })
   metaSpacePrefix: string;
