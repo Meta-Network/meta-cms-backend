@@ -132,8 +132,8 @@ export class PostService {
         summary: post.summary,
         category: post.category,
         tags: post.tags,
-        createdAt: post.createdAt.toUTCString(),
-        updatedAt: post.updatedAt.toUTCString(),
+        createdAt: post.createdAt.toISOString(),
+        updatedAt: post.updatedAt.toISOString(),
       } as MetaWorker.Info.Post;
       try {
         this.logger.verbose(
