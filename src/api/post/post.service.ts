@@ -1,6 +1,7 @@
 import { MetaWorker } from '@metaio/worker-model';
 import { Inject, Injectable, LoggerService } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { createHash } from 'crypto';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { IPaginationOptions, paginate } from 'nestjs-typeorm-paginate';
 import { Repository } from 'typeorm';
@@ -170,5 +171,49 @@ export class PostService {
       default:
         throw new Error('Invalid platform');
     }
+  }
+
+  signPost(
+    post: PostEntity,
+    content: string,
+    hashAlgorithm: string,
+    signAlgorithm: string,
+  ) {
+    hashAlgorithm = hashAlgorithm.toLowerCase();
+    signAlgorithm = signAlgorithm.toLowerCase();
+
+    const map = new Map<string, string>();
+    map.set('hashAlgorithm', hashAlgorithm);
+    map.set('signAlgorithm', signAlgorithm);
+    map.set(
+      'contentHash',
+      createHash(hashAlgorithm).update(content).digest('hex'),
+    );
+    map.set(
+      'summaryHash',
+      createHash(hashAlgorithm).update(post.summary).digest('hex'),
+    );
+    map.set('title', post.title);
+    map.set('tags', (post.tags ?? []).join(','));
+    map.set('category', post.category);
+    map.set('cover', post.cover);
+
+    const contentParts = [];
+
+    for (const key of Array.from(map.keys()).sort()) {
+      const value = map.get(key);
+
+      if (contentParts.length > 0) {
+        contentParts.push('&');
+      }
+
+      contentParts.push(key);
+      contentParts.push('=');
+      contentParts.push(encodeURIComponent(value));
+    }
+
+    const contentToSign = contentParts.join();
+
+    // TODO: sign
   }
 }
