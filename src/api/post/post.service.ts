@@ -177,16 +177,14 @@ export class PostService {
     post: PostEntity,
     content: string,
     hashAlgorithm: string,
-    signAlgorithm: string,
     authorPrivateKeyString: string,
     serverPrivateKeyString: string,
   ) {
     hashAlgorithm = hashAlgorithm.toLowerCase();
-    signAlgorithm = signAlgorithm.toLowerCase();
 
     const map = new Map<string, string>();
     map.set('hashAlgorithm', hashAlgorithm);
-    map.set('signAlgorithm', signAlgorithm);
+    map.set('signAlgorithm', 'ed25519');
     map.set(
       'contentHash',
       createHash(hashAlgorithm).update(content).digest('hex'),
