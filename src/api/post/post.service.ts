@@ -1,7 +1,7 @@
 import { MetaWorker } from '@metaio/worker-model';
 import { Inject, Injectable, LoggerService } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { createHash, createPrivateKey, sign } from 'crypto';
+import { createHash, createPrivateKey, createPublicKey, sign } from 'crypto';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { IPaginationOptions, paginate } from 'nestjs-typeorm-paginate';
 import { Repository } from 'typeorm';
@@ -229,6 +229,8 @@ export class PostService {
       format: 'der',
       type: 'pkcs8',
     });
+    const authorPublicKey = createPublicKey(authorPrivateKey);
+
     const serverPrivateKey = createPrivateKey({
       key: Buffer.concat([
         ed25519PrivateKeyPkcs8Header,
@@ -237,9 +239,26 @@ export class PostService {
       format: 'der',
       type: 'pkcs8',
     });
+    const serverPublicKey = createPublicKey(serverPrivateKey);
+
     const authorSignature = sign(null, contentToSign, authorPrivateKey);
     const serverSignature = sign(null, authorSignature, serverPrivateKey);
 
-    return [authorSignature.toString('hex'), serverSignature.toString('hex')];
+    return {
+      author: {
+        publicKey: authorPublicKey
+          .export({ format: 'der', type: 'spki' })
+          .slice(12)
+          .toString('hex'),
+        signature: authorSignature.toString('hex'),
+      },
+      server: {
+        publicKey: serverPublicKey
+          .export({ format: 'der', type: 'spki' })
+          .slice(12)
+          .toString('hex'),
+        signature: serverSignature.toString('hex'),
+      },
+    };
   }
 }
