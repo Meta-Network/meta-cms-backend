@@ -131,7 +131,7 @@ export class PostService {
         source: processedContent,
         cover: post.cover,
         summary: post.summary,
-        category: post.category,
+        categories: post.categories,
         tags: post.tags,
         createdAt: post.createdAt.toISOString(),
         updatedAt: post.updatedAt.toISOString(),
@@ -195,7 +195,7 @@ export class PostService {
     );
     map.set('title', post.title);
     map.set('tags', (post.tags ?? []).join(','));
-    map.set('category', post.category);
+    map.set('categories', (post.categories ?? []).join(','));
     map.set('cover', post.cover);
 
     const contentParts = [];

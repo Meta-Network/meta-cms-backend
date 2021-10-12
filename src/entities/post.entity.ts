@@ -55,10 +55,10 @@ export class PostEntity extends BaseEntity {
   @IsEnum(PostState)
   state: PostState;
 
-  @Column({ comment: 'Post category', nullable: true })
+  @Column({ comment: 'Post categories', type: 'simple-array', nullable: true })
   @IsString()
   @IsOptional()
-  category?: string;
+  categories?: Array<string>;
 
   @Column({ type: 'simple-array', nullable: true, comment: 'Post tags' })
   @IsArray()
