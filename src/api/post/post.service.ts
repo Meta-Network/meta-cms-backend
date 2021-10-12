@@ -1,7 +1,7 @@
 import { MetaWorker } from '@metaio/worker-model';
 import { Inject, Injectable, LoggerService } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { createHash } from 'crypto';
+import { createHash, createPrivateKey, sign } from 'crypto';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { IPaginationOptions, paginate } from 'nestjs-typeorm-paginate';
 import { Repository } from 'typeorm';
@@ -178,6 +178,8 @@ export class PostService {
     content: string,
     hashAlgorithm: string,
     signAlgorithm: string,
+    authorPrivateKeyString: string,
+    serverPrivateKeyString: string,
   ) {
     hashAlgorithm = hashAlgorithm.toLowerCase();
     signAlgorithm = signAlgorithm.toLowerCase();
@@ -212,8 +214,32 @@ export class PostService {
       contentParts.push(encodeURIComponent(value));
     }
 
-    const contentToSign = contentParts.join();
+    const contentToSign = Buffer.from(contentParts.join());
 
-    // TODO: sign
+    const ed25519PrivateKeyPkcs8Header = Buffer.from(
+      '302e020100300506032b657004220420',
+      'hex',
+    );
+
+    const authorPrivateKey = createPrivateKey({
+      key: Buffer.concat([
+        ed25519PrivateKeyPkcs8Header,
+        Buffer.from(authorPrivateKeyString, 'hex'),
+      ]),
+      format: 'der',
+      type: 'pkcs8',
+    });
+    const serverPrivateKey = createPrivateKey({
+      key: Buffer.concat([
+        ed25519PrivateKeyPkcs8Header,
+        Buffer.from(serverPrivateKeyString, 'hex'),
+      ]),
+      format: 'der',
+      type: 'pkcs8',
+    });
+    const authorSignature = sign(null, contentToSign, authorPrivateKey);
+    const serverSignature = sign(null, authorSignature, serverPrivateKey);
+
+    return [authorSignature.toString('hex'), serverSignature.toString('hex')];
   }
 }
