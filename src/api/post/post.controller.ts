@@ -12,6 +12,7 @@ import {
 import { ClientProxy } from '@nestjs/microservices';
 import {
   ApiBadRequestResponse,
+  ApiConflictResponse,
   ApiCookieAuth,
   ApiCreatedResponse,
   ApiForbiddenResponse,
@@ -29,6 +30,7 @@ import { PostEntity } from '../../entities/post.entity';
 import { PostState } from '../../enums/postState';
 import {
   EmptyAccessTokenException,
+  PostSyncingException,
   RequirdHttpHeadersNotFoundException,
 } from '../../exceptions';
 import { AccessTokenService } from '../../synchronizer/access-token.service';
@@ -141,6 +143,10 @@ export class PostController {
     type: EmptyAccessTokenException,
     description: 'When request user has no any access tokens',
   })
+  @ApiConflictResponse({
+    type: PostSyncingException,
+    description: 'When spider is triggered but not completed',
+  })
   async triggerPostSync(
     @User('id', ParseIntPipe) uid: number,
     @Param('platform') platform: string,
@@ -150,9 +156,18 @@ export class PostController {
       throw new EmptyAccessTokenException();
     }
 
+    const state = await this.redisClient.get(
+      `cms:post:sync_state:${platform}:${uid}`,
+    );
+    if (state === `syncing`) {
+      throw new PostSyncingException();
+    }
+
     await this.redisClient.set(
       `cms:post:sync_state:${platform}:${uid}`,
       'syncing',
+      'ex',
+      60,
     );
 
     this.microserviceClient.emit(`cms.post.sync.${platform}`, uid);

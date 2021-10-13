@@ -222,3 +222,14 @@ export class EmptyAccessTokenException extends AccessDeniedException {
   @ApiProperty({ example: 'Forbidden: Empty access token' })
   readonly message: string;
 }
+
+export class PostSyncingException extends ConflictException {
+  constructor() {
+    super('Conflict: Still syncing');
+  }
+
+  @ApiProperty({ example: HttpStatus.CONFLICT })
+  readonly statusCode: string;
+  @ApiProperty({ example: 'Conflict: Still syncing' })
+  readonly message: string;
+}
