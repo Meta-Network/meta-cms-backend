@@ -4,6 +4,7 @@ import {
   IsAlphanumeric,
   IsEnum,
   IsFQDN,
+  IsIn,
   IsInt,
   IsLocale,
   IsOptional,
@@ -11,6 +12,8 @@ import {
   Length,
   Matches,
 } from 'class-validator';
+import moment from 'moment';
+import momentTimezone from 'moment-timezone';
 import { Column, Entity, Index, ManyToOne } from 'typeorm';
 
 import { SiteStatus } from '../types/enum';
@@ -38,6 +41,7 @@ export class SiteConfigEntity extends BaseEntity {
    */
   @Column({ comment: 'Site timezone', default: '' })
   @IsString()
+  @IsIn(moment.tz.names())
   @IsOptional()
   timezone?: string = '';
 
