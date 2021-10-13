@@ -173,6 +173,13 @@ export class PostService {
     }
   }
 
+  async getSourceContent(postId: number) {
+    const post = await this.postRepository.findOneOrFail(postId);
+    const sourceService = this.getSourceService(post.platform);
+
+    return await sourceService.fetch(post.source);
+  }
+
   signPost(
     post: PostEntity,
     content: string,

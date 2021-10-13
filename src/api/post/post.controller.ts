@@ -196,4 +196,9 @@ export class PostController {
 
     return result;
   }
+
+  @Get(':postId/sourceContent')
+  async getPostSourceContent(@Param('postId', ParseIntPipe) postId: number) {
+    return await this.postService.getSourceContent(postId);
+  }
 }
