@@ -78,7 +78,7 @@ export class SiteConfigEntity extends BaseEntity {
   @Matches('\\w{3,16}')
   @IsOptional()
   @Index({ unique: true })
-  metaSpacePrefix: string;
+  metaSpacePrefix?: string = null;
 
   /**
    * Site store type

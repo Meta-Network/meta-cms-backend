@@ -35,8 +35,8 @@ import {
 import { UCenterJWTPayload } from '../../../../types';
 import { TransformResponse } from '../../../../utils/responseClass';
 import {
-  PatchMethodValidation,
   PostMethodValidation,
+  validatePatchRequestBody,
 } from '../../../../utils/validation';
 import { GitHubStorageLogicService } from '../../../provider/storage/github/logicService';
 
@@ -161,12 +161,17 @@ export class GitHubStorageController {
     description: 'Site config id',
   })
   @Patch()
-  @UsePipes(new ValidationPipe(PatchMethodValidation))
   async updateStorageConfig(
     @User() user: UCenterJWTPayload,
     @Query('configId', ParseIntPipe) configId: number,
     @Body() updateDto: GitHubStorageProviderEntity,
   ) {
+    const validate = Object.assign(
+      new GitHubStorageProviderEntity(),
+      updateDto,
+    );
+    await validatePatchRequestBody(validate);
+
     const result = await this.logicService.updateStorageConfig(
       user.id,
       configId,

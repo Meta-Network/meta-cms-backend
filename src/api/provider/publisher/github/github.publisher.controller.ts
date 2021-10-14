@@ -23,7 +23,7 @@ import {
 } from '@nestjs/swagger';
 import { DeleteResult } from 'typeorm';
 
-import { SkipUCenterAuth, User } from '../../../../decorators';
+import { User } from '../../../../decorators';
 import { GitHubPublisherProviderEntity } from '../../../../entities/provider/publisher/github.entity';
 import {
   AccessDeniedException,
@@ -35,8 +35,8 @@ import {
 import { UCenterJWTPayload } from '../../../../types';
 import { TransformResponse } from '../../../../utils/responseClass';
 import {
-  PatchMethodValidation,
   PostMethodValidation,
+  validatePatchRequestBody,
 } from '../../../../utils/validation';
 import { GitHubPublisherService } from './github.publisher.service';
 
@@ -161,12 +161,17 @@ export class GitHubPublisherController {
     description: 'Site config id',
   })
   @Patch()
-  @UsePipes(new ValidationPipe(PatchMethodValidation))
   async updatePublisherConfig(
     @User() user: UCenterJWTPayload,
     @Query('configId', ParseIntPipe) configId: number,
     @Body() updateDto: GitHubPublisherProviderEntity,
   ) {
+    const validate = Object.assign(
+      new GitHubPublisherProviderEntity(),
+      updateDto,
+    );
+    await validatePatchRequestBody(validate);
+
     const result = await this.publisherService.updatePublisherConfig(
       user.id,
       configId,

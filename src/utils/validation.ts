@@ -1,7 +1,15 @@
 import { ValidationPipeOptions } from '@nestjs/common';
-import { IsArray, isEmpty, IsIn, validateSync } from 'class-validator';
+import {
+  IsArray,
+  isEmpty,
+  IsIn,
+  validate,
+  validateOrReject,
+  validateSync,
+} from 'class-validator';
 
 import { SiteConfigEntity } from '../entities/siteConfig.entity';
+import { validationErrorToBadRequestException } from '../exceptions';
 
 class ResultListClass {
   constructor(list: boolean[]) {
@@ -38,4 +46,12 @@ export const PostMethodValidation: ValidationPipeOptions = {
 export const PatchMethodValidation: ValidationPipeOptions = {
   ...PostMethodValidation,
   skipMissingProperties: true,
+};
+
+export const validatePatchRequestBody = async (data: any): Promise<void> => {
+  try {
+    await validateOrReject(data, { skipMissingProperties: true });
+  } catch (error) {
+    throw validationErrorToBadRequestException(error);
+  }
 };

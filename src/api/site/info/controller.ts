@@ -41,8 +41,8 @@ import {
   TransformResponse,
 } from '../../../utils/responseClass';
 import {
-  PatchMethodValidation,
   PostMethodValidation,
+  validatePatchRequestBody,
 } from '../../../utils/validation';
 import { SiteInfoLogicService } from '../../site/info/logicService';
 
@@ -130,12 +130,14 @@ export class SiteInfoController {
     description: 'When request user id does not match',
   })
   @Patch(':siteInfoId')
-  @UsePipes(new ValidationPipe(PatchMethodValidation))
   async updateSiteInfo(
     @User('id', ParseIntPipe) uid: number,
     @Body() updateDto: SiteInfoEntity,
     @Param('siteInfoId', ParseIntPipe) siteId: number,
   ) {
+    const validate = Object.assign(new SiteInfoEntity(), updateDto);
+    await validatePatchRequestBody(validate);
+
     return await this.logicService.updateSiteInfo(uid, siteId, updateDto);
   }
 

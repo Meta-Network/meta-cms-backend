@@ -40,8 +40,8 @@ import {
   TransformResponse,
 } from '../../../utils/responseClass';
 import {
-  PatchMethodValidation,
   PostMethodValidation,
+  validatePatchRequestBody,
 } from '../../../utils/validation';
 import { SiteConfigLogicService } from '../../site/config/logicService';
 
@@ -142,15 +142,15 @@ export class SiteConfigController {
     type: AccessDeniedException,
     description: 'When request user id does not match site info `userId`',
   })
-  // @ApiQuery({ name: 'siteId', type: Number, example: 1 })
   @Patch(':configId')
-  @UsePipes(new ValidationPipe(PatchMethodValidation))
   async updateSiteConfig(
     @User('id', ParseIntPipe) uid: number,
     @Param('configId', ParseIntPipe) configId: number,
-    // @Query('siteId', ParseIntPipe) siteId: number,
     @Body() updateDto: SiteConfigEntity,
   ) {
+    const validate = Object.assign(new SiteConfigEntity(), updateDto);
+    await validatePatchRequestBody(validate);
+
     const userNotWritableProps: string[] = [
       'siteInfo',
       'status',
