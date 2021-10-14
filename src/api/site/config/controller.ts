@@ -151,6 +151,22 @@ export class SiteConfigController {
     // @Query('siteId', ParseIntPipe) siteId: number,
     @Body() updateDto: SiteConfigEntity,
   ) {
+    const userNotWritableProps: string[] = [
+      'siteInfo',
+      'status',
+      'cdnProviderId',
+      'cdnType',
+      'publisherProviderId',
+      'publisherType',
+      'cicdProviderId',
+      'cicdType',
+      'storeProviderId',
+      'storeType',
+    ];
+    userNotWritableProps.forEach((name) => {
+      delete updateDto[name];
+    });
+
     return await this.service.updateSiteConfig(uid, configId, updateDto);
   }
 
