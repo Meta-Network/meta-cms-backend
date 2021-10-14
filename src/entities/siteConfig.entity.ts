@@ -1,7 +1,6 @@
 import { MetaWorker } from '@metaio/worker-model';
 import { ApiHideProperty, ApiResponseProperty } from '@nestjs/swagger';
 import {
-  IsAlphanumeric,
   IsEnum,
   IsFQDN,
   IsIn,
@@ -36,14 +35,14 @@ export class SiteConfigEntity extends BaseEntity {
   /**
    * Site timezone
    * @type varchar(255)
-   * @default ''
-   * @example 'UTC+8'
+   * @default 'Asia/Shanghai'
+   * @example 'Asia/Shanghai'
    */
-  @Column({ comment: 'Site timezone', default: '' })
+  @Column({ comment: 'Site timezone', default: 'Asia/Shanghai' })
   @IsString()
-  @IsIn(moment.tz.names())
   @IsOptional()
-  timezone?: string = '';
+  @IsIn(moment.tz.names())
+  timezone?: string = 'Asia/Shanghai';
 
   /**
    * Site theme template id
