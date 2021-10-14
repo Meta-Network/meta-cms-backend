@@ -17,6 +17,7 @@ import { TasksModule } from '../task/tasks.module';
 import { PostController } from './post.controller';
 import { PostService } from './post.service';
 import { PreprocessorModule } from './preprocessor/preprocessor.module';
+import { EditorSourceService } from './sources/editor/editor-source.service';
 import { MatatakiSourceModule } from './sources/matataki/matataki.module';
 
 @Module({
@@ -36,6 +37,7 @@ import { MatatakiSourceModule } from './sources/matataki/matataki.module';
     ]),
     PreprocessorModule,
     MatatakiSourceModule,
+    EditorSourceService,
     TasksModule,
     SiteConfigModule,
   ],
