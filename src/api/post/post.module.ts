@@ -7,6 +7,7 @@ import Redis from 'ioredis';
 import { UCenterMicroserviceConfigService } from '../../configs/microservices/ucenter';
 import { MetaMicroserviceClient } from '../../constants';
 import { AccessTokenEntity } from '../../entities/accessToken.entity';
+import { DraftEntity } from '../../entities/draft.entity';
 import { PostEntity } from '../../entities/post.entity';
 import { PostSiteConfigRelaEntity } from '../../entities/postSiteConfigRela.entity';
 import { AccessTokenService } from '../../synchronizer/access-token.service';
@@ -24,6 +25,7 @@ import { MatatakiSourceModule } from './sources/matataki/matataki.module';
       PostEntity,
       PostSiteConfigRelaEntity,
       AccessTokenEntity,
+      DraftEntity,
     ]),
     ClientsModule.registerAsync([
       {

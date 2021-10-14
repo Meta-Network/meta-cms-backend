@@ -1,11 +1,17 @@
 import { MetaWorker } from '@metaio/worker-model';
-import { Inject, Injectable, LoggerService } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  LoggerService,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { createHash, createPrivateKey, createPublicKey, sign } from 'crypto';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { IPaginationOptions, paginate } from 'nestjs-typeorm-paginate';
 import { Repository } from 'typeorm';
 
+import { DraftEntity } from '../../entities/draft.entity';
 import { PostEntity } from '../../entities/post.entity';
 import { PostSiteConfigRelaEntity } from '../../entities/postSiteConfigRela.entity';
 import { PostState } from '../../enums/postState';
@@ -34,6 +40,8 @@ export class PostService {
     private readonly preprocessorService: PreProcessorService,
     private readonly matatakiSourceService: MatatakiSourceService,
     private readonly tasksService: TasksService,
+    @InjectRepository(DraftEntity)
+    private readonly draftRepository: Repository<DraftEntity>,
   ) {}
 
   async getPostsByUserId(
@@ -173,13 +181,6 @@ export class PostService {
     }
   }
 
-  async getSourceContent(postId: number) {
-    const post = await this.postRepository.findOneOrFail(postId);
-    const sourceService = this.getSourceService(post.platform);
-
-    return await sourceService.fetch(post.source);
-  }
-
   signPost(
     post: PostEntity,
     content: string,
@@ -265,5 +266,54 @@ export class PostService {
         signature: serverSignature.toString('hex'),
       },
     };
+  }
+
+  async makeDraft(postId: number) {
+    const post = await this.postRepository.findOneOrFail(postId);
+    const sourceService = this.getSourceService(post.platform);
+
+    const content = await sourceService.fetch(post.source);
+    const draft = this.draftRepository.create({ userId: post.userId, content });
+
+    await this.draftRepository.save(draft);
+
+    const draftPost = this.postRepository.create({
+      userId: post.userId,
+      title: post.title,
+      summary: post.summary,
+      cover: post.cover,
+      categories: post.categories,
+      tags: post.tags,
+      platform: 'editor',
+      source: draft.id.toString(),
+      state: PostState.Drafted,
+    });
+
+    await this.postRepository.save(draftPost);
+
+    return draftPost;
+  }
+
+  async getPost(postId: number) {
+    const post = await this.postRepository.findOneOrFail(postId);
+
+    if (post.platform === 'editor') {
+      const { content } = await this.draftRepository.findOneOrFail(
+        Number(post.source),
+      );
+
+      Object.assign(post, { content });
+    }
+
+    return post;
+  }
+  async updatePost(postId: number, content: string) {
+    const post = await this.postRepository.findOneOrFail(postId);
+
+    if (post.platform !== 'editor') {
+      throw new BadRequestException('post must be of editor platform');
+    }
+
+    await this.draftRepository.update(Number(post.source), { content });
   }
 }

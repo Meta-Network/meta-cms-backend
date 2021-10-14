@@ -7,6 +7,7 @@ import {
   Param,
   ParseIntPipe,
   Post,
+  Put,
   Query,
 } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
@@ -40,6 +41,7 @@ import {
   TransformResponse,
 } from '../../utils/responseClass';
 import { PublishPostDto } from './dto/publish-post.dto';
+import { UpdateDraftPostDto } from './dto/update-draft-post.dto';
 import { PostService } from './post.service';
 
 class PostPagination extends PaginationResponse<PostEntity> {
@@ -197,8 +199,34 @@ export class PostController {
     return result;
   }
 
-  @Get(':postId/sourceContent')
-  async getPostSourceContent(@Param('postId', ParseIntPipe) postId: number) {
-    return await this.postService.getSourceContent(postId);
+  @Post(':postId/draft')
+  @ApiCreatedResponse({ type: PostEntityResponse })
+  @ApiForbiddenResponse({
+    type: EmptyAccessTokenException,
+    description: 'When request user has no any access tokens',
+  })
+  async getDraftOfPost(@Param('postId', ParseIntPipe) postId: number) {
+    return await this.postService.makeDraft(postId);
+  }
+
+  @Get(':postId')
+  @ApiOkResponse({ type: PostEntityResponse })
+  @ApiForbiddenResponse({
+    type: EmptyAccessTokenException,
+    description: 'When request user has no any access tokens',
+  })
+  async getPost(@Param('postId', ParseIntPipe) postId: number) {
+    return await this.postService.getPost(postId);
+  }
+  @Put(':postId/content')
+  @ApiForbiddenResponse({
+    type: EmptyAccessTokenException,
+    description: 'When request user has no any access tokens',
+  })
+  async updateDraftPostContent(
+    @Param('postId', ParseIntPipe) postId: number,
+    @Body() { content }: UpdateDraftPostDto,
+  ) {
+    await this.postService.updatePost(postId, content);
   }
 }
