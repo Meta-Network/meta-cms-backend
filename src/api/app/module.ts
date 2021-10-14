@@ -17,6 +17,7 @@ import { TransformResponseInterceptor } from '../../interceptors/transform';
 import { SynchronizerModule } from '../../synchronizer/synchronizer.module';
 import { AppCacheModule } from '../cache/module';
 import { DomainModule } from '../domain/module';
+import { ImageModule } from '../image/image.module';
 import { PostModule } from '../post/post.module';
 import { GitHubPublisherModule } from '../provider/publisher/github/github.publisher.module';
 import { PublisherModule } from '../provider/publisher/publisher.module';
@@ -57,6 +58,7 @@ import { TokenModule } from '../token/token.module';
     PostModule,
     TokenModule,
     DomainModule,
+    ImageModule,
   ],
   providers: [
     {

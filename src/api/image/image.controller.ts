@@ -1,0 +1,35 @@
+import { HttpService } from '@nestjs/axios';
+import {
+  Body,
+  Controller,
+  Post,
+  Req,
+  UploadedFile,
+  UseInterceptors,
+} from '@nestjs/common';
+import { ApiProperty, ApiTags } from '@nestjs/swagger';
+import { lastValueFrom } from 'rxjs';
+
+export class UploadUrlDto {
+  @ApiProperty()
+  url: string;
+}
+
+@Controller('image')
+@ApiTags('image')
+export class ImageController {
+  constructor(private readonly httpService: HttpService) {}
+
+  @Post('uploadByUrl')
+  async uploadImage(@Body() { url }: UploadUrlDto) {
+    const { data } = await lastValueFrom(
+      this.httpService.post<string>('/image/uploadByUrl', url, {
+        headers: {
+          'Content-Type': 'text/plain',
+        },
+      }),
+    );
+
+    return data;
+  }
+}
