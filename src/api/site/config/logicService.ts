@@ -61,13 +61,13 @@ export class SiteConfigLogicService {
 
   async updateSiteConfig(
     uid: number,
-    sid: number,
+    // sid: number,
     cid: number,
     config: SiteConfigEntity,
   ): Promise<SiteConfigEntity> {
     const oldConf = await this.validateSiteConfigUserId(cid, uid);
-    if (oldConf.siteInfo.id !== sid)
-      throw new AccessDeniedException('access denied, site id inconsistent');
+    // if (oldConf.siteInfo.id !== sid)
+    //   throw new AccessDeniedException('access denied, site id inconsistent');
 
     const result = await this.siteConfigBaseService.update(oldConf, config);
 

@@ -129,12 +129,12 @@ export class SiteInfoController {
     type: AccessDeniedException,
     description: 'When request user id does not match',
   })
-  @Patch(':siteId')
+  @Patch(':siteInfoId')
   @UsePipes(new ValidationPipe(PatchMethodValidation))
   async updateSiteInfo(
     @User('id', ParseIntPipe) uid: number,
     @Body() updateDto: SiteInfoEntity,
-    @Param('siteId', ParseIntPipe) siteId: number,
+    @Param('siteInfoId', ParseIntPipe) siteId: number,
   ) {
     return await this.logicService.updateSiteInfo(uid, siteId, updateDto);
   }
@@ -152,10 +152,10 @@ export class SiteInfoController {
     type: AccessDeniedException,
     description: 'When request user id does not match',
   })
-  @Delete(':siteId')
+  @Delete(':siteInfoId')
   async deleteSiteInfo(
     @User('id', ParseIntPipe) uid: number,
-    @Param('siteId', ParseIntPipe) siteId: number,
+    @Param('siteInfoId', ParseIntPipe) siteId: number,
   ) {
     return await this.logicService.deleteSiteInfo(uid, siteId);
   }

@@ -71,16 +71,11 @@ export class GitHubStorageLogicService {
     );
 
     const result = await this.baseService.create(newStorage);
-    await this.configLogicService.updateSiteConfig(
-      uid,
-      config.siteInfo.id,
-      cid,
-      {
-        ...config,
-        storeType: MetaWorker.Enums.StorageType.GITHUB,
-        storeProviderId: result.id,
-      },
-    );
+    await this.configLogicService.updateSiteConfig(uid, cid, {
+      ...config,
+      storeType: MetaWorker.Enums.StorageType.GITHUB,
+      storeProviderId: result.id,
+    });
 
     return result;
   }
@@ -117,16 +112,11 @@ export class GitHubStorageLogicService {
       throw new DataNotFoundException('storage provider id not found');
 
     // remove siteConfig's storageType and providerId
-    await this.configLogicService.updateSiteConfig(
-      uid,
-      config.siteInfo.id,
-      cid,
-      {
-        ...config,
-        storeType: null,
-        storeProviderId: null,
-      },
-    );
+    await this.configLogicService.updateSiteConfig(uid, cid, {
+      ...config,
+      storeType: null,
+      storeProviderId: null,
+    });
 
     const storage = await this.baseService.read(config.storeProviderId);
     if (!storage) throw new DataNotFoundException('github storage not found');

@@ -90,13 +90,13 @@ export class SiteConfigController {
     type: AccessDeniedException,
     description: 'When request user id does not match site info `userId`',
   })
-  @ApiQuery({ name: 'siteId', type: Number, example: 1 })
+  @ApiQuery({ name: 'siteInfoId', type: Number, example: 1 })
   @ApiQuery({ name: 'page', type: Number, example: 1 })
   @ApiQuery({ name: 'limit', type: Number, example: 10 })
   @Get()
   async getSiteConfig(
     @User('id', ParseIntPipe) uid: number,
-    @Query('siteId', ParseIntPipe) siteId: number,
+    @Query('siteInfoId', ParseIntPipe) siteId: number,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page = 1,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit = 10,
   ) {
@@ -117,12 +117,12 @@ export class SiteConfigController {
     type: AccessDeniedException,
     description: 'When request user id does not match site info `userId`',
   })
-  @ApiQuery({ name: 'siteId', type: Number, example: 1 })
+  @ApiQuery({ name: 'siteInfoId', type: Number, example: 1 })
   @Post()
   @UsePipes(new ValidationPipe(PostMethodValidation))
   async createSiteConfig(
     @User('id', ParseIntPipe) uid: number,
-    @Query('siteId', ParseIntPipe) siteId: number,
+    @Query('siteInfoId', ParseIntPipe) siteId: number,
     @Body() createDto: SiteConfigEntity,
   ) {
     return await this.service.createSiteConfig(uid, siteId, createDto);
@@ -140,24 +140,18 @@ export class SiteConfigController {
   })
   @ApiForbiddenResponse({
     type: AccessDeniedException,
-    description:
-      'When request user id or site id does not match site info `userId` or `siteInfo.id`',
+    description: 'When request user id does not match site info `userId`',
   })
-  @ApiQuery({ name: 'siteId', type: Number, example: 1 })
+  // @ApiQuery({ name: 'siteId', type: Number, example: 1 })
   @Patch(':configId')
   @UsePipes(new ValidationPipe(PatchMethodValidation))
   async updateSiteConfig(
     @User('id', ParseIntPipe) uid: number,
     @Param('configId', ParseIntPipe) configId: number,
-    @Query('siteId', ParseIntPipe) siteId: number,
+    // @Query('siteId', ParseIntPipe) siteId: number,
     @Body() updateDto: SiteConfigEntity,
   ) {
-    return await this.service.updateSiteConfig(
-      uid,
-      siteId,
-      configId,
-      updateDto,
-    );
+    return await this.service.updateSiteConfig(uid, configId, updateDto);
   }
 
   @ApiOkResponse({ type: SiteConfigDeleteResponse })

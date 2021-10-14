@@ -109,16 +109,11 @@ export class GitHubPublisherService implements SpecificPublisherService {
     );
 
     const result = await this.create(newPublisher);
-    await this.siteConfigLogicService.updateSiteConfig(
-      userId,
-      config.siteInfo.id,
-      siteConfigId,
-      {
-        ...config,
-        publisherType: MetaWorker.Enums.PublisherType.GITHUB,
-        publisherProviderId: result.id,
-      },
-    );
+    await this.siteConfigLogicService.updateSiteConfig(userId, siteConfigId, {
+      ...config,
+      publisherType: MetaWorker.Enums.PublisherType.GITHUB,
+      publisherProviderId: result.id,
+    });
 
     return result;
   }
@@ -158,16 +153,11 @@ export class GitHubPublisherService implements SpecificPublisherService {
       throw new DataNotFoundException('publisher provider id not found');
 
     // remove siteConfig's publisherType and providerId
-    await this.siteConfigLogicService.updateSiteConfig(
-      userId,
-      config.siteInfo.id,
-      siteConfigId,
-      {
-        ...config,
-        publisherType: null,
-        publisherProviderId: null,
-      },
-    );
+    await this.siteConfigLogicService.updateSiteConfig(userId, siteConfigId, {
+      ...config,
+      publisherType: null,
+      publisherProviderId: null,
+    });
 
     const publisher = await this.read(config.publisherProviderId);
     if (!publisher)
