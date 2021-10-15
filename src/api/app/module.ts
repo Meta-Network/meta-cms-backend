@@ -19,7 +19,6 @@ import { AppCacheModule } from '../cache/module';
 import { DomainModule } from '../domain/module';
 import { ImageModule } from '../image/image.module';
 import { PostModule } from '../post/post.module';
-import { GitHubPublisherModule } from '../provider/publisher/github/github.publisher.module';
 import { PublisherModule } from '../provider/publisher/publisher.module';
 import { StorageModule } from '../provider/storage/module';
 import { SiteModule } from '../site/module';
@@ -52,7 +51,6 @@ import { TokenModule } from '../token/token.module';
     SiteModule,
     StorageModule,
     PublisherModule,
-
     TasksModule,
     SynchronizerModule,
     PostModule,
