@@ -82,6 +82,7 @@ export class PostService {
     user: Partial<UCenterJWTPayload>,
     postId: number,
     publishPostDto: PublishPostDto,
+    draftFlag = false,
   ) {
     this.logger.verbose(
       `Find the post to publish postId: ${postId}`,
@@ -105,7 +106,7 @@ export class PostService {
     for (const siteconfigId of publishPostDto.configIds) {
       await this.tasksService.checkSiteConfigTaskWorkspace(siteconfigId);
     }
-    return await this.doPublishPost(user, post, publishPostDto);
+    return await this.doPublishPost(user, post, publishPostDto, draftFlag);
   }
 
   async publishPendingPosts(
@@ -189,6 +190,7 @@ export class PostService {
     user: Partial<UCenterJWTPayload>,
     post: PostEntity,
     publishPostDto: PublishPostDto,
+    draftFlag: boolean,
   ) {
     const postId = post.id;
 
@@ -209,6 +211,7 @@ export class PostService {
           user,
           postInfo,
           postSiteConfigRela.siteConfig.id,
+          draftFlag,
           true,
         );
         postSiteConfigRela.state = TaskCommonState.SUCCESS;

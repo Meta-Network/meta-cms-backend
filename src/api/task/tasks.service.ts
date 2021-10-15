@@ -77,6 +77,7 @@ export class TasksService {
     user: Partial<UCenterJWTPayload>,
     post: MetaWorker.Info.Post | MetaWorker.Info.Post[],
     siteConfigId: number,
+    draftFlag = false,
     skipCheckSiteConfigTaskWorkspace = false,
   ) {
     if (!skipCheckSiteConfigTaskWorkspace) {
@@ -85,11 +86,28 @@ export class TasksService {
     return await this.doCheckoutCommitPush(
       user,
       siteConfigId,
-      async () => await this.doCreatePost(user, post, siteConfigId),
+      async () => await this.doCreatePost(user, post, siteConfigId, draftFlag),
     );
   }
 
   async updatePost(
+    user: Partial<UCenterJWTPayload>,
+    post: MetaWorker.Info.Post,
+    siteConfigId: number,
+    draftFlag = false,
+    skipCheckSiteConfigTaskWorkspace = false,
+  ) {
+    if (!skipCheckSiteConfigTaskWorkspace) {
+      await this.checkSiteConfigTaskWorkspace(siteConfigId);
+    }
+    return await this.doCheckoutCommitPush(
+      user,
+      siteConfigId,
+      async () => await this.doUpdatePost(user, post, siteConfigId, draftFlag),
+    );
+  }
+
+  async publishDraft(
     user: Partial<UCenterJWTPayload>,
     post: MetaWorker.Info.Post,
     siteConfigId: number,
@@ -101,7 +119,7 @@ export class TasksService {
     return await this.doCheckoutCommitPush(
       user,
       siteConfigId,
-      async () => await this.doUpdatePost(user, post, siteConfigId),
+      async () => await this.doPublishDraft(user, post, siteConfigId),
     );
   }
 
@@ -291,6 +309,7 @@ export class TasksService {
     user: Partial<UCenterJWTPayload>,
     post: MetaWorker.Info.Post | MetaWorker.Info.Post[],
     siteConfigId: number,
+    draftFlag = false,
   ) {
     const { postConfig, template } = await this.generatePostConfigAndTemplate(
       user,
@@ -305,7 +324,7 @@ export class TasksService {
     const postTaskSteps = [];
 
     postTaskSteps.push(
-      ...this.getCreatePostTaskMethodsByTemplateType(templateType),
+      ...this.getCreatePostTaskMethodsByTemplateType(templateType, draftFlag),
     );
 
     return await this.taskDispatchersService.dispatchTask(
@@ -318,6 +337,7 @@ export class TasksService {
     user: Partial<UCenterJWTPayload>,
     post: MetaWorker.Info.Post,
     siteConfigId: number,
+    draftFlag = false,
   ) {
     const { postConfig, template } = await this.generatePostConfigAndTemplate(
       user,
@@ -332,7 +352,34 @@ export class TasksService {
     const postTaskSteps = [];
 
     postTaskSteps.push(
-      ...this.getUpdatePostTaskMethodsByTemplateType(templateType),
+      ...this.getUpdatePostTaskMethodsByTemplateType(templateType, draftFlag),
+    );
+
+    return await this.taskDispatchersService.dispatchTask(
+      postTaskSteps,
+      postConfig,
+    );
+  }
+
+  protected async doPublishDraft(
+    user: Partial<UCenterJWTPayload>,
+    post: MetaWorker.Info.Post,
+    siteConfigId: number,
+  ) {
+    const { postConfig, template } = await this.generatePostConfigAndTemplate(
+      user,
+      post,
+      siteConfigId,
+    );
+    const templateType = template.templateType;
+    this.logger.verbose(
+      `Adding publish draft worker to queue`,
+      this.constructor.name,
+    );
+    const postTaskSteps = [];
+
+    postTaskSteps.push(
+      ...this.getPublishDraftTaskMethodsByTemplateType(templateType),
     );
 
     return await this.taskDispatchersService.dispatchTask(
@@ -472,15 +519,36 @@ export class TasksService {
 
   protected getCreatePostTaskMethodsByTemplateType(
     templateType: MetaWorker.Enums.TemplateType,
+    draftFlag = false,
   ): MetaWorker.Enums.TaskMethod[] {
     // HEXO
-    return [MetaWorker.Enums.TaskMethod.HEXO_CREATE_POST];
+    if (MetaWorker.Enums.TemplateType.HEXO === templateType) {
+      if (draftFlag) {
+        return [MetaWorker.Enums.TaskMethod.HEXO_CREATE_DRAFT];
+      }
+      return [MetaWorker.Enums.TaskMethod.HEXO_CREATE_POST];
+    }
   }
   protected getUpdatePostTaskMethodsByTemplateType(
     templateType: MetaWorker.Enums.TemplateType,
+    draftFlag = false,
   ): MetaWorker.Enums.TaskMethod[] {
     // HEXO
-    return [MetaWorker.Enums.TaskMethod.HEXO_UPDATE_POST];
+    if (MetaWorker.Enums.TemplateType.HEXO === templateType) {
+      if (draftFlag) {
+        return [MetaWorker.Enums.TaskMethod.HEXO_UPDATE_DRAFT];
+      }
+      return [MetaWorker.Enums.TaskMethod.HEXO_UPDATE_POST];
+    }
+  }
+
+  protected getPublishDraftTaskMethodsByTemplateType(
+    templateType: MetaWorker.Enums.TemplateType,
+  ): MetaWorker.Enums.TaskMethod[] {
+    // HEXO
+    if (MetaWorker.Enums.TemplateType.HEXO === templateType) {
+      return [MetaWorker.Enums.TaskMethod.HEXO_PUBLISH_DRAFT];
+    }
   }
 
   protected async generateDeployConfigAndRepoSize(
