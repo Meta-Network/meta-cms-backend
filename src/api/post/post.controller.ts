@@ -43,7 +43,7 @@ import {
   TransformResponse,
 } from '../../utils/responseClass';
 import { DraftPostCreationDto, DraftPostUpdateDto } from './dto/draft-post-dto';
-import { PublishPostDto } from './dto/publish-post.dto';
+import { PublishPostDto, PublishPostsDto } from './dto/publish-post.dto';
 import { PostService } from './post.service';
 
 class PostPagination extends PaginationResponse<PostEntity> {
@@ -111,7 +111,7 @@ export class PostController {
     return await this.postService.getPostsByUserId(uid, state, options);
   }
 
-  @Post(':postId/publish')
+  @Post(':postId(\\d+)/publish')
   @ApiCreatedResponse({ type: PostEntityResponse })
   async publishPost(
     @User() user: UCenterJWTPayload,
@@ -120,8 +120,20 @@ export class PostController {
   ) {
     return await this.postService.publishPendingPost(user, postId, body);
   }
+  @Post('publish')
+  @ApiCreatedResponse({ type: PostEntityResponse })
+  @ApiBadRequestResponse({
+    type: RequirdHttpHeadersNotFoundException,
+    description: 'When cookie with access token not provided',
+  })
+  async publishPosts(
+    @User() user: UCenterJWTPayload,
+    @Body() body: PublishPostsDto,
+  ) {
+    return await this.postService.publishPendingPosts(user, body);
+  }
 
-  @Post(':postId/ignore')
+  @Post(':postId(\\d+)/ignore')
   @ApiCreatedResponse({ type: PostEntityResponse })
   async setPostIgnored(
     @User('id', ParseIntPipe) uid: number,
@@ -185,13 +197,13 @@ export class PostController {
     return result;
   }
 
-  @Post(':postId/draft')
+  @Post(':postId(\\d+)/draft')
   @ApiCreatedResponse({ type: PostEntityResponse })
   async getDraftOfPost(@Param('postId', ParseIntPipe) postId: number) {
     return await this.postService.makeDraft(postId);
   }
 
-  @Get(':postId')
+  @Get(':postId(\\d+)')
   @ApiOkResponse({ type: PostEntityResponse })
   async getPost(@Param('postId', ParseIntPipe) postId: number) {
     return await this.postService.getPost(postId);

@@ -8,3 +8,11 @@ export class PublishPostDto {
   @IsNumber({}, { each: true })
   configIds: number[];
 }
+
+export class PublishPostsDto extends PublishPostDto {
+  @ApiProperty({ description: 'Post ids', example: [1, 2] })
+  @IsArray()
+  @ArrayNotEmpty()
+  @IsNumber({}, { each: true })
+  postIds: number[];
+}
