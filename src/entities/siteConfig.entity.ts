@@ -41,7 +41,7 @@ export class SiteConfigEntity extends BaseEntity {
   @Column({ comment: 'Site timezone', default: 'Asia/Shanghai' })
   @IsString()
   @IsOptional()
-  @IsIn(moment.tz.names())
+  @IsIn(momentTimezone.tz.names())
   timezone?: string = 'Asia/Shanghai';
 
   /**
