@@ -9,7 +9,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { createHash, createPrivateKey, createPublicKey, sign } from 'crypto';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { IPaginationOptions, paginate } from 'nestjs-typeorm-paginate';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 
 import { DraftEntity } from '../../entities/draft.entity';
 import { PostEntity } from '../../entities/post.entity';
@@ -145,6 +145,7 @@ export class PostService {
         await this.tasksService.createPost(user, postInfos, siteConfigId);
         await this.updatePostSiteRelaStateBySiteConfigId(
           TaskCommonState.SUCCESS,
+          postIds,
           siteConfigId,
         );
       } catch (err) {
@@ -155,21 +156,27 @@ export class PostService {
         );
         await this.updatePostSiteRelaStateBySiteConfigId(
           TaskCommonState.FAIL,
+          postIds,
           siteConfigId,
         );
         throw err;
       }
     }
-    return posts;
+    posts.forEach((post) => (post.state = PostState.Published));
+    return await this.postRepository.save(posts);
   }
   async updatePostSiteRelaStateBySiteConfigId(
     state: TaskCommonState,
+    postIds: number[],
     siteConfigId: number,
   ) {
     await this.postSiteConfigRepository.update(
       {
         siteConfig: {
           id: siteConfigId,
+        },
+        post: {
+          id: In(postIds),
         },
       },
       {
