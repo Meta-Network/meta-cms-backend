@@ -400,7 +400,7 @@ export class PostService {
       tags: post.tags,
       platform: 'editor',
       source: await this.createDraft(post.userId, content),
-      state: PostState.Drafted,
+      state: PostState.Pending,
     });
 
     await this.postRepository.save(draftPost);
