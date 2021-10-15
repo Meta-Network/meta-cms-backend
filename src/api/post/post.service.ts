@@ -23,7 +23,7 @@ import { UCenterJWTPayload } from '../../types';
 import { TaskCommonState } from '../../types/enum';
 import { SiteConfigLogicService } from '../site/config/logicService';
 import { TasksService } from '../task/tasks.service';
-import { PublishPostDto } from './dto/publish-post.dto';
+import { PublishPostDto, PublishPostsDto } from './dto/publish-post.dto';
 import { PreProcessorService } from './preprocessor/preprocessor.service';
 import { EditorSourceService } from './sources/editor/editor-source.service';
 import { MatatakiSourceService } from './sources/matataki/matataki-source.service';
@@ -96,6 +96,52 @@ export class PostService {
       publishPostDto.configIds,
       user.id,
     );
+    // check site config & skip check in `doFetchContentAndCreatePost` method
+    for (const siteconfigId of publishPostDto.configIds) {
+      await this.tasksService.checkSiteConfigTaskWorkspace(siteconfigId);
+    }
+    return await this.doFetchContentAndCreatePost(user, post, publishPostDto);
+  }
+
+  async publishPendingPosts(
+    user: Partial<UCenterJWTPayload>,
+    publishPostsDto: PublishPostsDto,
+  ) {
+    const postIds = publishPostsDto.postIds;
+
+    this.logger.verbose(
+      `Find the post to publish postIds: ${postIds}`,
+      this.constructor.name,
+    );
+
+    await this.siteConfigLogicService.validateSiteConfigsUserId(
+      publishPostsDto.configIds,
+      user.id,
+    );
+    // check site config & skip check in `doFetchContentAndCreatePost` method
+    for (const siteconfigId of publishPostsDto.configIds) {
+      await this.tasksService.checkSiteConfigTaskWorkspace(siteconfigId);
+    }
+    const posts = await this.postRepository.findByIds(postIds);
+    for (const post of posts) {
+      if (post.userId !== user.id) {
+        throw new AccessDeniedException('access denied, user id inconsistent');
+      }
+
+      if (post.state !== PostState.Pending) {
+        throw new InvalidStatusException('invalid post state');
+      }
+      await this.doFetchContentAndCreatePost(user, post, publishPostsDto);
+    }
+    return posts;
+  }
+
+  protected async doFetchContentAndCreatePost(
+    user: Partial<UCenterJWTPayload>,
+    post: PostEntity,
+    publishPostDto: PublishPostDto,
+  ) {
+    const postId = post.id;
 
     const sourceService = this.getSourceService(post.platform);
     this.logger.verbose(
@@ -155,6 +201,7 @@ export class PostService {
           user,
           postInfo,
           postSiteConfigRela.siteConfig.id,
+          true,
         );
         postSiteConfigRela.state = TaskCommonState.SUCCESS;
         await this.postSiteConfigRepository.save(postSiteConfigRela);

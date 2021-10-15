@@ -40,7 +40,7 @@ import {
   PaginationResponse,
   TransformResponse,
 } from '../../utils/responseClass';
-import { PublishPostDto } from './dto/publish-post.dto';
+import { PublishPostDto, PublishPostsDto } from './dto/publish-post.dto';
 import { UpdateDraftPostDto } from './dto/update-draft-post.dto';
 import { PostService } from './post.service';
 
@@ -109,7 +109,7 @@ export class PostController {
     return await this.postService.getPostsByUserId(uid, state, options);
   }
 
-  @Post(':postId/publish')
+  @Post(':postId(\\d+)/publish')
   @ApiCreatedResponse({ type: PostEntityResponse })
   @ApiBadRequestResponse({
     type: RequirdHttpHeadersNotFoundException,
@@ -122,8 +122,20 @@ export class PostController {
   ) {
     return await this.postService.publishPendingPost(user, postId, body);
   }
+  @Post('publish')
+  @ApiCreatedResponse({ type: PostEntityResponse })
+  @ApiBadRequestResponse({
+    type: RequirdHttpHeadersNotFoundException,
+    description: 'When cookie with access token not provided',
+  })
+  async publishPosts(
+    @User() user: UCenterJWTPayload,
+    @Body() body: PublishPostsDto,
+  ) {
+    return await this.postService.publishPendingPosts(user, body);
+  }
 
-  @Post(':postId/ignore')
+  @Post(':postId(\\d+)/ignore')
   @ApiCreatedResponse({ type: PostEntityResponse })
   @ApiBadRequestResponse({
     type: RequirdHttpHeadersNotFoundException,
@@ -199,7 +211,7 @@ export class PostController {
     return result;
   }
 
-  @Post(':postId/draft')
+  @Post(':postId(\\d+)/draft')
   @ApiCreatedResponse({ type: PostEntityResponse })
   @ApiForbiddenResponse({
     type: EmptyAccessTokenException,
@@ -209,7 +221,7 @@ export class PostController {
     return await this.postService.makeDraft(postId);
   }
 
-  @Get(':postId')
+  @Get(':postId(\\d+)')
   @ApiOkResponse({ type: PostEntityResponse })
   @ApiForbiddenResponse({
     type: EmptyAccessTokenException,
@@ -218,7 +230,7 @@ export class PostController {
   async getPost(@Param('postId', ParseIntPipe) postId: number) {
     return await this.postService.getPost(postId);
   }
-  @Put(':postId/content')
+  @Put(':postId(\\d+)/content')
   @ApiForbiddenResponse({
     type: EmptyAccessTokenException,
     description: 'When request user has no any access tokens',

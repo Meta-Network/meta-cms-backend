@@ -77,8 +77,11 @@ export class TasksService {
     user: Partial<UCenterJWTPayload>,
     post: MetaWorker.Info.Post,
     siteConfigId: number,
+    skipCheckSiteConfigTaskWorkspace = false,
   ) {
-    await this.checkSiteConfigTaskWorkspace(siteConfigId);
+    if (!skipCheckSiteConfigTaskWorkspace) {
+      await this.checkSiteConfigTaskWorkspace(siteConfigId);
+    }
     return await this.doCheckoutCommitPush(
       user,
       siteConfigId,
@@ -90,8 +93,11 @@ export class TasksService {
     user: Partial<UCenterJWTPayload>,
     post: MetaWorker.Info.Post,
     siteConfigId: number,
+    skipCheckSiteConfigTaskWorkspace = false,
   ) {
-    await this.checkSiteConfigTaskWorkspace(siteConfigId);
+    if (!skipCheckSiteConfigTaskWorkspace) {
+      await this.checkSiteConfigTaskWorkspace(siteConfigId);
+    }
     return await this.doCheckoutCommitPush(
       user,
       siteConfigId,
@@ -450,7 +456,7 @@ export class TasksService {
     return [MetaWorker.Enums.TaskMethod.HEXO_UPDATE_CONFIG];
   }
 
-  protected async checkSiteConfigTaskWorkspace(siteConfigId: number) {
+  async checkSiteConfigTaskWorkspace(siteConfigId: number) {
     // check task workspace is existed
 
     if (
