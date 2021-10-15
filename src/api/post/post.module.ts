@@ -11,13 +11,12 @@ import { DraftEntity } from '../../entities/draft.entity';
 import { PostEntity } from '../../entities/post.entity';
 import { PostSiteConfigRelaEntity } from '../../entities/postSiteConfigRela.entity';
 import { AccessTokenService } from '../../synchronizer/access-token.service';
-import { SiteConfigLogicService } from '../site/config/logicService';
 import { SiteConfigModule } from '../site/config/module';
 import { TasksModule } from '../task/tasks.module';
 import { PostController } from './post.controller';
 import { PostService } from './post.service';
 import { PreprocessorModule } from './preprocessor/preprocessor.module';
-import { EditorSourceService } from './sources/editor/editor-source.service';
+import { EditorModule } from './sources/editor/editor.module';
 import { MatatakiSourceModule } from './sources/matataki/matataki.module';
 
 @Module({
@@ -37,7 +36,7 @@ import { MatatakiSourceModule } from './sources/matataki/matataki.module';
     ]),
     PreprocessorModule,
     MatatakiSourceModule,
-    EditorSourceService,
+    EditorModule,
     TasksModule,
     SiteConfigModule,
   ],
