@@ -100,7 +100,7 @@ export class PostService {
     for (const siteconfigId of publishPostDto.configIds) {
       await this.tasksService.checkSiteConfigTaskWorkspace(siteconfigId);
     }
-    return await this.doFetchContentAndCreatePost(user, post, publishPostDto);
+    return await this.doPublishPost(user, post, publishPostDto);
   }
 
   async publishPendingPosts(
@@ -123,6 +123,7 @@ export class PostService {
       await this.tasksService.checkSiteConfigTaskWorkspace(siteconfigId);
     }
     const posts = await this.postRepository.findByIds(postIds);
+    const postInfos = [] as MetaWorker.Info.Post[];
     for (const post of posts) {
       if (post.userId !== user.id) {
         throw new AccessDeniedException('access denied, user id inconsistent');
@@ -131,67 +132,62 @@ export class PostService {
       if (post.state !== PostState.Pending) {
         throw new InvalidStatusException('invalid post state');
       }
-      await this.doFetchContentAndCreatePost(user, post, publishPostsDto);
+      postInfos.push(await this.doGeneratePostInfo(post));
+      await this.doSavePostSiteConfigRelas(publishPostsDto, post.id);
+    }
+    for (const siteConfigId of publishPostsDto.configIds) {
+      try {
+        await this.tasksService.createPosts(user, postInfos, siteConfigId);
+        await this.updatePostSiteRelaStateBySiteConfigId(
+          TaskCommonState.SUCCESS,
+          siteConfigId,
+        );
+      } catch (err) {
+        this.logger.error(
+          `Create posts fail: ${postIds}`,
+          err,
+          this.constructor.name,
+        );
+        await this.updatePostSiteRelaStateBySiteConfigId(
+          TaskCommonState.FAIL,
+          siteConfigId,
+        );
+        throw err;
+      }
     }
     return posts;
   }
+  async updatePostSiteRelaStateBySiteConfigId(
+    state: TaskCommonState,
+    siteConfigId: number,
+  ) {
+    await this.postSiteConfigRepository.update(
+      {
+        siteConfig: {
+          id: siteConfigId,
+        },
+      },
+      {
+        state,
+      },
+    );
+  }
 
-  protected async doFetchContentAndCreatePost(
+  protected async doPublishPost(
     user: Partial<UCenterJWTPayload>,
     post: PostEntity,
     publishPostDto: PublishPostDto,
   ) {
     const postId = post.id;
 
-    const sourceService = this.getSourceService(post.platform);
-    this.logger.verbose(
-      `Fetching source content postId: ${postId}`,
-      this.constructor.name,
-    );
-
-    const sourceContent = await sourceService.fetch(post.source);
-    this.logger.verbose(
-      `Preprocess source content postId: ${postId}`,
-      this.constructor.name,
-    );
-
-    const processedContent = await this.preprocessorService.preprocess(
-      sourceContent,
-    );
-    const relas = publishPostDto.configIds.map(
-      (configId) =>
-        ({
-          siteConfig: {
-            id: configId,
-          },
-          post: {
-            id: postId,
-          },
-          state: TaskCommonState.DOING,
-        } as Partial<PostSiteConfigRelaEntity>),
-    );
-    this.logger.verbose(
-      `Saving post site config relations postId: ${postId}`,
-      this.constructor.name,
-    );
-
-    await this.postSiteConfigRepository.save(relas);
-
+    const postInfo = await this.doGeneratePostInfo(post);
+    const relas = await this.doSavePostSiteConfigRelas(publishPostDto, postId);
     for (const postSiteConfigRela of relas) {
       this.logger.verbose(
         ` post to site: ${JSON.stringify(postSiteConfigRela)}`,
         this.constructor.name,
       );
-      const postInfo = {
-        title: post.title,
-        source: processedContent,
-        cover: post.cover,
-        summary: post.summary,
-        categories: post.categories,
-        tags: post.tags,
-        createdAt: post.createdAt.toISOString(),
-        updatedAt: post.updatedAt.toISOString(),
-      } as MetaWorker.Info.Post;
+
       try {
         this.logger.verbose(
           `Dispatching post site config relations postId: ${postId}`,
@@ -218,6 +214,60 @@ export class PostService {
     }
     post.state = PostState.Published;
     return await this.postRepository.save(post);
+  }
+
+  protected async doSavePostSiteConfigRelas(
+    publishPostDto: PublishPostDto,
+    postId: number,
+  ) {
+    const relas = publishPostDto.configIds.map(
+      (configId) =>
+        ({
+          siteConfig: {
+            id: configId,
+          },
+          post: {
+            id: postId,
+          },
+          state: TaskCommonState.DOING,
+        } as Partial<PostSiteConfigRelaEntity>),
+    );
+    this.logger.verbose(
+      `Saving post site config relations postId: ${postId}`,
+      this.constructor.name,
+    );
+
+    await this.postSiteConfigRepository.save(relas);
+    return relas;
+  }
+
+  protected async doGeneratePostInfo(post: PostEntity) {
+    const postId = post.id;
+    const sourceService = this.getSourceService(post.platform);
+    this.logger.verbose(
+      `Fetching source content postId: ${postId}`,
+      this.constructor.name,
+    );
+
+    const sourceContent = await sourceService.fetch(post.source);
+    this.logger.verbose(
+      `Preprocess source content postId: ${postId}`,
+      this.constructor.name,
+    );
+
+    const processedContent = await this.preprocessorService.preprocess(
+      sourceContent,
+    );
+    return {
+      title: post.title,
+      source: processedContent,
+      cover: post.cover,
+      summary: post.summary,
+      categories: post.categories,
+      tags: post.tags,
+      createdAt: post.createdAt.toISOString(),
+      updatedAt: post.updatedAt.toISOString(),
+    } as MetaWorker.Info.Post;
   }
 
   getSourceService(platform: string) {
