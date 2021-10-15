@@ -6,6 +6,7 @@ import {
   LoggerService,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { SchedulerRegistry } from '@nestjs/schedule';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
 import { DataNotFoundException, ValidationException } from '../../exceptions';
@@ -32,6 +33,7 @@ export class TasksService {
     private readonly taskDispatchersService: TaskDispatchersService,
     private readonly dnsService: DnsService,
     private readonly metaNetworkService: MetaNetworkService,
+    private readonly scheduleRegistry: SchedulerRegistry,
   ) {}
 
   async deploySite(
@@ -245,6 +247,9 @@ export class TasksService {
 
     await this.doUpdateDns(publisherType, publishConfig);
     await this.publisherService.updateDomainName(publisherType, publishConfig);
+    this.scheduleUpdateDomain(publishConfig, publisherType, 60000);
+    this.scheduleUpdateDomain(publishConfig, publisherType, 300000);
+    this.scheduleUpdateDomain(publishConfig, publisherType, 600000);
     await this.siteConfigLogicService.updateSiteConfigStatus(
       publishConfig.site.configId,
       SiteStatus.Published,
@@ -257,6 +262,23 @@ export class TasksService {
       userId: user.id,
     });
     return publishSiteTaskStepResults;
+  }
+
+  protected scheduleUpdateDomain(
+    publishConfig: MetaWorker.Configs.PublishConfig,
+    publisherType: MetaWorker.Enums.PublisherType,
+    timeout: number,
+  ) {
+    this.scheduleRegistry.addTimeout(
+      `update-site-domain-${publishConfig.site.configId}-${
+        new Date().getTime() + timeout
+      }`,
+      setTimeout(
+        () =>
+          this.publisherService.updateDomainName(publisherType, publishConfig),
+        timeout,
+      ),
+    );
   }
 
   protected async doCreatePost(
