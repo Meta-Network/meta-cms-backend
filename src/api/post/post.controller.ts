@@ -33,9 +33,11 @@ import { PostEntity } from '../../entities/post.entity';
 import { PostState } from '../../enums/postState';
 import {
   EmptyAccessTokenException,
+  InvalidPlatformException,
   PostSyncingException,
   RequirdHttpHeadersNotFoundException,
 } from '../../exceptions';
+import { ParsePlatformPipe } from '../../pipes/parse-platform.pipe';
 import { AccessTokenService } from '../../synchronizer/access-token.service';
 import { UCenterJWTPayload } from '../../types';
 import {
@@ -151,9 +153,13 @@ export class PostController {
     type: PostSyncingException,
     description: 'When spider is triggered but not completed',
   })
+  @ApiBadRequestResponse({
+    type: InvalidPlatformException,
+    description: 'When platform is invalid'
+  })
   async triggerPostSync(
     @User('id', ParseIntPipe) uid: number,
-    @Param('platform') platform: string,
+    @Param('platform', ParsePlatformPipe) platform: string,
   ) {
     const hasAnyToken = await this.accessTokenService.hasAny(uid, platform);
     if (!hasAnyToken) {
@@ -181,9 +187,13 @@ export class PostController {
   @ApiOkResponse({
     type: SyncStateResponse,
   })
+  @ApiBadRequestResponse({
+    type: InvalidPlatformException,
+    description: 'When platform is invalid'
+  })
   async getSyncState(
     @User('id', ParseIntPipe) uid: number,
-    @Param('platform') platform: string,
+    @Param('platform', ParsePlatformPipe) platform: string,
   ) {
     const result =
       (await this.redisClient.get(`cms:post:sync_state:${platform}:${uid}`)) ??
