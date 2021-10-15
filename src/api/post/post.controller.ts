@@ -6,9 +6,11 @@ import {
   Inject,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
   Put,
   Query,
+  ValidationPipe,
 } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import {
@@ -40,8 +42,8 @@ import {
   PaginationResponse,
   TransformResponse,
 } from '../../utils/responseClass';
+import { DraftPostCreationDto, DraftPostUpdateDto } from './dto/draft-post-dto';
 import { PublishPostDto } from './dto/publish-post.dto';
-import { UpdateDraftPostDto } from './dto/update-draft-post.dto';
 import { PostService } from './post.service';
 
 class PostPagination extends PaginationResponse<PostEntity> {
@@ -64,6 +66,10 @@ class SyncStateResponse extends TransformResponse<'idle' | 'syncing' | number> {
 
 @ApiTags('post')
 @ApiCookieAuth()
+@ApiBadRequestResponse({
+  type: RequirdHttpHeadersNotFoundException,
+  description: 'When cookie with access token not provided',
+})
 @Controller('post')
 export class PostController {
   constructor(
@@ -77,10 +83,6 @@ export class PostController {
 
   @Get()
   @ApiOkResponse({ type: PostListResponse })
-  @ApiBadRequestResponse({
-    type: RequirdHttpHeadersNotFoundException,
-    description: 'When cookie with access token not provided',
-  })
   @ApiForbiddenResponse({
     type: EmptyAccessTokenException,
     description: 'When request user has no any access tokens',
@@ -111,10 +113,6 @@ export class PostController {
 
   @Post(':postId/publish')
   @ApiCreatedResponse({ type: PostEntityResponse })
-  @ApiBadRequestResponse({
-    type: RequirdHttpHeadersNotFoundException,
-    description: 'When cookie with access token not provided',
-  })
   async publishPost(
     @User() user: UCenterJWTPayload,
     @Param('postId', ParseIntPipe) postId: number,
@@ -125,10 +123,6 @@ export class PostController {
 
   @Post(':postId/ignore')
   @ApiCreatedResponse({ type: PostEntityResponse })
-  @ApiBadRequestResponse({
-    type: RequirdHttpHeadersNotFoundException,
-    description: 'When cookie with access token not provided',
-  })
   async setPostIgnored(
     @User('id', ParseIntPipe) uid: number,
     @Param('postId', ParseIntPipe) postId: number,
@@ -137,10 +131,6 @@ export class PostController {
   }
 
   @Post('sync/:platform')
-  @ApiBadRequestResponse({
-    type: RequirdHttpHeadersNotFoundException,
-    description: 'When cookie with access token not provided',
-  })
   @ApiForbiddenResponse({
     type: EmptyAccessTokenException,
     description: 'When request user has no any access tokens',
@@ -179,10 +169,6 @@ export class PostController {
   @ApiOkResponse({
     type: SyncStateResponse,
   })
-  @ApiBadRequestResponse({
-    type: RequirdHttpHeadersNotFoundException,
-    description: 'When cookie with access token not provided',
-  })
   async getSyncState(
     @User('id', ParseIntPipe) uid: number,
     @Param('platform') platform: string,
@@ -201,32 +187,30 @@ export class PostController {
 
   @Post(':postId/draft')
   @ApiCreatedResponse({ type: PostEntityResponse })
-  @ApiForbiddenResponse({
-    type: EmptyAccessTokenException,
-    description: 'When request user has no any access tokens',
-  })
   async getDraftOfPost(@Param('postId', ParseIntPipe) postId: number) {
     return await this.postService.makeDraft(postId);
   }
 
   @Get(':postId')
   @ApiOkResponse({ type: PostEntityResponse })
-  @ApiForbiddenResponse({
-    type: EmptyAccessTokenException,
-    description: 'When request user has no any access tokens',
-  })
   async getPost(@Param('postId', ParseIntPipe) postId: number) {
     return await this.postService.getPost(postId);
   }
-  @Put(':postId/content')
-  @ApiForbiddenResponse({
-    type: EmptyAccessTokenException,
-    description: 'When request user has no any access tokens',
-  })
-  async updateDraftPostContent(
-    @Param('postId', ParseIntPipe) postId: number,
-    @Body() { content }: UpdateDraftPostDto,
+
+  @Post()
+  @ApiCreatedResponse({ type: PostEntityResponse })
+  async createDraftPost(
+    @User('id', ParseIntPipe) uid: number,
+    @Body(new ValidationPipe({ whitelist: true })) dto: DraftPostCreationDto,
   ) {
-    await this.postService.updatePost(postId, content);
+    return await this.postService.createPost(uid, dto);
+  }
+  @Patch(':postId')
+  @ApiOkResponse({ type: PostEntityResponse })
+  async updateDraftPost(
+    @Param('postId', ParseIntPipe) postId: number,
+    @Body(new ValidationPipe({ whitelist: true })) dto: DraftPostUpdateDto,
+  ) {
+    return await this.postService.updatePost(postId, dto);
   }
 }
