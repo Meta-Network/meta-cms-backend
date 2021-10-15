@@ -25,6 +25,7 @@ import { SiteConfigLogicService } from '../site/config/logicService';
 import { TasksService } from '../task/tasks.service';
 import { PublishPostDto } from './dto/publish-post.dto';
 import { PreProcessorService } from './preprocessor/preprocessor.service';
+import { EditorSourceService } from './sources/editor/editor-source.service';
 import { MatatakiSourceService } from './sources/matataki/matataki-source.service';
 
 @Injectable()
@@ -42,6 +43,7 @@ export class PostService {
     private readonly tasksService: TasksService,
     @InjectRepository(DraftEntity)
     private readonly draftRepository: Repository<DraftEntity>,
+    private readonly editorSourceService: EditorSourceService,
   ) {}
 
   async getPostsByUserId(
@@ -175,6 +177,9 @@ export class PostService {
     switch (platform) {
       case 'matataki':
         return this.matatakiSourceService;
+
+      case 'editor':
+        return this.editorSourceService;
 
       default:
         throw new Error('Invalid platform');
