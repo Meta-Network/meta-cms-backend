@@ -12,13 +12,13 @@ import { AppCacheService } from './service';
       useClass: CacheConfigService,
     }),
   ],
-  // providers: [
-  //   {
-  //     provide: APP_INTERCEPTOR,
-  //     useClass: CacheInterceptor,
-  //   },
-  //   AppCacheService,
-  // ],
+  providers: [
+    // {
+    //   provide: APP_INTERCEPTOR,
+    //   useClass: CacheInterceptor,
+    // },
+    AppCacheService,
+  ],
   exports: [AppCacheService],
 })
 export class AppCacheModule {}
