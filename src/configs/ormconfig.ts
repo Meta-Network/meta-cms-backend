@@ -49,6 +49,7 @@ const options: ConnectionOptions = {
     DraftEntity,
   ],
   synchronize: false,
+  logging: process.env.NODE_ENV !== 'production',
   migrationsTableName: 'be_migrations',
   migrations: [
     process.env.NODE_ENV === 'migration'
