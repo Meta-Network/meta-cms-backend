@@ -217,7 +217,7 @@ export class PostController {
   ) {
     return await this.postService.createPost(uid, dto);
   }
-  @Patch(':postId')
+  @Patch(':postId(\\d+)')
   @ApiOkResponse({ type: PostEntityResponse })
   async updateDraftPost(
     @Param('postId', ParseIntPipe) postId: number,
