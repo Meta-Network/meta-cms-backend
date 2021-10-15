@@ -380,9 +380,6 @@ export class PostService {
     const sourceService = this.getSourceService(post.platform);
 
     const content = await sourceService.fetch(post.source);
-    const draft = this.draftRepository.create({ userId: post.userId, content });
-
-    await this.draftRepository.save(draft);
 
     const draftPost = this.postRepository.create({
       userId: post.userId,
@@ -392,7 +389,7 @@ export class PostService {
       categories: post.categories,
       tags: post.tags,
       platform: 'editor',
-      source: draft.id.toString(),
+      source: (await this.createDraft(post.userId, content)).toString(),
       state: PostState.Drafted,
     });
 
@@ -419,13 +416,10 @@ export class PostService {
     { content, ...postDto }: DraftPostCreationDto,
   ) {
     const post = this.postRepository.create(postDto);
-    const draft = this.draftRepository.create({ userId, content });
-
-    await this.draftRepository.save(draft);
 
     post.userId = userId;
     post.platform = 'editor';
-    post.source = draft.id.toString();
+    post.source = (await this.createDraft(userId, content)).toString();
     post.state = PostState.Drafted;
 
     await this.postRepository.save(post);
@@ -439,12 +433,8 @@ export class PostService {
       throw new BadRequestException('post must be of editor platform');
     }
 
-    const draft = await this.draftRepository.findOneOrFail(Number(post.source));
-
     if (typeof dto.content === 'string') {
-      draft.content = dto.content;
-
-      await this.draftRepository.save(draft);
+      await this.updateDraft(Number(post.source), dto.content);
     }
 
     this.postRepository.merge(post, dto);
@@ -452,8 +442,26 @@ export class PostService {
 
     await this.postRepository.save(post);
 
-    post.content = draft.content;
+    if (typeof dto.content === 'string') {
+      post.content = dto.content;
+    }
 
     return post;
+  }
+
+  // TODO: Switch to hexo storage
+  async createDraft(userId: number, content: string) {
+    const draft = this.draftRepository.create({ userId, content });
+
+    await this.draftRepository.save(draft);
+
+    return draft.id;
+  }
+  async updateDraft(draftId: number, content: string) {
+    const draft = await this.draftRepository.findOneOrFail(draftId);
+
+    draft.content = content;
+
+    await this.draftRepository.save(draft);
   }
 }
