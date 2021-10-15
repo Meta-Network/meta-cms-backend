@@ -389,7 +389,7 @@ export class PostService {
       categories: post.categories,
       tags: post.tags,
       platform: 'editor',
-      source: (await this.createDraft(post.userId, content)).toString(),
+      source: await this.createDraft(post.userId, content),
       state: PostState.Drafted,
     });
 
@@ -419,7 +419,7 @@ export class PostService {
 
     post.userId = userId;
     post.platform = 'editor';
-    post.source = (await this.createDraft(userId, content)).toString();
+    post.source = await this.createDraft(userId, content);
     post.state = PostState.Drafted;
 
     await this.postRepository.save(post);
@@ -451,11 +451,15 @@ export class PostService {
 
   // TODO: Switch to hexo storage
   async createDraft(userId: number, content: string) {
+    if (typeof content !== 'string') {
+      return 'local';
+    }
+
     const draft = this.draftRepository.create({ userId, content });
 
     await this.draftRepository.save(draft);
 
-    return draft.id;
+    return draft.id.toString();
   }
   async updateDraft(draftId: number, content: string) {
     const draft = await this.draftRepository.findOneOrFail(draftId);
