@@ -155,7 +155,7 @@ export class PostController {
   })
   @ApiBadRequestResponse({
     type: InvalidPlatformException,
-    description: 'When platform is invalid'
+    description: 'When platform is invalid',
   })
   async triggerPostSync(
     @User('id', ParseIntPipe) uid: number,
@@ -189,7 +189,7 @@ export class PostController {
   })
   @ApiBadRequestResponse({
     type: InvalidPlatformException,
-    description: 'When platform is invalid'
+    description: 'When platform is invalid',
   })
   async getSyncState(
     @User('id', ParseIntPipe) uid: number,

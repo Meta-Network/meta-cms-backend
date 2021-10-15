@@ -142,7 +142,7 @@ export class PostService {
     }
     for (const siteConfigId of publishPostsDto.configIds) {
       try {
-        await this.tasksService.createPosts(user, postInfos, siteConfigId);
+        await this.tasksService.createPost(user, postInfos, siteConfigId);
         await this.updatePostSiteRelaStateBySiteConfigId(
           TaskCommonState.SUCCESS,
           siteConfigId,

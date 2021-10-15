@@ -75,7 +75,7 @@ export class TasksService {
 
   async createPost(
     user: Partial<UCenterJWTPayload>,
-    post: MetaWorker.Info.Post,
+    post: MetaWorker.Info.Post | MetaWorker.Info.Post[],
     siteConfigId: number,
     skipCheckSiteConfigTaskWorkspace = false,
   ) {
@@ -86,22 +86,6 @@ export class TasksService {
       user,
       siteConfigId,
       async () => await this.doCreatePost(user, post, siteConfigId),
-    );
-  }
-
-  async createPosts(
-    user: Partial<UCenterJWTPayload>,
-    posts: MetaWorker.Info.Post[],
-    siteConfigId: number,
-    skipCheckSiteConfigTaskWorkspace = false,
-  ) {
-    if (!skipCheckSiteConfigTaskWorkspace) {
-      await this.checkSiteConfigTaskWorkspace(siteConfigId);
-    }
-    return await this.doCheckoutCommitPush(
-      user,
-      siteConfigId,
-      async () => await this.doCreatePosts(user, posts, siteConfigId),
     );
   }
 
@@ -305,7 +289,7 @@ export class TasksService {
 
   protected async doCreatePost(
     user: Partial<UCenterJWTPayload>,
-    post: MetaWorker.Info.Post,
+    post: MetaWorker.Info.Post | MetaWorker.Info.Post[],
     siteConfigId: number,
   ) {
     const { postConfig, template } = await this.generatePostConfigAndTemplate(
@@ -328,38 +312,6 @@ export class TasksService {
       postTaskSteps,
       postConfig,
     );
-  }
-
-  protected async doCreatePosts(
-    user: Partial<UCenterJWTPayload>,
-    posts: MetaWorker.Info.Post[],
-    siteConfigId: number,
-  ) {
-    let result = {};
-    for (const post of posts) {
-      const { postConfig, template } = await this.generatePostConfigAndTemplate(
-        user,
-        post,
-        siteConfigId,
-      );
-      const templateType = template.templateType;
-      this.logger.verbose(
-        `Adding post creator worker to queue`,
-        this.constructor.name,
-      );
-      const postTaskSteps = [];
-
-      postTaskSteps.push(
-        ...this.getCreatePostTaskMethodsByTemplateType(templateType),
-      );
-
-      const taskStepResults = await this.taskDispatchersService.dispatchTask(
-        postTaskSteps,
-        postConfig,
-      );
-      result = Object.assign(result, taskStepResults);
-    }
-    return result;
   }
 
   protected async doUpdatePost(
@@ -457,7 +409,7 @@ export class TasksService {
 
   protected async generatePostConfigAndTemplate(
     user: Partial<UCenterJWTPayload>,
-    post: MetaWorker.Info.Post,
+    post: MetaWorker.Info.Post | MetaWorker.Info.Post[],
     configId: number,
   ): Promise<{
     postConfig: MetaWorker.Configs.PostConfig;
