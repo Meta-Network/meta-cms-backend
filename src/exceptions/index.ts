@@ -233,3 +233,14 @@ export class PostSyncingException extends ConflictException {
   @ApiProperty({ example: 'Conflict: Still syncing' })
   readonly message: string;
 }
+
+export class InvalidPlatformException extends BadRequestException {
+  constructor() {
+    super('BadRequest: invalid platform');
+  }
+
+  @ApiProperty({ example: HttpStatus.BAD_REQUEST })
+  readonly statusCode: string;
+  @ApiProperty({ example: 'BadRequest: invalid platform' })
+  readonly message: string;
+}

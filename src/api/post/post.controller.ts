@@ -6,9 +6,11 @@ import {
   Inject,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
   Put,
   Query,
+  ValidationPipe,
 } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import {
@@ -31,17 +33,19 @@ import { PostEntity } from '../../entities/post.entity';
 import { PostState } from '../../enums/postState';
 import {
   EmptyAccessTokenException,
+  InvalidPlatformException,
   PostSyncingException,
   RequirdHttpHeadersNotFoundException,
 } from '../../exceptions';
+import { ParsePlatformPipe } from '../../pipes/parse-platform.pipe';
 import { AccessTokenService } from '../../synchronizer/access-token.service';
 import { UCenterJWTPayload } from '../../types';
 import {
   PaginationResponse,
   TransformResponse,
 } from '../../utils/responseClass';
+import { DraftPostCreationDto, DraftPostUpdateDto } from './dto/draft-post-dto';
 import { PublishPostDto, PublishPostsDto } from './dto/publish-post.dto';
-import { UpdateDraftPostDto } from './dto/update-draft-post.dto';
 import { PostService } from './post.service';
 
 class PostPagination extends PaginationResponse<PostEntity> {
@@ -64,6 +68,10 @@ class SyncStateResponse extends TransformResponse<'idle' | 'syncing' | number> {
 
 @ApiTags('post')
 @ApiCookieAuth()
+@ApiBadRequestResponse({
+  type: RequirdHttpHeadersNotFoundException,
+  description: 'When cookie with access token not provided',
+})
 @Controller('post')
 export class PostController {
   constructor(
@@ -77,10 +85,6 @@ export class PostController {
 
   @Get()
   @ApiOkResponse({ type: PostListResponse })
-  @ApiBadRequestResponse({
-    type: RequirdHttpHeadersNotFoundException,
-    description: 'When cookie with access token not provided',
-  })
   @ApiForbiddenResponse({
     type: EmptyAccessTokenException,
     description: 'When request user has no any access tokens',
@@ -111,10 +115,6 @@ export class PostController {
 
   @Post(':postId(\\d+)/publish')
   @ApiCreatedResponse({ type: PostEntityResponse })
-  @ApiBadRequestResponse({
-    type: RequirdHttpHeadersNotFoundException,
-    description: 'When cookie with access token not provided',
-  })
   async publishPost(
     @User() user: UCenterJWTPayload,
     @Param('postId', ParseIntPipe) postId: number,
@@ -137,10 +137,6 @@ export class PostController {
 
   @Post(':postId(\\d+)/ignore')
   @ApiCreatedResponse({ type: PostEntityResponse })
-  @ApiBadRequestResponse({
-    type: RequirdHttpHeadersNotFoundException,
-    description: 'When cookie with access token not provided',
-  })
   async setPostIgnored(
     @User('id', ParseIntPipe) uid: number,
     @Param('postId', ParseIntPipe) postId: number,
@@ -149,10 +145,6 @@ export class PostController {
   }
 
   @Post('sync/:platform')
-  @ApiBadRequestResponse({
-    type: RequirdHttpHeadersNotFoundException,
-    description: 'When cookie with access token not provided',
-  })
   @ApiForbiddenResponse({
     type: EmptyAccessTokenException,
     description: 'When request user has no any access tokens',
@@ -161,9 +153,13 @@ export class PostController {
     type: PostSyncingException,
     description: 'When spider is triggered but not completed',
   })
+  @ApiBadRequestResponse({
+    type: InvalidPlatformException,
+    description: 'When platform is invalid'
+  })
   async triggerPostSync(
     @User('id', ParseIntPipe) uid: number,
-    @Param('platform') platform: string,
+    @Param('platform', ParsePlatformPipe) platform: string,
   ) {
     const hasAnyToken = await this.accessTokenService.hasAny(uid, platform);
     if (!hasAnyToken) {
@@ -192,12 +188,12 @@ export class PostController {
     type: SyncStateResponse,
   })
   @ApiBadRequestResponse({
-    type: RequirdHttpHeadersNotFoundException,
-    description: 'When cookie with access token not provided',
+    type: InvalidPlatformException,
+    description: 'When platform is invalid'
   })
   async getSyncState(
     @User('id', ParseIntPipe) uid: number,
-    @Param('platform') platform: string,
+    @Param('platform', ParsePlatformPipe) platform: string,
   ) {
     const result =
       (await this.redisClient.get(`cms:post:sync_state:${platform}:${uid}`)) ??
@@ -213,32 +209,30 @@ export class PostController {
 
   @Post(':postId(\\d+)/draft')
   @ApiCreatedResponse({ type: PostEntityResponse })
-  @ApiForbiddenResponse({
-    type: EmptyAccessTokenException,
-    description: 'When request user has no any access tokens',
-  })
   async getDraftOfPost(@Param('postId', ParseIntPipe) postId: number) {
     return await this.postService.makeDraft(postId);
   }
 
   @Get(':postId(\\d+)')
   @ApiOkResponse({ type: PostEntityResponse })
-  @ApiForbiddenResponse({
-    type: EmptyAccessTokenException,
-    description: 'When request user has no any access tokens',
-  })
   async getPost(@Param('postId', ParseIntPipe) postId: number) {
     return await this.postService.getPost(postId);
   }
-  @Put(':postId(\\d+)/content')
-  @ApiForbiddenResponse({
-    type: EmptyAccessTokenException,
-    description: 'When request user has no any access tokens',
-  })
-  async updateDraftPostContent(
-    @Param('postId', ParseIntPipe) postId: number,
-    @Body() { content }: UpdateDraftPostDto,
+
+  @Post()
+  @ApiCreatedResponse({ type: PostEntityResponse })
+  async createDraftPost(
+    @User('id', ParseIntPipe) uid: number,
+    @Body(new ValidationPipe({ whitelist: true })) dto: DraftPostCreationDto,
   ) {
-    await this.postService.updatePost(postId, content);
+    return await this.postService.createPost(uid, dto);
+  }
+  @Patch(':postId(\\d+)')
+  @ApiOkResponse({ type: PostEntityResponse })
+  async updateDraftPost(
+    @Param('postId', ParseIntPipe) postId: number,
+    @Body(new ValidationPipe({ whitelist: true })) dto: DraftPostUpdateDto,
+  ) {
+    return await this.postService.updatePost(postId, dto);
   }
 }

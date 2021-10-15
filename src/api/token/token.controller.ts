@@ -9,7 +9,8 @@ import {
 
 import { User } from '../../decorators';
 import { AccessTokenEntity } from '../../entities/accessToken.entity';
-import { RequirdHttpHeadersNotFoundException } from '../../exceptions';
+import { InvalidPlatformException, RequirdHttpHeadersNotFoundException } from '../../exceptions';
+import { ParsePlatformPipe } from '../../pipes/parse-platform.pipe';
 import { AccessTokenService } from '../../synchronizer/access-token.service';
 import { TransformResponse } from '../../utils/responseClass';
 
@@ -40,18 +41,26 @@ export class TokenController {
 
   @Post(':platform/enable_sync')
   @ApiCreatedResponse({ type: TokenEntityResponse })
+  @ApiBadRequestResponse({
+    type: InvalidPlatformException,
+    description: 'When platform is invalid'
+  })
   async enableSync(
     @User('id', ParseIntPipe) uid: number,
-    @Param('platform') platform: string,
+    @Param('platform', ParsePlatformPipe) platform: string,
   ) {
     return await this.accessTokenService.updateActive(uid, platform, true);
   }
 
   @Post(':platform/disable_sync')
   @ApiCreatedResponse({ type: TokenEntityResponse })
+  @ApiBadRequestResponse({
+    type: InvalidPlatformException,
+    description: 'When platform is invalid'
+  })
   async disableSync(
     @User('id', ParseIntPipe) uid: number,
-    @Param('platform') platform: string,
+    @Param('platform', ParsePlatformPipe) platform: string,
   ) {
     return await this.accessTokenService.updateActive(uid, platform, false);
   }

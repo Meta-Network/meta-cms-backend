@@ -23,10 +23,15 @@ import { UCenterJWTPayload } from '../../types';
 import { TaskCommonState } from '../../types/enum';
 import { SiteConfigLogicService } from '../site/config/logicService';
 import { TasksService } from '../task/tasks.service';
+import { DraftPostCreationDto, DraftPostUpdateDto } from './dto/draft-post-dto';
 import { PublishPostDto, PublishPostsDto } from './dto/publish-post.dto';
 import { PreProcessorService } from './preprocessor/preprocessor.service';
 import { EditorSourceService } from './sources/editor/editor-source.service';
 import { MatatakiSourceService } from './sources/matataki/matataki-source.service';
+
+export interface DraftPost extends PostEntity {
+  content: string;
+}
 
 @Injectable()
 export class PostService {
@@ -397,25 +402,58 @@ export class PostService {
   }
 
   async getPost(postId: number) {
-    const post = await this.postRepository.findOneOrFail(postId);
+    const post = (await this.postRepository.findOneOrFail(postId)) as DraftPost;
 
     if (post.platform === 'editor') {
       const { content } = await this.draftRepository.findOneOrFail(
         Number(post.source),
       );
 
-      Object.assign(post, { content });
+      post.content = content;
     }
 
     return post;
   }
-  async updatePost(postId: number, content: string) {
-    const post = await this.postRepository.findOneOrFail(postId);
+  async createPost(
+    userId: number,
+    { content, ...postDto }: DraftPostCreationDto,
+  ) {
+    const post = this.postRepository.create(postDto);
+    const draft = this.draftRepository.create({ userId, content });
+
+    await this.draftRepository.save(draft);
+
+    post.userId = userId;
+    post.platform = 'editor';
+    post.source = draft.id.toString();
+    post.state = PostState.Drafted;
+
+    await this.postRepository.save(post);
+
+    return post;
+  }
+  async updatePost(postId: number, dto: DraftPostUpdateDto) {
+    const post = (await this.postRepository.findOneOrFail(postId)) as DraftPost;
 
     if (post.platform !== 'editor') {
       throw new BadRequestException('post must be of editor platform');
     }
 
-    await this.draftRepository.update(Number(post.source), { content });
+    const draft = await this.draftRepository.findOneOrFail(Number(post.source));
+
+    if (typeof dto.content === 'string') {
+      draft.content = dto.content;
+
+      await this.draftRepository.save(draft);
+    }
+
+    this.postRepository.merge(post, dto);
+    post.state = PostState.Drafted;
+
+    await this.postRepository.save(post);
+
+    post.content = draft.content;
+
+    return post;
   }
 }
