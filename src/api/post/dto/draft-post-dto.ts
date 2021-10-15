@@ -34,7 +34,7 @@ export class DraftPostCreationDto {
   categories: Array<string>;
 
   @ApiProperty()
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
   content: string;
 }
