@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   Inject,
   LoggerService,
   Param,
@@ -9,16 +10,21 @@ import {
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
-import { ApiProperty, ApiTags } from '@nestjs/swagger';
+import { ApiOkResponse, ApiProperty, ApiTags } from '@nestjs/swagger';
 import { IsNotEmpty, IsNumber } from 'class-validator';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
 import { SkipUCenterAuth, User } from '../../decorators';
 import { ValidationException } from '../../exceptions';
 import { UCenterJWTPayload } from '../../types';
+import { TransformResponse } from '../../utils/responseClass';
 import { PostMethodValidation } from '../../utils/validation';
 import { TasksService } from './tasks.service';
 
+class TaskWorkspaceLockedResponse extends TransformResponse<boolean> {
+  @ApiProperty()
+  readonly data: boolean;
+}
 class DeploySiteFromConfigDto {
   @ApiProperty({ description: 'Site config id', example: 1 })
   @IsNumber()
@@ -39,6 +45,19 @@ export class TasksController {
     private readonly logger: LoggerService,
     private readonly service: TasksService,
   ) {}
+
+  @ApiOkResponse({ type: TaskWorkspaceLockedResponse })
+  @Get('workspaces/:siteConfigId(\\d+)/locked')
+  @UsePipes(new ValidationPipe(PostMethodValidation))
+  async isSiteConfigTaskWorkspaceLocked(
+    @User() user: UCenterJWTPayload,
+    @Param('siteConfigId', ParseIntPipe) siteConfigId: number,
+  ) {
+    return await this.service.isSiteConfigTaskWorkspaceLocked(
+      user.id,
+      siteConfigId,
+    );
+  }
 
   @Post('deploy')
   @UsePipes(new ValidationPipe(PostMethodValidation))

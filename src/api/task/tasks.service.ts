@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { SchedulerRegistry } from '@nestjs/schedule';
+import { isNotEmpty } from 'class-validator';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
 import { DataNotFoundException, ValidationException } from '../../exceptions';
@@ -35,6 +36,19 @@ export class TasksService {
     private readonly metaNetworkService: MetaNetworkService,
     private readonly scheduleRegistry: SchedulerRegistry,
   ) {}
+
+  async isSiteConfigTaskWorkspaceLocked(userId: number, siteConfigId: number) {
+    await this.siteConfigLogicService.validateSiteConfigUserId(
+      siteConfigId,
+      userId,
+    );
+    const taskWorkspace =
+      await this.taskDispatchersService.tryGetSiteConfigTaskWorkspaceLock(
+        siteConfigId,
+      );
+
+    return isNotEmpty(taskWorkspace);
+  }
 
   async deploySite(
     user: Partial<UCenterJWTPayload>,
