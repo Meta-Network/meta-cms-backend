@@ -430,7 +430,7 @@ export class PostService {
     post.userId = userId;
     post.platform = 'editor';
     post.source = await this.createDraft(userId, content);
-    post.state = PostState.Drafted;
+    post.state = PostState.Pending;
 
     await this.postRepository.save(post);
 
@@ -448,7 +448,6 @@ export class PostService {
     }
 
     this.postRepository.merge(post, dto);
-    post.state = PostState.Drafted;
 
     await this.postRepository.save(post);
 
