@@ -2,7 +2,6 @@ import { MetaWorker } from '@metaio/worker-model';
 import { Inject, Injectable, LoggerService } from '@nestjs/common';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { Octokit } from 'octokit';
-import { publish } from 'rxjs';
 
 import {
   PublisherProvider,
@@ -27,18 +26,30 @@ export class GitHubPublisherProvider implements PublisherProvider {
     const octokit = new Octokit({
       auth: publishConfig.git.gitToken,
     });
+
     let siteInfo;
     try {
-      siteInfo = await (await this.getSiteInfo(publishConfig)).data;
+      await this.checkSiteDnsHealth(publishConfig);
+      siteInfo = (await this.getSiteInfo(publishConfig)).data;
     } catch (err) {
       await this.createSite(publishConfig);
     }
+
     if (siteInfo.cname !== publishConfig.site.domain) {
-      const data = {
+      const dataBase = {
         owner: publishConfig.git.gitUsername,
         repo: publishConfig.git.gitReponame,
         cname: publishConfig.site.domain,
       };
+      let data;
+      if (siteInfo.public) {
+        data = dataBase;
+      } else {
+        data = {
+          ...dataBase,
+          public: true,
+        };
+      }
       this.logger.verbose(
         `update cname ${data.owner}.github.io/${data.repo} : ${data.cname}`,
         this.constructor.name,
@@ -55,7 +66,15 @@ export class GitHubPublisherProvider implements PublisherProvider {
       repo: publishConfig.git.gitReponame,
     });
   }
-
+  async checkSiteDnsHealth(publishConfig: MetaWorker.Configs.PublishConfig) {
+    const octokit = new Octokit({
+      auth: publishConfig.git.gitToken,
+    });
+    return await octokit.request('GET /repos/{owner}/{repo}/pages/health', {
+      owner: publishConfig.git.gitUsername,
+      repo: publishConfig.git.gitReponame,
+    });
+  }
   async createSite(publishConfig: MetaWorker.Configs.PublishConfig) {
     this.logger.verbose(`Create site `, this.constructor.name);
     const octokit = new Octokit({

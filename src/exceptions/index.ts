@@ -3,6 +3,7 @@ import {
   ConflictException,
   ForbiddenException,
   HttpStatus,
+  InternalServerErrorException,
   NotAcceptableException,
   NotFoundException,
   UnauthorizedException,
@@ -242,5 +243,18 @@ export class InvalidPlatformException extends BadRequestException {
   @ApiProperty({ example: HttpStatus.BAD_REQUEST })
   readonly statusCode: string;
   @ApiProperty({ example: 'BadRequest: invalid platform' })
+  readonly message: string;
+}
+
+export class IpfsGatewayTimeoutException extends Error {}
+
+export class PublishFailedException extends InternalServerErrorException {
+  constructor() {
+    super('Error: publish failed');
+  }
+
+  @ApiProperty({ example: HttpStatus.INTERNAL_SERVER_ERROR })
+  readonly statusCode: string;
+  @ApiProperty({ example: 'Error: publish failed' })
   readonly message: string;
 }
