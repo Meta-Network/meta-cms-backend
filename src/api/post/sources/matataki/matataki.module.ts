@@ -4,11 +4,7 @@ import { Module } from '@nestjs/common';
 import { MatatakiSourceService } from './matataki-source.service';
 
 @Module({
-  imports: [
-    HttpModule.register({
-      baseURL: 'https://ipfs.fleek.co/ipfs/',
-    }),
-  ],
+  imports: [HttpModule],
   providers: [MatatakiSourceService],
   exports: [MatatakiSourceService],
 })

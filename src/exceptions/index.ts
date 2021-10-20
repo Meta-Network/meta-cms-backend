@@ -244,3 +244,5 @@ export class InvalidPlatformException extends BadRequestException {
   @ApiProperty({ example: 'BadRequest: invalid platform' })
   readonly message: string;
 }
+
+export class IpfsGatewayTimeoutException extends Error {}
