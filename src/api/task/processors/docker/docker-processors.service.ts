@@ -51,7 +51,7 @@ export class DockerProcessorsService {
     // https://github.com/apocas/dockerode#equivalent-of-docker-run-in-dockerode
     return await this.docker.run(
       image,
-      ['node', 'dist/main.js'],
+      [],
       process.stdout,
       this.buildCreateDockerOptions(appName, image, secret, options),
     );
