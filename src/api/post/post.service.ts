@@ -18,6 +18,8 @@ import { PostState } from '../../enums/postState';
 import {
   AccessDeniedException,
   InvalidStatusException,
+  IpfsGatewayTimeoutException,
+  PublishFailedException,
 } from '../../exceptions';
 import { UCenterJWTPayload } from '../../types';
 import { TaskCommonState } from '../../types/enum';
@@ -138,7 +140,11 @@ export class PostService {
       if (post.state !== PostState.Pending) {
         throw new InvalidStatusException('invalid post state');
       }
-      postInfos.push(await this.doGeneratePostInfo(post));
+      const postInfo = await this.doGeneratePostInfo(post);
+      if (!postInfo) {
+        continue;
+      }
+      postInfos.push(postInfo);
       await this.doSavePostSiteConfigRelas(publishPostsDto, post.id);
     }
     for (const siteConfigId of publishPostsDto.configIds) {
@@ -195,6 +201,10 @@ export class PostService {
     const postId = post.id;
 
     const postInfo = await this.doGeneratePostInfo(post);
+    if (!postInfo) {
+      throw new PublishFailedException();
+    }
+
     const relas = await this.doSavePostSiteConfigRelas(publishPostDto, postId);
     for (const postSiteConfigRela of relas) {
       this.logger.verbose(
@@ -264,7 +274,20 @@ export class PostService {
       this.constructor.name,
     );
 
-    const sourceContent = await sourceService.fetch(post.source);
+    let sourceContent: string;
+
+    try {
+      sourceContent = await sourceService.fetch(post.source);
+    } catch (err) {
+      await this.setPostState(post.id, PostState.Invalid);
+
+      this.logger.error(
+        `Failed to get source content of postId: ${postId}`,
+        err,
+        this.constructor.name,
+      );
+      return null;
+    }
     this.logger.verbose(
       `Preprocess source content postId: ${postId}`,
       this.constructor.name,

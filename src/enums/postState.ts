@@ -3,4 +3,5 @@ export enum PostState {
   Published = 'published',
   Ignored = 'ignored',
   Drafted = 'drafted',
+  Invalid = 'invalid',
 }
