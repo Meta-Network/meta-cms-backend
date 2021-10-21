@@ -28,34 +28,39 @@ export class GitHubPublisherProvider implements PublisherProvider {
     });
 
     let siteInfo;
+    let https_enforced = false;
     try {
-      await this.checkSiteDnsHealth(publishConfig);
+      const dnsHealthResponse = await this.checkSiteDnsHealth(publishConfig);
+      https_enforced =
+        dnsHealthResponse.status &&
+        dnsHealthResponse.data.domain === publishConfig.site.domain;
       siteInfo = (await this.getSiteInfo(publishConfig)).data;
     } catch (err) {
       await this.createSite(publishConfig);
     }
 
-    if (siteInfo.cname !== publishConfig.site.domain) {
-      const dataBase = {
-        owner: publishConfig.git.gitUsername,
-        repo: publishConfig.git.gitReponame,
-        cname: publishConfig.site.domain,
+    // if (siteInfo.cname !== publishConfig.site.domain) {
+    const dataBase = {
+      owner: publishConfig.git.gitUsername,
+      repo: publishConfig.git.gitReponame,
+      cname: publishConfig.site.domain,
+      https_enforced,
+    };
+    let data;
+    if (siteInfo.public) {
+      data = dataBase;
+    } else {
+      data = {
+        ...dataBase,
+        public: true,
       };
-      let data;
-      if (siteInfo.public) {
-        data = dataBase;
-      } else {
-        data = {
-          ...dataBase,
-          public: true,
-        };
-      }
-      this.logger.verbose(
-        `update cname ${data.owner}.github.io/${data.repo} : ${data.cname}`,
-        this.constructor.name,
-      );
-      await octokit.request('PUT /repos/{owner}/{repo}/pages', data);
     }
+    this.logger.verbose(
+      `update cname ${data.owner}.github.io/${data.repo} : ${data.cname}`,
+      this.constructor.name,
+    );
+    await octokit.request('PUT /repos/{owner}/{repo}/pages', data);
+    // }
   }
   async getSiteInfo(publishConfig: MetaWorker.Configs.PublishConfig) {
     const octokit = new Octokit({
