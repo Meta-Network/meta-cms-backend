@@ -57,7 +57,7 @@ export class CloudFlareDnsProvider implements DnsProvider {
           .post(
             `https://api.cloudflare.com/client/v4/zones/${dns.env.zoneId}/dns_records`,
           )
-          .send(dnsRecord)
+          .send({ ...dnsRecord, proxied: true })
           .set('Authorization', `Bearer ${dns.env.token}`);
         this.logger.verbose(
           `Post dns record: ${JSON.stringify(postRes.body)}`,
