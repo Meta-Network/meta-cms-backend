@@ -12,7 +12,7 @@ export class AccessTokenService {
   ) {}
 
   async save(userId: number, platform: string, accessToken: string) {
-    const entity = this.repository.create({ userId, platform, accessToken });
+    const entity = this.repository.create({ userId, platform, accessToken, active: false });
 
     await this.repository.save(entity);
   }
