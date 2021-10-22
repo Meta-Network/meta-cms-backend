@@ -31,7 +31,7 @@ services:
   cms-backend:
     image: metaio/meta-cms-backend:latest
     ports:
-      - 3002:3000
+      - '3002:3000'
     volumes:
       - /var/docker/meta-cms-backend/config:/opt/MetaNetwork/CMSBackend/config
       - /var/tmp/docker-cms-be:/var/tmp/docker-cms-be
