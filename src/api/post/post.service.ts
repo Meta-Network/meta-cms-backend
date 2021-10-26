@@ -96,6 +96,10 @@ export class PostService {
       throw new AccessDeniedException('access denied, user id inconsistent');
     }
 
+    if (post.title.length === 0) {
+      throw new InvalidStatusException('post title is empty');
+    }
+
     if (post.state !== PostState.Pending) {
       throw new InvalidStatusException('invalid post state');
     }
@@ -135,6 +139,10 @@ export class PostService {
     for (const post of posts) {
       if (post.userId !== user.id) {
         throw new AccessDeniedException('access denied, user id inconsistent');
+      }
+
+      if (post.title.length === 0) {
+        throw new InvalidStatusException('post title is empty');
       }
 
       if (post.state !== PostState.Pending) {
