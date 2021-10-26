@@ -97,7 +97,7 @@ export class PostService {
     }
 
     if (post.title.length === 0) {
-      throw new InvalidStatusException('post title is empty');
+      throw new BadRequestException('post title is empty');
     }
 
     if (post.state !== PostState.Pending) {
@@ -142,7 +142,7 @@ export class PostService {
       }
 
       if (post.title.length === 0) {
-        throw new InvalidStatusException('post title is empty');
+        throw new BadRequestException('post title is empty');
       }
 
       if (post.state !== PostState.Pending) {
