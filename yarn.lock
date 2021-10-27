@@ -622,10 +622,10 @@
   resolved "https://registry.yarnpkg.com/@metaio/microservice-model/-/microservice-model-1.0.1.tgz#2c41c3247d8705ffea47f62b6d28d07fd10703ed"
   integrity sha512-vC/6KhStSRBsnweHlEwT3AHQ5B7e1LB7ZkzWTtyt0TLu6qcZd3ZeZdAO+OxGh4ne4BF96uivKKT0tQ8gViyIoA==
 
-"@metaio/worker-model@1.4.2":
-  version "1.4.2"
-  resolved "https://registry.yarnpkg.com/@metaio/worker-model/-/worker-model-1.4.2.tgz#fb8b4526f06da1e50149193a66989e8f8d6e97b2"
-  integrity sha512-7ipqioWIzb+AmTDBBgOfmh1t09WVmjET2mGhMpcjiKnyFjyi7ASWomVGhIgXM8YyWd0Vkxh67eb4BApRB1wzIw==
+"@metaio/worker-model@1.5.2":
+  version "1.5.2"
+  resolved "https://registry.yarnpkg.com/@metaio/worker-model/-/worker-model-1.5.2.tgz#ef2eabcebc259789d5fa50c2518ceaadbda14d4a"
+  integrity sha512-0bxDb/nddkdfpuNHn7sDdJm4Z3YGJwl7GZJbWc3H5R3cEI8nf7Y6W0E+b3/uwIgBXfX+awAXoEKpjWxRNXVE9A==
 
 "@nestjs/axios@^0.0.1":
   version "0.0.1"

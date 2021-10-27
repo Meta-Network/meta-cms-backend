@@ -227,7 +227,7 @@ export class TasksService {
 
     const { templateType } = deployConfig.template;
     taskSteps.push(...this.getDeployTaskMethodsByTemplateType(templateType));
-
+    taskSteps.push(MetaWorker.Enums.TaskMethod.GENERATE_METASPACE_CONFIG);
     taskSteps.push(MetaWorker.Enums.TaskMethod.GIT_COMMIT_PUSH);
     if (overwriteTheme) {
       taskSteps.push(MetaWorker.Enums.TaskMethod.GIT_OVERWRITE_THEME);
