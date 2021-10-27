@@ -32,6 +32,7 @@ export class GitWorkersService extends TaskWorkersService {
         MetaWorker.Enums.TaskMethod.GIT_COMMIT_PUSH,
         MetaWorker.Enums.TaskMethod.GIT_CLONE_CHECKOUT,
         MetaWorker.Enums.TaskMethod.PUBLISH_GITHUB_PAGES,
+        MetaWorker.Enums.TaskMethod.GENERATE_METASPACE_CONFIG,
       ],
       taskWorkerJobProcessor,
     );
