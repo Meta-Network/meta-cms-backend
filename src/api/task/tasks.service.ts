@@ -566,7 +566,7 @@ export class TasksService {
   }
 
   protected async generateDeployConfigAndRepoSize(
-    user: any,
+    user: Partial<UCenterJWTPayload>,
     configId: number,
     validSiteStatus?: SiteStatus[],
   ): Promise<{
@@ -581,7 +581,7 @@ export class TasksService {
 
     const { site, template, theme, storage } =
       await this.siteService.generateMetaWorkerSiteInfo(
-        user.id,
+        user,
         configId,
         validSiteStatus,
       );
