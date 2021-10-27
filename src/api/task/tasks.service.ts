@@ -439,7 +439,7 @@ export class TasksService {
     );
 
     const { site, template, theme, publisher } =
-      await this.siteService.generateMetaWorkerSiteInfo(user.id, configId, [
+      await this.siteService.generateMetaWorkerSiteInfo(user, configId, [
         SiteStatus.Deployed,
         SiteStatus.Publishing,
         SiteStatus.Published,
@@ -482,7 +482,7 @@ export class TasksService {
     );
 
     const { site, template, storage } =
-      await this.siteService.generateMetaWorkerSiteInfo(user.id, configId, [
+      await this.siteService.generateMetaWorkerSiteInfo(user, configId, [
         SiteStatus.Deployed,
         SiteStatus.Publishing,
         SiteStatus.Published,

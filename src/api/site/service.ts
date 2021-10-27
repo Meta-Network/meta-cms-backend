@@ -1,8 +1,10 @@
 import { MetaWorker } from '@metaio/worker-model';
 import { Inject, Injectable, LoggerService } from '@nestjs/common';
+import { JwtPayload } from 'jsonwebtoken';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
 import { InvalidStatusException } from '../../exceptions';
+import { UCenterJWTPayload } from '../../types';
 import { SiteStatus } from '../../types/enum';
 import { TemplateLogicService } from '../theme/template/logicService';
 import { SiteConfigLogicService } from './config/logicService';
@@ -35,7 +37,7 @@ export class SiteService {
   ) {}
 
   async generateMetaWorkerSiteInfo(
-    userId: number,
+    user: Partial<UCenterJWTPayload>,
     siteConfigId: number,
     validSiteStatus?: SiteStatus[],
   ): Promise<GenerateMetaWorkerSiteInfo> {
@@ -45,6 +47,7 @@ export class SiteService {
       `Get site config from SiteConfigLogicService`,
       SiteService.name,
     );
+    const userId = user.id;
     const config = await this.siteConfigService.validateSiteConfigUserId(
       siteConfigId,
       userId,
@@ -76,6 +79,7 @@ export class SiteService {
       author,
       keywords,
       favicon,
+      avatar: user.avatar,
     };
 
     this.logger.verbose(
