@@ -18,7 +18,6 @@ import { PostState } from '../../enums/postState';
 import {
   AccessDeniedException,
   InvalidStatusException,
-  IpfsGatewayTimeoutException,
   PublishFailedException,
 } from '../../exceptions';
 import { UCenterJWTPayload } from '../../types';

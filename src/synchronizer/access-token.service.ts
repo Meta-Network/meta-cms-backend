@@ -1,51 +1,90 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Connection } from 'typeorm';
 
 import { AccessTokenEntity } from '../entities/accessToken.entity';
 
 @Injectable()
 export class AccessTokenService {
-  constructor(
-    @InjectRepository(AccessTokenEntity)
-    private repository: Repository<AccessTokenEntity>,
-  ) {}
+  constructor(private connection: Connection) {}
 
   async save(userId: number, platform: string, accessToken: string) {
-    const entity = this.repository.create({ userId, platform, accessToken, active: false });
-
-    await this.repository.save(entity);
+    const queryRunner = this.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const entity = queryRunner.manager.create(AccessTokenEntity, {
+        userId,
+        platform,
+        accessToken,
+        active: false,
+      });
+      await queryRunner.manager.save(entity);
+      await queryRunner.commitTransaction();
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error; // TODO: Friendly error message
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   async read(userId: number) {
-    return await this.repository.find({ where: { userId } });
+    const queryRunner = this.connection.createQueryRunner();
+    await queryRunner.connect();
+    const tokens = await queryRunner.manager.find(AccessTokenEntity, {
+      where: { userId },
+    });
+    await queryRunner.release();
+    return tokens;
   }
 
   async updateActive(userId: number, platform: string, active: boolean) {
-    const token = await this.repository.findOneOrFail({
-      where: { userId, platform },
-    });
-    token.active = active;
-
-    await this.repository.save(token);
-
-    return token;
+    const queryRunner = this.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const token = await queryRunner.manager.findOneOrFail(AccessTokenEntity, {
+        where: { userId, platform },
+      });
+      token.active = active;
+      await queryRunner.manager.save(token);
+      await queryRunner.commitTransaction();
+      return token;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error; // TODO: Friendly error message
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   async hasAny(userId: number, platform?: string) {
+    const queryRunner = this.connection.createQueryRunner();
+    await queryRunner.connect();
     const where = !platform ? { userId } : { userId, platform };
-
-    return (await this.repository.count({ where })) > 0;
+    const count = await queryRunner.manager.count(AccessTokenEntity, { where });
+    await queryRunner.release();
+    return count > 0;
   }
 
   async remove(userId: number, platform: string) {
-    const entity = await this.repository.findOne({
-      where: { userId, platform },
-    });
-    if (!entity) {
-      return;
+    const queryRunner = this.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const entity = await queryRunner.manager.findOne(AccessTokenEntity, {
+        where: { userId, platform },
+      });
+      if (!entity) {
+        return;
+      }
+      await queryRunner.manager.remove(entity);
+      await queryRunner.commitTransaction();
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error; // TODO: Friendly error message
+    } finally {
+      await queryRunner.release();
     }
-
-    await this.repository.remove(entity);
   }
 }

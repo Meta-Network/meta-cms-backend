@@ -1,10 +1,8 @@
 import { MetaWorker } from '@metaio/worker-model';
 import { Inject, Injectable, LoggerService } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { Octokit } from 'octokit';
-import { DeleteResult } from 'typeorm';
-import { Repository } from 'typeorm/repository/Repository';
+import { Connection, DeleteResult } from 'typeorm';
 
 import { GitHubPublisherProviderEntity } from '../../../../entities/provider/publisher/github.entity';
 import {
@@ -37,8 +35,7 @@ export class GitHubPublisherService implements SpecificPublisherService {
   constructor(
     @Inject(WINSTON_MODULE_NEST_PROVIDER)
     private readonly logger: LoggerService,
-    @InjectRepository(GitHubPublisherProviderEntity)
-    private readonly publisherRepository: Repository<GitHubPublisherProviderEntity>,
+    private connection: Connection,
     private readonly siteConfigLogicService: SiteConfigLogicService,
     private readonly ucenterService: MetaUCenterService,
   ) {
@@ -51,29 +48,79 @@ export class GitHubPublisherService implements SpecificPublisherService {
   async read(
     publisherProviderId: number,
   ): Promise<GitHubPublisherProviderEntity> {
-    return await this.publisherRepository.findOne(publisherProviderId);
+    const queryRunner = this.connection.createQueryRunner();
+    await queryRunner.connect();
+    const find = await queryRunner.manager.findOne(
+      GitHubPublisherProviderEntity,
+      publisherProviderId,
+    );
+    await queryRunner.release();
+    return find;
   }
 
   async create(
     publisherProvider: GitHubPublisherProviderEntity,
   ): Promise<GitHubPublisherProviderEntity> {
-    const newPublisher = this.publisherRepository.create(publisherProvider);
-    return await this.publisherRepository.save(newPublisher);
+    const queryRunner = this.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const newPublisher = queryRunner.manager.create(
+        GitHubPublisherProviderEntity,
+        publisherProvider,
+      );
+      const save = await queryRunner.manager.save(newPublisher);
+      await queryRunner.commitTransaction();
+      return save;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error; // TODO: Friendly error message
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   async update(
     oldPublisherProvider: GitHubPublisherProviderEntity,
     newPublisherProvider: GitHubPublisherProviderEntity,
   ): Promise<GitHubPublisherProviderEntity> {
-    const Publisher = this.publisherRepository.merge(
-      oldPublisherProvider,
-      newPublisherProvider,
-    );
-    return await this.publisherRepository.save(Publisher);
+    const queryRunner = this.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const publisher = queryRunner.manager.merge(
+        GitHubPublisherProviderEntity,
+        oldPublisherProvider,
+        newPublisherProvider,
+      );
+      const save = await queryRunner.manager.save(publisher);
+      await queryRunner.commitTransaction();
+      return save;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error; // TODO: Friendly error message
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   async delete(publisherProviderId: number): Promise<DeleteResult> {
-    return await this.publisherRepository.delete(publisherProviderId);
+    const queryRunner = this.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const del = await queryRunner.manager.delete(
+        GitHubPublisherProviderEntity,
+        publisherProviderId,
+      );
+      await queryRunner.commitTransaction();
+      return del;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error; // TODO: Friendly error message
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   async getPublisherConfig(

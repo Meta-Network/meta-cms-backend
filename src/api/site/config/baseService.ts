@@ -6,6 +6,7 @@ import {
   Pagination,
 } from 'nestjs-typeorm-paginate';
 import {
+  Connection,
   DeleteResult,
   FindManyOptions,
   FindOneOptions,
@@ -25,6 +26,7 @@ export class SiteConfigBaseService {
   constructor(
     @InjectRepository(SiteConfigEntity)
     private readonly siteConfigRepository: Repository<SiteConfigEntity>,
+    private connection: Connection,
   ) {}
 
   async read(
@@ -76,19 +78,55 @@ export class SiteConfigBaseService {
   }
 
   async create(config: SiteConfigEntity): Promise<SiteConfigEntity> {
-    const siteConfig = this.siteConfigRepository.create(config);
-    return await this.siteConfigRepository.save(siteConfig);
+    const queryRunner = this.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const siteConfig = queryRunner.manager.create(SiteConfigEntity, config);
+      const save = await queryRunner.manager.save(siteConfig);
+      await queryRunner.commitTransaction();
+      return save;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error; // TODO: Friendly error message
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   async update(
     oldC: SiteConfigEntity,
     newC: SiteConfigEntity,
   ): Promise<SiteConfigEntity> {
-    const config = this.siteConfigRepository.merge(oldC, newC);
-    return await this.siteConfigRepository.save(config);
+    const queryRunner = this.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const config = queryRunner.manager.merge(SiteConfigEntity, oldC, newC);
+      const save = await queryRunner.manager.save(config);
+      await queryRunner.commitTransaction();
+      return save;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error; // TODO: Friendly error message
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   async delete(cid: number): Promise<DeleteResult> {
-    return await this.siteConfigRepository.delete(cid);
+    const queryRunner = this.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const del = await queryRunner.manager.delete(SiteConfigEntity, cid);
+      await queryRunner.commitTransaction();
+      return del;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error; // TODO: Friendly error message
+    } finally {
+      await queryRunner.release();
+    }
   }
 }

@@ -5,7 +5,7 @@ import {
   paginate,
   Pagination,
 } from 'nestjs-typeorm-paginate';
-import { DeleteResult, FindOneOptions, Repository } from 'typeorm';
+import { Connection, DeleteResult, FindOneOptions, Repository } from 'typeorm';
 
 import { SiteInfoEntity } from '../../../entities/siteInfo.entity';
 import { SiteInfoWithConfigCountEntity } from '../../../entities/siteInfoWithConfigCount.entity';
@@ -15,6 +15,7 @@ export class SiteInfoBaseService {
   constructor(
     @InjectRepository(SiteInfoEntity)
     private readonly siteInfoRepository: Repository<SiteInfoEntity>,
+    private connection: Connection,
   ) {}
 
   async read(
@@ -50,19 +51,55 @@ export class SiteInfoBaseService {
   }
 
   async create(info: SiteInfoEntity): Promise<SiteInfoEntity> {
-    const siteInfo = this.siteInfoRepository.create(info);
-    return await this.siteInfoRepository.save(siteInfo);
+    const queryRunner = this.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const siteInfo = queryRunner.manager.create(SiteInfoEntity, info);
+      const save = await queryRunner.manager.save(siteInfo);
+      await queryRunner.commitTransaction();
+      return save;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error; // TODO: Friendly error message
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   async update(
     oldI: SiteInfoEntity,
     newI: SiteInfoEntity,
   ): Promise<SiteInfoEntity> {
-    const info = this.siteInfoRepository.merge(oldI, newI);
-    return await this.siteInfoRepository.save(info);
+    const queryRunner = this.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const info = queryRunner.manager.merge(SiteInfoEntity, oldI, newI);
+      const save = await this.siteInfoRepository.save(info);
+      await queryRunner.commitTransaction();
+      return save;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error; // TODO: Friendly error message
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   async delete(sid: number): Promise<DeleteResult> {
-    return await this.siteInfoRepository.delete(sid);
+    const queryRunner = this.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const del = await this.siteInfoRepository.delete(sid);
+      await queryRunner.commitTransaction();
+      return del;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error; // TODO: Friendly error message
+    } finally {
+      await queryRunner.release();
+    }
   }
 }

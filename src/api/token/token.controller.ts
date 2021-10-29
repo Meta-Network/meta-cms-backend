@@ -9,7 +9,10 @@ import {
 
 import { User } from '../../decorators';
 import { AccessTokenEntity } from '../../entities/accessToken.entity';
-import { InvalidPlatformException, RequirdHttpHeadersNotFoundException } from '../../exceptions';
+import {
+  InvalidPlatformException,
+  RequirdHttpHeadersNotFoundException,
+} from '../../exceptions';
 import { ParsePlatformPipe } from '../../pipes/parse-platform.pipe';
 import { AccessTokenService } from '../../synchronizer/access-token.service';
 import { TransformResponse } from '../../utils/responseClass';
@@ -43,7 +46,7 @@ export class TokenController {
   @ApiCreatedResponse({ type: TokenEntityResponse })
   @ApiBadRequestResponse({
     type: InvalidPlatformException,
-    description: 'When platform is invalid'
+    description: 'When platform is invalid',
   })
   async enableSync(
     @User('id', ParseIntPipe) uid: number,
@@ -56,7 +59,7 @@ export class TokenController {
   @ApiCreatedResponse({ type: TokenEntityResponse })
   @ApiBadRequestResponse({
     type: InvalidPlatformException,
-    description: 'When platform is invalid'
+    description: 'When platform is invalid',
   })
   async disableSync(
     @User('id', ParseIntPipe) uid: number,
