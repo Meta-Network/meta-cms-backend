@@ -215,13 +215,4 @@ export class GitHubStorageController {
   ) {
     return await this.logicService.deleteStorageConfig(uid, configId);
   }
-
-  // private async addGitHubWorkerTask(
-  //   type: BullProcessorType,
-  //   configId: number,
-  //   user: UCenterJWTPayload,
-  //   github: GitHubStorageProviderEntity,
-  // ): Promise<void> {
-  //   // await this.taskService.addGitWorkerQueue(type, workerConfig);
-  // }
 }
