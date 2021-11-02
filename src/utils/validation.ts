@@ -3,7 +3,6 @@ import {
   IsArray,
   isEmpty,
   IsIn,
-  validate,
   validateOrReject,
   validateSync,
 } from 'class-validator';
