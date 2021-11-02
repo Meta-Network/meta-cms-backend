@@ -214,15 +214,15 @@ export class TasksService {
       siteConfigId,
       SiteStatus.Deploying,
     );
-    const { deployConfig, gitRepoSize } =
+    const { deployConfig, repoEmpty } =
       await this.generateDeployConfigAndRepoSize(user, siteConfigId);
     const taskSteps: MetaWorker.Enums.TaskMethod[] = [];
 
     this.logger.verbose(`Adding storage worker to queue`, TasksService.name);
-    if (gitRepoSize > 0) {
-      taskSteps.push(MetaWorker.Enums.TaskMethod.GIT_CLONE_CHECKOUT);
-    } else {
+    if (repoEmpty) {
       taskSteps.push(MetaWorker.Enums.TaskMethod.GIT_INIT_PUSH);
+    } else {
+      taskSteps.push(MetaWorker.Enums.TaskMethod.GIT_CLONE_CHECKOUT);
     }
 
     const { templateType } = deployConfig.template;
@@ -571,7 +571,7 @@ export class TasksService {
     validSiteStatus?: SiteStatus[],
   ): Promise<{
     deployConfig: MetaWorker.Configs.DeployConfig;
-    gitRepoSize: number;
+    repoEmpty: boolean;
   }> {
     this.logger.verbose(`Generate meta worker user info`, TasksService.name);
     const userInfo: MetaWorker.Info.UCenterUser = {
@@ -589,7 +589,7 @@ export class TasksService {
     const { storageProviderId, storageType } = storage;
     if (!storageProviderId)
       throw new DataNotFoundException('storage provider id not found');
-    const { gitInfo, repoSize } =
+    const { gitInfo, repoEmpty } =
       await this.storageService.generateMetaWorkerGitInfo(
         storageType,
         user.id,
@@ -606,7 +606,7 @@ export class TasksService {
     };
     return {
       deployConfig,
-      gitRepoSize: repoSize,
+      repoEmpty,
     };
   }
 }

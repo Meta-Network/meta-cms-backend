@@ -1,20 +1,32 @@
 import { Inject, Injectable, LoggerService } from '@nestjs/common';
+// import { PaginateInterface } from '@octokit/plugin-paginate-rest';
+// import { Api } from '@octokit/plugin-rest-endpoint-methods/dist-types/types';
+// import { RequestError } from '@octokit/request-error';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { Octokit } from 'octokit';
 
 import { AccessDeniedException } from '../../exceptions';
+import { CreateGitRepoResult } from '../../types';
 
-export type CreateGitHubRepoResult = {
-  status: boolean;
-  size: number;
+export type CreateGitHubRepoResult = CreateGitRepoResult & {
   permissions?: {
-    admin: boolean;
     maintain?: boolean;
-    push: boolean;
     triage?: boolean;
-    pull: boolean;
   };
 };
+
+// type OctokitInst = Octokit &
+//   Api & {
+//     paginate: PaginateInterface;
+//   } & {
+//     retry: {
+//       retryRequest: (
+//         error: RequestError,
+//         retries: number,
+//         retryAfter: number,
+//       ) => RequestError;
+//     };
+//   };
 
 @Injectable()
 export class OctokitService {
@@ -75,7 +87,7 @@ export class OctokitService {
         );
         return {
           status: true,
-          size: repoData.size || commitData.length,
+          empty: !commitData.length,
           permissions: repoData.permissions,
         };
       } catch (error) {
@@ -90,7 +102,7 @@ export class OctokitService {
           );
           return {
             status: true,
-            size: repoData.size || 0,
+            empty: true,
             permissions: repoData.permissions,
           };
         }
@@ -118,7 +130,7 @@ export class OctokitService {
         );
         return {
           status: true,
-          size: repoData.size,
+          empty: true,
           permissions: repoData.permissions,
         };
       }

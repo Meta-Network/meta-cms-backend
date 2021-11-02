@@ -49,8 +49,19 @@ export type QueueTaskConfig =
   | MetaWorker.Configs.PublishTaskConfig
   | MetaWorker.Configs.PostTaskConfig
   | MetaWorker.Configs.DnsTaskConfig;
+
 export type GenerateMetaWorkerGitInfo = {
   gitInfo: MetaWorker.Info.Git;
   publishInfo?: MetaWorker.Info.Publish;
-  repoSize: number;
+  repoEmpty: boolean;
+};
+
+export type CreateGitRepoResult = {
+  status: boolean;
+  empty: boolean;
+  permissions?: {
+    admin: boolean;
+    push: boolean;
+    pull: boolean;
+  };
 };

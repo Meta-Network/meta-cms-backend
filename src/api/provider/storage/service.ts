@@ -40,7 +40,7 @@ export class StorageService {
         `Create GitHub repo from config`,
         StorageService.name,
       );
-      const { status, size } =
+      const { status, empty } =
         await this.githubService.createGitHubRepoFromConfig(gitToken, github);
       if (!status) {
         this.logger.error(
@@ -59,7 +59,7 @@ export class StorageService {
         gitLastCommitHash: lastCommitHash,
       };
 
-      return { gitInfo, repoSize: size };
+      return { gitInfo, repoEmpty: empty };
     }
   }
 }

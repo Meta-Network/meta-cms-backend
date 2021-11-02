@@ -248,7 +248,7 @@ export class GitHubPublisherService implements SpecificPublisherService {
       `Create GitHub publisher repo from config`,
       this.constructor.name,
     );
-    const { status, size } = await this.createGitHubPublisherRepoFromConfig(
+    const { status, empty } = await this.createGitHubPublisherRepoFromConfig(
       gitToken,
       github,
     );
@@ -274,6 +274,6 @@ export class GitHubPublisherService implements SpecificPublisherService {
       publishDir: publishDir,
     };
 
-    return { gitInfo, publishInfo, repoSize: size };
+    return { gitInfo, publishInfo, repoEmpty: empty };
   }
 }
