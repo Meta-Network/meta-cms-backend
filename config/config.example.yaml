@@ -118,3 +118,8 @@ task:
 post:
   preprocessor:
     urlprefix:
+meta-space:
+  # camelCase. see MetaWorker.Info.Gateway
+  gateway:
+    ipfs:
+      baseUrl:

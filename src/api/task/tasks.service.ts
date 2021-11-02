@@ -602,9 +602,8 @@ export class TasksService {
       template,
       theme,
       git: gitInfo,
+      gateway: this.configService.get('meta-space.gateway'),
     };
-    // for hexo update config
-    // deployConfig.site.domain = `https://${deployConfig.site.domain}`;
     return {
       deployConfig,
       gitRepoSize: repoSize,
