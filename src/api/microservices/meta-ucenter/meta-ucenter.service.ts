@@ -19,6 +19,10 @@ export class MetaUCenterService implements OnApplicationBootstrap {
     return await this.getSocialAuthTokenByUserId(userId, 'github');
   }
 
+  async getGiteeAuthTokenByUserId(userId: number): Promise<string> {
+    return await this.getSocialAuthTokenByUserId(userId, 'gitee');
+  }
+
   async getSocialAuthTokenByUserId(
     userId: number,
     platform: string,
