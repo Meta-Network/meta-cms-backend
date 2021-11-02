@@ -8,13 +8,6 @@ import { Octokit } from 'octokit';
 import { AccessDeniedException } from '../../exceptions';
 import { CreateGitRepoResult } from '../../types';
 
-export type CreateGitHubRepoResult = CreateGitRepoResult & {
-  permissions?: {
-    maintain?: boolean;
-    triage?: boolean;
-  };
-};
-
 // type OctokitInst = Octokit &
 //   Api & {
 //     paginate: PaginateInterface;
@@ -40,7 +33,7 @@ export class OctokitService {
     userName: string,
     repoName: string,
     privateRepo = false,
-  ): Promise<CreateGitHubRepoResult> {
+  ): Promise<CreateGitRepoResult> {
     const octokit = new Octokit({ auth: token });
     // Login GitHub user
     const { data: authData } = await octokit.rest.users.getAuthenticated();

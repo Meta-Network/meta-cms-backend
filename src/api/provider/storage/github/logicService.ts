@@ -7,11 +7,12 @@ import {
   DataAlreadyExistsException,
   DataNotFoundException,
 } from '../../../../exceptions';
+import { CreateGitRepoResult } from '../../../../types';
 import { GitHubStorageBaseService } from '../../../provider/storage/github/baseService';
 import { SiteConfigLogicService } from '../../../site/config/logicService';
-import { CreateGitHubRepoResult, OctokitService } from '../../octokitService';
+import { OctokitService } from '../../octokitService';
 
-type CreateGitHubRepoFromConfig = CreateGitHubRepoResult;
+type CreateGitHubRepoFromConfig = CreateGitRepoResult;
 
 @Injectable()
 export class GitHubStorageLogicService {

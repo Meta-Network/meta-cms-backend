@@ -8,16 +8,19 @@ import {
   DataAlreadyExistsException,
   DataNotFoundException,
 } from '../../../../exceptions';
-import { GenerateMetaWorkerGitInfo } from '../../../../types';
+import {
+  CreateGitRepoResult,
+  GenerateMetaWorkerGitInfo,
+} from '../../../../types';
 import { MetaUCenterService } from '../../../microservices/meta-ucenter/meta-ucenter.service';
 import { SiteConfigLogicService } from '../../../site/config/logicService';
-import { CreateGitHubRepoResult, OctokitService } from '../../octokitService';
+import { OctokitService } from '../../octokitService';
 import {
   registerSpecificPublisherService,
   SpecificPublisherService,
 } from '../publisher.service';
 
-type CreateGitHubPublisherRepoFromConfig = CreateGitHubRepoResult;
+type CreateGitHubPublisherRepoFromConfig = CreateGitRepoResult;
 
 @Injectable()
 export class GitHubPublisherService implements SpecificPublisherService {
