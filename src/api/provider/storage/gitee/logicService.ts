@@ -154,12 +154,12 @@ export class GiteeStorageLogicService implements SpecificStorageService {
     const token = await this.ucenterService.getGiteeAuthTokenByUserId(userId);
 
     this.logger.verbose(`Get storage config`, this.constructor.name);
-    const github = await this.getStorageConfigById(providerId);
+    const gitee = await this.getStorageConfigById(providerId);
 
     this.logger.verbose(`Create Gitee repo from config`, this.constructor.name);
     const { status, empty } = await this.createGiteeRepoFromConfig(
       token,
-      github,
+      gitee,
     );
     if (!status) {
       this.logger.error(
@@ -168,10 +168,10 @@ export class GiteeStorageLogicService implements SpecificStorageService {
       );
     }
 
-    const { userName, repoName, branchName, lastCommitHash } = github;
+    const { userName, repoName, branchName, lastCommitHash } = gitee;
     const gitInfo: MetaWorker.Info.Git = {
       token,
-      serviceType: MetaWorker.Enums.GitServiceType.GITHUB,
+      serviceType: MetaWorker.Enums.GitServiceType.GITEE,
       username: userName,
       reponame: repoName,
       branchName: branchName,
