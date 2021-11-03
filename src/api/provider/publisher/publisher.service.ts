@@ -1,7 +1,5 @@
 import { MetaWorker } from '@metaio/worker-model';
-import { Inject, Injectable, LoggerService } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
+import { Injectable } from '@nestjs/common';
 
 import { ValidationException } from '../../../exceptions';
 import { GenerateMetaWorkerGitInfo } from '../../../types';
@@ -10,11 +8,12 @@ import { getPublisherProvider } from './publisher.provider';
 const publisherServiceMap = {};
 export function registerSpecificPublisherService(
   publisherType: MetaWorker.Enums.PublisherType,
-  publisherProvider,
+  publisherProvider: SpecificPublisherService,
 ) {
   publisherServiceMap[publisherType] = publisherProvider;
   console.log(`Register publisher service: ${publisherType}`);
 }
+
 export function getSpecificPublisherService(
   publisherType: MetaWorker.Enums.PublisherType,
 ): SpecificPublisherService {
@@ -25,34 +24,29 @@ export function getSpecificPublisherService(
   }
   return instance;
 }
+
 export interface SpecificPublisherService {
   generateMetaWorkerGitInfo(
-    userId,
-    publisherProviderId,
+    userId: number,
+    publisherProviderId: number,
   ): GenerateMetaWorkerGitInfo | Promise<GenerateMetaWorkerGitInfo>;
 }
 
 @Injectable()
 export class PublisherService {
-  constructor(
-    @Inject(WINSTON_MODULE_NEST_PROVIDER)
-    private readonly logger: LoggerService,
-    private readonly configService: ConfigService,
-  ) {}
-
   getTargetOriginDomain(
     publisherType: MetaWorker.Enums.PublisherType,
     publishConfig: MetaWorker.Configs.PublishConfig,
   ): string {
-    return getPublisherProvider(publisherType).getTargetOriginDomain(
-      publishConfig,
-    );
+    const provider = getPublisherProvider(publisherType);
+    return provider.getTargetOriginDomain(publishConfig);
   }
   async updateDomainName(
     publisherType: MetaWorker.Enums.PublisherType,
     publishConfig: MetaWorker.Configs.PublishConfig,
   ) {
-    await getPublisherProvider(publisherType).updateDomainName(publishConfig);
+    const provider = getPublisherProvider(publisherType);
+    await provider.updateDomainName(publishConfig);
   }
 
   async generateMetaWorkerGitInfo(
@@ -60,10 +54,7 @@ export class PublisherService {
     userId: number,
     publisherProviderId: number,
   ): Promise<GenerateMetaWorkerGitInfo> {
-    if (publisherType === MetaWorker.Enums.PublisherType.GITHUB) {
-      return await getSpecificPublisherService(
-        publisherType,
-      ).generateMetaWorkerGitInfo(userId, publisherProviderId);
-    }
+    const service = getSpecificPublisherService(publisherType);
+    return await service.generateMetaWorkerGitInfo(userId, publisherProviderId);
   }
 }

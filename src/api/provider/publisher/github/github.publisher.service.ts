@@ -38,7 +38,7 @@ export class GitHubPublisherService implements SpecificPublisherService {
     );
   }
 
-  async read(
+  public async read(
     publisherProviderId: number,
   ): Promise<GitHubPublisherProviderEntity> {
     const queryRunner = this.connection.createQueryRunner();
@@ -51,7 +51,7 @@ export class GitHubPublisherService implements SpecificPublisherService {
     return find;
   }
 
-  async create(
+  public async create(
     publisherProvider: GitHubPublisherProviderEntity,
   ): Promise<GitHubPublisherProviderEntity> {
     const queryRunner = this.connection.createQueryRunner();
@@ -73,7 +73,7 @@ export class GitHubPublisherService implements SpecificPublisherService {
     }
   }
 
-  async update(
+  public async update(
     oldPublisherProvider: GitHubPublisherProviderEntity,
     newPublisherProvider: GitHubPublisherProviderEntity,
   ): Promise<GitHubPublisherProviderEntity> {
@@ -97,7 +97,7 @@ export class GitHubPublisherService implements SpecificPublisherService {
     }
   }
 
-  async delete(publisherProviderId: number): Promise<DeleteResult> {
+  public async delete(publisherProviderId: number): Promise<DeleteResult> {
     const queryRunner = this.connection.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -116,7 +116,7 @@ export class GitHubPublisherService implements SpecificPublisherService {
     }
   }
 
-  async getPublisherConfig(
+  public async getPublisherConfig(
     userId: number,
     siteConfigId: number,
   ): Promise<GitHubPublisherProviderEntity> {
@@ -132,7 +132,7 @@ export class GitHubPublisherService implements SpecificPublisherService {
     return await this.read(config.publisherProviderId);
   }
 
-  async createPublisherConfig(
+  public async createPublisherConfig(
     userId: number,
     siteConfigId: number,
     publisher: GitHubPublisherProviderEntity,
@@ -158,7 +158,7 @@ export class GitHubPublisherService implements SpecificPublisherService {
     return result;
   }
 
-  async updatePublisherConfig(
+  public async updatePublisherConfig(
     userId: number,
     siteConfigId: number,
     publisher: GitHubPublisherProviderEntity,
@@ -179,7 +179,7 @@ export class GitHubPublisherService implements SpecificPublisherService {
     return await this.update(oldPublisher, publisher);
   }
 
-  async deletePublisherConfig(
+  public async deletePublisherConfig(
     userId: number,
     siteConfigId: number,
   ): Promise<DeleteResult> {
@@ -206,10 +206,7 @@ export class GitHubPublisherService implements SpecificPublisherService {
     return await this.delete(publisher.id);
   }
 
-  /**
-   * For internal use only
-   */
-  protected async getPublisherConfigById(
+  private async getPublisherConfigById(
     sid: number,
   ): Promise<GitHubPublisherProviderEntity> {
     const res = await this.read(sid);
@@ -218,7 +215,7 @@ export class GitHubPublisherService implements SpecificPublisherService {
     return res;
   }
 
-  async createGitHubPublisherRepoFromConfig(
+  private async createGitHubPublisherRepoFromConfig(
     token: string,
     cfg: GitHubPublisherProviderEntity,
   ): Promise<CreateGitHubPublisherRepoFromConfig> {
@@ -231,7 +228,7 @@ export class GitHubPublisherService implements SpecificPublisherService {
     );
   }
 
-  async generateMetaWorkerGitInfo(
+  public async generateMetaWorkerGitInfo(
     userId: number,
     publisherProviderId: number,
   ): Promise<GenerateMetaWorkerGitInfo> {

@@ -5,11 +5,12 @@ import { ValidationException } from '../../../exceptions';
 const publisherProviderMap = {};
 export function registerPublisherProvider(
   publisherType: MetaWorker.Enums.PublisherType,
-  publisherProvider,
+  publisherProvider: PublisherProvider,
 ) {
   publisherProviderMap[publisherType] = publisherProvider;
   console.log(`Register publisher provider: ${publisherType}`);
 }
+
 export function getPublisherProvider(
   publisherType: MetaWorker.Enums.PublisherType,
 ): PublisherProvider {
@@ -21,9 +22,12 @@ export function getPublisherProvider(
   }
   return instance;
 }
+
 export interface PublisherProvider {
   getTargetOriginDomain(
     publishConfig: MetaWorker.Configs.PublishConfig,
   ): string;
-  updateDomainName(publishConfig: MetaWorker.Configs.PublishConfig);
+  updateDomainName(
+    publishConfig: MetaWorker.Configs.PublishConfig,
+  ): void | Promise<void>;
 }
