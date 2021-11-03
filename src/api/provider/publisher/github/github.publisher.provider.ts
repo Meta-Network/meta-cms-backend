@@ -20,11 +20,15 @@ export class GitHubPublisherProvider implements PublisherProvider {
   getTargetOriginDomain(
     publishConfig: MetaWorker.Configs.PublishConfig,
   ): string {
-    return `${publishConfig.git.gitUsername}.github.io`;
+    return `${publishConfig.git.publisher.username}.github.io`;
   }
   async updateDomainName(publishConfig: MetaWorker.Configs.PublishConfig) {
+    const {
+      git: { publisher },
+      site,
+    } = publishConfig;
     const octokit = new Octokit({
-      auth: publishConfig.git.gitToken,
+      auth: publisher.token,
     });
 
     let siteInfo;
@@ -33,7 +37,7 @@ export class GitHubPublisherProvider implements PublisherProvider {
       const dnsHealthResponse = await this.checkSiteDnsHealth(publishConfig);
       isDnsRecordValid =
         dnsHealthResponse.status &&
-        dnsHealthResponse.data.domain === publishConfig.site.domain;
+        dnsHealthResponse.data.domain === site.domain;
       siteInfo = (await this.getSiteInfo(publishConfig)).data;
     } catch (err) {
       await this.createSite(publishConfig);
@@ -42,9 +46,9 @@ export class GitHubPublisherProvider implements PublisherProvider {
     // if (siteInfo.cname !== publishConfig.site.domain) {
     if (isDnsRecordValid) {
       const dataBase = {
-        owner: publishConfig.git.gitUsername,
-        repo: publishConfig.git.gitReponame,
-        cname: publishConfig.site.domain,
+        owner: publisher.username,
+        repo: publisher.reponame,
+        cname: site.domain,
       };
       let data;
       if (siteInfo.public) {
@@ -63,33 +67,43 @@ export class GitHubPublisherProvider implements PublisherProvider {
     }
   }
   async getSiteInfo(publishConfig: MetaWorker.Configs.PublishConfig) {
+    const {
+      git: { publisher },
+    } = publishConfig;
     const octokit = new Octokit({
-      auth: publishConfig.git.gitToken,
+      auth: publisher.token,
     });
     return await octokit.request('GET /repos/{owner}/{repo}/pages', {
-      owner: publishConfig.git.gitUsername,
-      repo: publishConfig.git.gitReponame,
+      owner: publisher.username,
+      repo: publisher.reponame,
     });
   }
   async checkSiteDnsHealth(publishConfig: MetaWorker.Configs.PublishConfig) {
+    const {
+      git: { publisher },
+    } = publishConfig;
     const octokit = new Octokit({
-      auth: publishConfig.git.gitToken,
+      auth: publisher.token,
     });
     return await octokit.request('GET /repos/{owner}/{repo}/pages/health', {
-      owner: publishConfig.git.gitUsername,
-      repo: publishConfig.git.gitReponame,
+      owner: publisher.username,
+      repo: publisher.reponame,
     });
   }
   async createSite(publishConfig: MetaWorker.Configs.PublishConfig) {
     this.logger.verbose(`Create site `, this.constructor.name);
+    const {
+      git: { publisher },
+      publish,
+    } = publishConfig;
     const octokit = new Octokit({
-      auth: publishConfig.git.gitToken,
+      auth: publisher.token,
     });
     return await octokit.request('POST /repos/{owner}/{repo}/pages', {
-      owner: publishConfig.git.gitUsername,
-      repo: publishConfig.git.gitReponame,
+      owner: publisher.username,
+      repo: publisher.reponame,
       source: {
-        branch: publishConfig.publish.publishBranch,
+        branch: publish.publishBranch,
         path: '/',
       },
       mediaType: {

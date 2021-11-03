@@ -18,7 +18,7 @@ export class GiteePublisherProvider implements PublisherProvider {
   getTargetOriginDomain(
     publishConfig: MetaWorker.Configs.PublishConfig,
   ): string {
-    return `${publishConfig.git.gitUsername}.github.io`;
+    return `${publishConfig.git.publisher.username}.github.io`;
   }
   updateDomainName(publishConfig: MetaWorker.Configs.PublishConfig) {
     throw new Error('Method not implemented.');

@@ -234,9 +234,7 @@ export class GitHubPublisherService implements SpecificPublisherService {
   ): Promise<GenerateMetaWorkerGitInfo> {
     this.logger.verbose(`Generate meta worker Git info`, this.constructor.name);
 
-    const gitToken = await this.ucenterService.getGitHubAuthTokenByUserId(
-      userId,
-    );
+    const token = await this.ucenterService.getGitHubAuthTokenByUserId(userId);
 
     this.logger.verbose(
       `Get publisher config from GitHubPublisherService`,
@@ -249,7 +247,7 @@ export class GitHubPublisherService implements SpecificPublisherService {
       this.constructor.name,
     );
     const { status, empty } = await this.createGitHubPublisherRepoFromConfig(
-      gitToken,
+      token,
       github,
     );
     if (!status) {
@@ -262,12 +260,12 @@ export class GitHubPublisherService implements SpecificPublisherService {
     const { userName, repoName, branchName, lastCommitHash, publishDir } =
       github;
     const gitInfo: MetaWorker.Info.Git = {
-      gitToken,
-      gitType: MetaWorker.Enums.GitServiceType.GITHUB,
-      gitUsername: userName,
-      gitReponame: repoName,
-      gitBranchName: branchName,
-      gitLastCommitHash: lastCommitHash,
+      token,
+      serviceType: MetaWorker.Enums.GitServiceType.GITHUB,
+      username: userName,
+      reponame: repoName,
+      branchName: branchName,
+      lastCommitHash: lastCommitHash,
     };
     const publishInfo: MetaWorker.Info.Publish = {
       publishBranch: branchName,

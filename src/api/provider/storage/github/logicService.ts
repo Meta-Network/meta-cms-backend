@@ -155,9 +155,7 @@ export class GitHubStorageLogicService implements SpecificStorageService {
       GitHubStorageLogicService.name,
     );
 
-    const gitToken = await this.ucenterService.getGitHubAuthTokenByUserId(
-      userId,
-    );
+    const token = await this.ucenterService.getGitHubAuthTokenByUserId(userId);
 
     this.logger.verbose(
       `Get storage config from GitHubStorageLogicService`,
@@ -167,7 +165,7 @@ export class GitHubStorageLogicService implements SpecificStorageService {
 
     this.logger.verbose(`Create GitHub repo from config`, StorageService.name);
     const { status, empty } = await this.createGitHubRepoFromConfig(
-      gitToken,
+      token,
       github,
     );
     if (!status) {
@@ -179,12 +177,12 @@ export class GitHubStorageLogicService implements SpecificStorageService {
 
     const { userName, repoName, branchName, lastCommitHash } = github;
     const gitInfo: MetaWorker.Info.Git = {
-      gitToken,
-      gitType: MetaWorker.Enums.GitServiceType.GITHUB,
-      gitUsername: userName,
-      gitReponame: repoName,
-      gitBranchName: branchName,
-      gitLastCommitHash: lastCommitHash,
+      token,
+      serviceType: MetaWorker.Enums.GitServiceType.GITHUB,
+      username: userName,
+      reponame: repoName,
+      branchName: branchName,
+      lastCommitHash: lastCommitHash,
     };
 
     return { gitInfo, repoEmpty: empty };

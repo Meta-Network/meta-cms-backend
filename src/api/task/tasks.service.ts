@@ -457,7 +457,9 @@ export class TasksService {
       );
     const publishConfig: MetaWorker.Configs.PublishConfig = {
       site,
-      git: gitInfo,
+      git: {
+        publisher: gitInfo,
+      },
       publish: publishInfo,
     };
 
@@ -502,7 +504,9 @@ export class TasksService {
       },
       site,
       post,
-      git: gitInfo,
+      git: {
+        storage: gitInfo,
+      },
     };
     return {
       postConfig,
@@ -601,7 +605,9 @@ export class TasksService {
       site,
       template,
       theme,
-      git: gitInfo,
+      git: {
+        storage: gitInfo,
+      },
       gateway: this.configService.get('meta-space.gateway'),
     };
     return {
