@@ -129,7 +129,7 @@ export class GitHubStorageLogicService {
     cfg: GitHubStorageProviderEntity,
   ): Promise<CreateGitHubRepoFromConfig> {
     const { userName, repoName } = cfg;
-    return await this.octokitService.createGitHubRepo(
+    return await this.octokitService.createGitRepo(
       token,
       userName,
       repoName,

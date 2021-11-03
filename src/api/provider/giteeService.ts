@@ -5,6 +5,7 @@ import Req from 'superagent';
 
 import { AccessDeniedException } from '../../exceptions';
 import { CreateGitRepoResult } from '../../types';
+import { AbstractGitService } from './abstractGitService';
 
 export declare namespace Gitee {
   export namespace Users {
@@ -144,11 +145,12 @@ export type CreateRepoOptions = {
 };
 
 @Injectable()
-export class GiteeService {
+export class GiteeService extends AbstractGitService {
   public constructor(
     @Inject(WINSTON_MODULE_NEST_PROVIDER)
     private readonly logger: LoggerService,
   ) {
+    super();
     this.baseUrl = 'https://gitee.com/api/v5';
   }
 

@@ -223,7 +223,7 @@ export class GitHubPublisherService implements SpecificPublisherService {
     cfg: GitHubPublisherProviderEntity,
   ): Promise<CreateGitHubPublisherRepoFromConfig> {
     const { userName, repoName } = cfg;
-    return await this.octokitService.createGitHubRepo(
+    return await this.octokitService.createGitRepo(
       token,
       userName,
       repoName,

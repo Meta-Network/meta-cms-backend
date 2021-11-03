@@ -7,6 +7,7 @@ import { Octokit } from 'octokit';
 
 import { AccessDeniedException } from '../../exceptions';
 import { CreateGitRepoResult } from '../../types';
+import { AbstractGitService } from './abstractGitService';
 
 // type OctokitInst = Octokit &
 //   Api & {
@@ -22,13 +23,15 @@ import { CreateGitRepoResult } from '../../types';
 //   };
 
 @Injectable()
-export class OctokitService {
+export class OctokitService extends AbstractGitService {
   constructor(
     @Inject(WINSTON_MODULE_NEST_PROVIDER)
     private readonly logger: LoggerService,
-  ) {}
+  ) {
+    super();
+  }
 
-  async createGitHubRepo(
+  async createGitRepo(
     token: string,
     userName: string,
     repoName: string,
