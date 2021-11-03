@@ -1,5 +1,6 @@
 import { MetaWorker } from '@metaio/worker-model';
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable, LoggerService } from '@nestjs/common';
+import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { DeleteResult } from 'typeorm';
 
 import { GiteeStorageProviderEntity } from '../../../../entities/provider/storage/gitee.entity';
@@ -7,22 +8,35 @@ import {
   DataAlreadyExistsException,
   DataNotFoundException,
 } from '../../../../exceptions';
-import { CreateGitRepoResult } from '../../../../types';
+import {
+  CreateGitRepoResult,
+  GenerateMetaWorkerGitInfo,
+} from '../../../../types';
+import { MetaUCenterService } from '../../../microservices/meta-ucenter/meta-ucenter.service';
 import { SiteConfigLogicService } from '../../../site/config/logicService';
 import { GiteeService } from '../../giteeService';
+import {
+  registerSpecificStorageService,
+  SpecificStorageService,
+} from '../service';
 import { GiteeStorageBaseService } from './baseService';
 
 type CreateGiteeRepoFromConfig = CreateGitRepoResult;
 
 @Injectable()
-export class GiteeStorageLogicService {
+export class GiteeStorageLogicService implements SpecificStorageService {
   constructor(
+    @Inject(WINSTON_MODULE_NEST_PROVIDER)
+    private readonly logger: LoggerService,
     private readonly baseService: GiteeStorageBaseService,
     private readonly configLogicService: SiteConfigLogicService,
     private readonly giteeService: GiteeService,
-  ) {}
+    private readonly ucenterService: MetaUCenterService,
+  ) {
+    registerSpecificStorageService(MetaWorker.Enums.StorageType.GITEE, this);
+  }
 
-  async getStorageConfig(
+  public async getStorageConfig(
     uid: number,
     cid: number,
   ): Promise<GiteeStorageProviderEntity> {
@@ -38,7 +52,7 @@ export class GiteeStorageLogicService {
     return await this.baseService.read(config.storeProviderId);
   }
 
-  async createStorageConfig(
+  public async createStorageConfig(
     uid: number,
     cid: number,
     storage: GiteeStorageProviderEntity,
@@ -65,7 +79,7 @@ export class GiteeStorageLogicService {
     return result;
   }
 
-  async updateStorageConfig(
+  public async updateStorageConfig(
     uid: number,
     cid: number,
     storage: GiteeStorageProviderEntity,
@@ -85,7 +99,10 @@ export class GiteeStorageLogicService {
     return await this.baseService.update(oldStorage, storage);
   }
 
-  async deleteStorageConfig(uid: number, cid: number): Promise<DeleteResult> {
+  public async deleteStorageConfig(
+    uid: number,
+    cid: number,
+  ): Promise<DeleteResult> {
     const config = await this.configLogicService.validateSiteConfigUserId(
       cid,
       uid,
@@ -108,16 +125,15 @@ export class GiteeStorageLogicService {
     return await this.baseService.delete(storage.id);
   }
 
-  /**
-   * For internal use only
-   */
-  async getStorageConfigById(sid: number): Promise<GiteeStorageProviderEntity> {
+  private async getStorageConfigById(
+    sid: number,
+  ): Promise<GiteeStorageProviderEntity> {
     const res = await this.baseService.read(sid);
     if (!res) throw new DataNotFoundException('Gitee storage config not found');
     return res;
   }
 
-  async createGiteeRepoFromConfig(
+  private async createGiteeRepoFromConfig(
     token: string,
     cfg: GiteeStorageProviderEntity,
   ): Promise<CreateGiteeRepoFromConfig> {
@@ -128,5 +144,40 @@ export class GiteeStorageLogicService {
       repoName,
       true, // Storage repo is a private repo
     );
+  }
+
+  public async generateMetaWorkerGitInfo(
+    userId: number,
+    providerId: number,
+  ): Promise<GenerateMetaWorkerGitInfo> {
+    this.logger.verbose(`Generate meta worker Git info`, this.constructor.name);
+    const token = await this.ucenterService.getGiteeAuthTokenByUserId(userId);
+
+    this.logger.verbose(`Get storage config`, this.constructor.name);
+    const github = await this.getStorageConfigById(providerId);
+
+    this.logger.verbose(`Create Gitee repo from config`, this.constructor.name);
+    const { status, empty } = await this.createGiteeRepoFromConfig(
+      token,
+      github,
+    );
+    if (!status) {
+      this.logger.error(
+        `Create Gitee repo from config failed`,
+        this.constructor.name,
+      );
+    }
+
+    const { userName, repoName, branchName, lastCommitHash } = github;
+    const gitInfo: MetaWorker.Info.Git = {
+      token,
+      serviceType: MetaWorker.Enums.GitServiceType.GITHUB,
+      username: userName,
+      reponame: repoName,
+      branchName: branchName,
+      lastCommitHash: lastCommitHash,
+    };
+
+    return { gitInfo, repoEmpty: empty };
   }
 }
