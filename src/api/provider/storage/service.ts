@@ -1,65 +1,44 @@
 import { MetaWorker } from '@metaio/worker-model';
-import { Inject, Injectable, LoggerService } from '@nestjs/common';
-import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
+import { Injectable } from '@nestjs/common';
 
+import { ValidationException } from '../../../exceptions';
 import { GenerateMetaWorkerGitInfo } from '../../../types';
-import { MetaUCenterService } from '../../microservices/meta-ucenter/meta-ucenter.service';
-import { GitHubStorageLogicService } from './github/logicService';
+
+const storageServiceMap = {};
+export function registerSpecificStorageService(
+  type: MetaWorker.Enums.StorageType,
+  provider: SpecificStorageService,
+) {
+  storageServiceMap[type] = provider;
+  console.log(`Register storage service: ${type}`);
+}
+
+export function getSpecificStorageService(
+  type: MetaWorker.Enums.StorageType,
+): SpecificStorageService {
+  // console.log(publisherType, publisherServiceMap);
+  const instance = storageServiceMap[type];
+  if (!instance) {
+    throw new ValidationException('Invalid storage type');
+  }
+  return instance;
+}
+
+export interface SpecificStorageService {
+  generateMetaWorkerGitInfo(
+    userId: number,
+    providerId: number,
+  ): GenerateMetaWorkerGitInfo | Promise<GenerateMetaWorkerGitInfo>;
+}
 
 @Injectable()
 export class StorageService {
-  constructor(
-    @Inject(WINSTON_MODULE_NEST_PROVIDER)
-    private readonly logger: LoggerService,
-
-    private readonly ucenterService: MetaUCenterService,
-    private readonly githubService: GitHubStorageLogicService,
-  ) {}
-
   async generateMetaWorkerGitInfo(
     type: MetaWorker.Enums.StorageType,
     userId: number,
     storageProviderId: number,
   ): Promise<GenerateMetaWorkerGitInfo> {
-    if (type === MetaWorker.Enums.StorageType.GITHUB) {
-      this.logger.verbose(`Generate meta worker Git info`, StorageService.name);
-
-      const gitToken = await this.ucenterService.getGitHubAuthTokenByUserId(
-        userId,
-      );
-
-      this.logger.verbose(
-        `Get storage config from GitHubStorageLogicService`,
-        StorageService.name,
-      );
-      const github = await this.githubService.getStorageConfigById(
-        storageProviderId,
-      );
-
-      this.logger.verbose(
-        `Create GitHub repo from config`,
-        StorageService.name,
-      );
-      const { status, empty } =
-        await this.githubService.createGitHubRepoFromConfig(gitToken, github);
-      if (!status) {
-        this.logger.error(
-          `Create GitHub repo from config failed`,
-          StorageService.name,
-        );
-      }
-
-      const { userName, repoName, branchName, lastCommitHash } = github;
-      const gitInfo: MetaWorker.Info.Git = {
-        gitToken,
-        gitType: MetaWorker.Enums.GitServiceType.GITHUB,
-        gitUsername: userName,
-        gitReponame: repoName,
-        gitBranchName: branchName,
-        gitLastCommitHash: lastCommitHash,
-      };
-
-      return { gitInfo, repoEmpty: empty };
-    }
+    const service = getSpecificStorageService(type);
+    return await service.generateMetaWorkerGitInfo(userId, storageProviderId);
   }
 }

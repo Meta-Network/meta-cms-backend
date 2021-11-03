@@ -1,5 +1,6 @@
 import { MetaWorker } from '@metaio/worker-model';
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable, LoggerService } from '@nestjs/common';
+import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { DeleteResult } from 'typeorm';
 
 import { GitHubStorageProviderEntity } from '../../../../entities/provider/storage/github.entity';
@@ -7,22 +8,30 @@ import {
   DataAlreadyExistsException,
   DataNotFoundException,
 } from '../../../../exceptions';
-import { CreateGitRepoResult } from '../../../../types';
+import {
+  CreateGitRepoResult,
+  GenerateMetaWorkerGitInfo,
+} from '../../../../types';
+import { MetaUCenterService } from '../../../microservices/meta-ucenter/meta-ucenter.service';
 import { GitHubStorageBaseService } from '../../../provider/storage/github/baseService';
 import { SiteConfigLogicService } from '../../../site/config/logicService';
 import { OctokitService } from '../../octokitService';
+import { SpecificStorageService, StorageService } from '../service';
 
 type CreateGitHubRepoFromConfig = CreateGitRepoResult;
 
 @Injectable()
-export class GitHubStorageLogicService {
+export class GitHubStorageLogicService implements SpecificStorageService {
   constructor(
+    @Inject(WINSTON_MODULE_NEST_PROVIDER)
+    private readonly logger: LoggerService,
     private readonly baseService: GitHubStorageBaseService,
     private readonly configLogicService: SiteConfigLogicService,
     private readonly octokitService: OctokitService,
+    private readonly ucenterService: MetaUCenterService,
   ) {}
 
-  async getStorageConfig(
+  public async getStorageConfig(
     uid: number,
     cid: number,
   ): Promise<GitHubStorageProviderEntity> {
@@ -38,7 +47,7 @@ export class GitHubStorageLogicService {
     return await this.baseService.read(config.storeProviderId);
   }
 
-  async createStorageConfig(
+  public async createStorageConfig(
     uid: number,
     cid: number,
     storage: GitHubStorageProviderEntity,
@@ -68,7 +77,7 @@ export class GitHubStorageLogicService {
     return result;
   }
 
-  async updateStorageConfig(
+  public async updateStorageConfig(
     uid: number,
     cid: number,
     storage: GitHubStorageProviderEntity,
@@ -89,7 +98,10 @@ export class GitHubStorageLogicService {
     return await this.baseService.update(oldStorage, storage);
   }
 
-  async deleteStorageConfig(uid: number, cid: number): Promise<DeleteResult> {
+  public async deleteStorageConfig(
+    uid: number,
+    cid: number,
+  ): Promise<DeleteResult> {
     const config = await this.configLogicService.validateSiteConfigUserId(
       cid,
       uid,
@@ -112,10 +124,7 @@ export class GitHubStorageLogicService {
     return await this.baseService.delete(storage.id);
   }
 
-  /**
-   * For internal use only
-   */
-  async getStorageConfigById(
+  private async getStorageConfigById(
     sid: number,
   ): Promise<GitHubStorageProviderEntity> {
     const res = await this.baseService.read(sid);
@@ -124,7 +133,7 @@ export class GitHubStorageLogicService {
     return res;
   }
 
-  async createGitHubRepoFromConfig(
+  private async createGitHubRepoFromConfig(
     token: string,
     cfg: GitHubStorageProviderEntity,
   ): Promise<CreateGitHubRepoFromConfig> {
@@ -135,5 +144,49 @@ export class GitHubStorageLogicService {
       repoName,
       true, // Storage repo is a private repo
     );
+  }
+
+  public async generateMetaWorkerGitInfo(
+    userId: number,
+    providerId: number,
+  ): Promise<GenerateMetaWorkerGitInfo> {
+    this.logger.verbose(
+      `Generate meta worker Git info`,
+      GitHubStorageLogicService.name,
+    );
+
+    const gitToken = await this.ucenterService.getGitHubAuthTokenByUserId(
+      userId,
+    );
+
+    this.logger.verbose(
+      `Get storage config from GitHubStorageLogicService`,
+      StorageService.name,
+    );
+    const github = await this.getStorageConfigById(providerId);
+
+    this.logger.verbose(`Create GitHub repo from config`, StorageService.name);
+    const { status, empty } = await this.createGitHubRepoFromConfig(
+      gitToken,
+      github,
+    );
+    if (!status) {
+      this.logger.error(
+        `Create GitHub repo from config failed`,
+        StorageService.name,
+      );
+    }
+
+    const { userName, repoName, branchName, lastCommitHash } = github;
+    const gitInfo: MetaWorker.Info.Git = {
+      gitToken,
+      gitType: MetaWorker.Enums.GitServiceType.GITHUB,
+      gitUsername: userName,
+      gitReponame: repoName,
+      gitBranchName: branchName,
+      gitLastCommitHash: lastCommitHash,
+    };
+
+    return { gitInfo, repoEmpty: empty };
   }
 }
