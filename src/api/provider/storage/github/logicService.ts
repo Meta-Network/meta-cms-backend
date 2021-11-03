@@ -16,7 +16,10 @@ import { MetaUCenterService } from '../../../microservices/meta-ucenter/meta-uce
 import { GitHubStorageBaseService } from '../../../provider/storage/github/baseService';
 import { SiteConfigLogicService } from '../../../site/config/logicService';
 import { OctokitService } from '../../octokitService';
-import { SpecificStorageService, StorageService } from '../service';
+import {
+  registerSpecificStorageService,
+  SpecificStorageService,
+} from '../service';
 
 type CreateGitHubRepoFromConfig = CreateGitRepoResult;
 
@@ -29,7 +32,9 @@ export class GitHubStorageLogicService implements SpecificStorageService {
     private readonly configLogicService: SiteConfigLogicService,
     private readonly octokitService: OctokitService,
     private readonly ucenterService: MetaUCenterService,
-  ) {}
+  ) {
+    registerSpecificStorageService(MetaWorker.Enums.StorageType.GITHUB, this);
+  }
 
   public async getStorageConfig(
     uid: number,
@@ -150,20 +155,17 @@ export class GitHubStorageLogicService implements SpecificStorageService {
     userId: number,
     providerId: number,
   ): Promise<GenerateMetaWorkerGitInfo> {
-    this.logger.verbose(
-      `Generate meta worker Git info`,
-      GitHubStorageLogicService.name,
-    );
+    this.logger.verbose(`Generate meta worker Git info`, this.constructor.name);
 
     const token = await this.ucenterService.getGitHubAuthTokenByUserId(userId);
 
-    this.logger.verbose(
-      `Get storage config from GitHubStorageLogicService`,
-      StorageService.name,
-    );
+    this.logger.verbose(`Get storage config`, this.constructor.name);
     const github = await this.getStorageConfigById(providerId);
 
-    this.logger.verbose(`Create GitHub repo from config`, StorageService.name);
+    this.logger.verbose(
+      `Create GitHub repo from config`,
+      this.constructor.name,
+    );
     const { status, empty } = await this.createGitHubRepoFromConfig(
       token,
       github,
@@ -171,7 +173,7 @@ export class GitHubStorageLogicService implements SpecificStorageService {
     if (!status) {
       this.logger.error(
         `Create GitHub repo from config failed`,
-        StorageService.name,
+        this.constructor.name,
       );
     }
 
