@@ -192,7 +192,7 @@ export class GiteeService {
     return res.body;
   }
 
-  public async createGitHubRepo(
+  public async createGitRepo(
     token: string,
     userName: string,
     repoName: string,
