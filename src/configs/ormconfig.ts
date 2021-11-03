@@ -5,7 +5,9 @@ import { DraftEntity } from '../entities/draft.entity';
 import { MatatakiSyncEntity } from '../entities/matatakiSync.entity';
 import { PostEntity } from '../entities/post.entity';
 import { PostSiteConfigRelaEntity } from '../entities/postSiteConfigRela.entity';
+import { GiteePublisherProviderEntity } from '../entities/provider/publisher/gitee.entity';
 import { GitHubPublisherProviderEntity } from '../entities/provider/publisher/github.entity';
+import { GiteeStorageProviderEntity } from '../entities/provider/storage/gitee.entity';
 import { GitHubStorageProviderEntity } from '../entities/provider/storage/github.entity';
 import { SiteConfigEntity } from '../entities/siteConfig.entity';
 import { SiteInfoEntity } from '../entities/siteInfo.entity';
@@ -41,6 +43,8 @@ const options: ConnectionOptions = {
     ThemeEntity,
     GitHubStorageProviderEntity,
     GitHubPublisherProviderEntity,
+    GiteeStorageProviderEntity,
+    GiteePublisherProviderEntity,
     AccessTokenEntity,
     PostEntity,
     PostSiteConfigRelaEntity,
