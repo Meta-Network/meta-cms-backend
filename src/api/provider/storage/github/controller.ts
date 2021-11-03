@@ -38,7 +38,7 @@ import {
   PostMethodValidation,
   validatePatchRequestBody,
 } from '../../../../utils/validation';
-import { GitHubStorageLogicService } from '../../../provider/storage/github/logicService';
+import { GitHubStorageLogicService } from './logicService';
 
 class GitHubStorageResponse extends TransformResponse<GitHubStorageProviderEntity> {
   @ApiProperty({ type: GitHubStorageProviderEntity })

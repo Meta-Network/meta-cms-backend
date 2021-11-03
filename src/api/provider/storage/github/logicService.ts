@@ -13,13 +13,13 @@ import {
   GenerateMetaWorkerGitInfo,
 } from '../../../../types';
 import { MetaUCenterService } from '../../../microservices/meta-ucenter/meta-ucenter.service';
-import { GitHubStorageBaseService } from '../../../provider/storage/github/baseService';
 import { SiteConfigLogicService } from '../../../site/config/logicService';
 import { OctokitService } from '../../octokitService';
 import {
   registerSpecificStorageService,
   SpecificStorageService,
 } from '../service';
+import { GitHubStorageBaseService } from './baseService';
 
 type CreateGitHubRepoFromConfig = CreateGitRepoResult;
 
