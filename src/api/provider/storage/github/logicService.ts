@@ -189,4 +189,27 @@ export class GitHubStorageLogicService implements SpecificStorageService {
 
     return { gitInfo, repoEmpty: empty };
   }
+
+  public async getMetaWorkerGitInfo(
+    userId: number,
+    providerId: number,
+  ): Promise<GenerateMetaWorkerGitInfo> {
+    this.logger.verbose(`Get meta worker Git info`, this.constructor.name);
+    const token = await this.ucenterService.getGitHubAuthTokenByUserId(userId);
+    const github = await this.getStorageConfig(userId, providerId);
+    if (!github) {
+      throw new DataNotFoundException('Storage provider not found');
+    }
+    const { userName, repoName, branchName, lastCommitHash } = github;
+    const gitInfo: MetaWorker.Info.Git = {
+      token,
+      serviceType: MetaWorker.Enums.GitServiceType.GITHUB,
+      username: userName,
+      reponame: repoName,
+      branchName: branchName,
+      lastCommitHash: lastCommitHash,
+    };
+
+    return { gitInfo, repoEmpty: false };
+  }
 }

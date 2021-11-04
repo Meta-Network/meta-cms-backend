@@ -203,7 +203,7 @@ export class TasksService {
     if (MetaWorker.Enums.PublisherType.GITHUB === publisherType) {
       return [MetaWorker.Enums.TaskMethod.PUBLISH_GITHUB_PAGES];
     }
-    throw new ValidationException(`invalid publisher type: ${publisherType}`);
+    throw new ValidationException(`Invalid publisher type: ${publisherType}`);
   }
   protected async doDeploySite(
     user: Partial<UCenterJWTPayload>,
@@ -438,7 +438,7 @@ export class TasksService {
       this.constructor.name,
     );
 
-    const { site, template, theme, publisher } =
+    const { site, template, theme, storage, publisher } =
       await this.siteService.generateMetaWorkerSiteInfo(user, configId, [
         SiteStatus.Deployed,
         SiteStatus.Publishing,
@@ -449,16 +449,24 @@ export class TasksService {
 
     if (!publisherProviderId)
       throw new DataNotFoundException('publisher provider id not found');
-    const { gitInfo, publishInfo } =
+    const { gitInfo: publisherGitInfo, publishInfo } =
       await this.publisherService.generateMetaWorkerGitInfo(
         publisherType,
         user.id,
         publisherProviderId,
       );
+    const { storageProviderId, storageType } = storage;
+    const { gitInfo: storageGitInfo } =
+      await this.storageService.getMetaWorkerGitInfo(
+        storageType,
+        user.id,
+        storageProviderId,
+      );
     const publishConfig: MetaWorker.Configs.PublishConfig = {
       site,
       git: {
-        publisher: gitInfo,
+        storage: storageGitInfo,
+        publisher: publisherGitInfo,
       },
       publish: publishInfo,
     };

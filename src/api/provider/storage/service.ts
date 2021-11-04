@@ -29,6 +29,11 @@ export interface SpecificStorageService {
     userId: number,
     providerId: number,
   ): GenerateMetaWorkerGitInfo | Promise<GenerateMetaWorkerGitInfo>;
+
+  getMetaWorkerGitInfo(
+    userId: number,
+    providerId: number,
+  ): GenerateMetaWorkerGitInfo | Promise<GenerateMetaWorkerGitInfo>;
 }
 
 @Injectable()
@@ -40,5 +45,14 @@ export class StorageService {
   ): Promise<GenerateMetaWorkerGitInfo> {
     const service = getSpecificStorageService(type);
     return await service.generateMetaWorkerGitInfo(userId, storageProviderId);
+  }
+
+  async getMetaWorkerGitInfo(
+    type: MetaWorker.Enums.StorageType,
+    userId: number,
+    storageProviderId: number,
+  ): Promise<GenerateMetaWorkerGitInfo> {
+    const service = getSpecificStorageService(type);
+    return await service.getMetaWorkerGitInfo(userId, storageProviderId);
   }
 }

@@ -180,4 +180,29 @@ export class GiteeStorageLogicService implements SpecificStorageService {
 
     return { gitInfo, repoEmpty: empty };
   }
+
+  public async getMetaWorkerGitInfo(
+    userId: number,
+    providerId: number,
+  ): Promise<GenerateMetaWorkerGitInfo> {
+    this.logger.verbose(`Generate meta worker Git info`, this.constructor.name);
+    const token = await this.ucenterService.getGiteeAuthTokenByUserId(userId);
+
+    this.logger.verbose(`Get storage config`, this.constructor.name);
+    const gitee = await this.getStorageConfigById(providerId);
+    if (!gitee) {
+      throw new DataNotFoundException('Storage provider not found');
+    }
+    const { userName, repoName, branchName, lastCommitHash } = gitee;
+    const gitInfo: MetaWorker.Info.Git = {
+      token,
+      serviceType: MetaWorker.Enums.GitServiceType.GITEE,
+      username: userName,
+      reponame: repoName,
+      branchName: branchName,
+      lastCommitHash: lastCommitHash,
+    };
+
+    return { gitInfo, repoEmpty: false };
+  }
 }
