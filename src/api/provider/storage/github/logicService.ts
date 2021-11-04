@@ -196,7 +196,7 @@ export class GitHubStorageLogicService implements SpecificStorageService {
   ): Promise<GenerateMetaWorkerGitInfo> {
     this.logger.verbose(`Get meta worker Git info`, this.constructor.name);
     const token = await this.ucenterService.getGitHubAuthTokenByUserId(userId);
-    const github = await this.getStorageConfig(userId, providerId);
+    const github = await this.getStorageConfigById(providerId);
     if (!github) {
       throw new DataNotFoundException('Storage provider not found');
     }
