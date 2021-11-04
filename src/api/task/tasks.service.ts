@@ -183,7 +183,7 @@ export class TasksService {
       await this.taskDispatchersService.dispatchTask(
         checkoutTaskSteps,
         deployConfig,
-        options?.isLastTask,
+        //必定不是最后一个任务，这里不能退出
       );
 
     const commitPushTaskSteps: MetaWorker.Enums.TaskMethod[] = [
@@ -330,7 +330,6 @@ export class TasksService {
     siteConfigId: number,
     options?: {
       isDraft?: boolean;
-      isLastTask?: boolean;
     },
   ) {
     const { postConfig, template } = await this.generatePostConfigAndTemplate(
@@ -355,7 +354,7 @@ export class TasksService {
     return await this.taskDispatchersService.dispatchTask(
       postTaskSteps,
       postConfig,
-      options?.isLastTask,
+      // 必定不是最后一个任务
     );
   }
 
@@ -365,7 +364,6 @@ export class TasksService {
     siteConfigId: number,
     options?: {
       isDraft?: boolean;
-      isLastTask?: boolean;
     },
   ) {
     const { postConfig, template } = await this.generatePostConfigAndTemplate(
@@ -390,7 +388,7 @@ export class TasksService {
     return await this.taskDispatchersService.dispatchTask(
       postTaskSteps,
       postConfig,
-      options?.isLastTask,
+      // 必定不是最后一个任务
     );
   }
 
@@ -398,9 +396,6 @@ export class TasksService {
     user: Partial<UCenterJWTPayload>,
     post: MetaWorker.Info.Post,
     siteConfigId: number,
-    options?: {
-      isLastTask?: boolean;
-    },
   ) {
     const { postConfig, template } = await this.generatePostConfigAndTemplate(
       user,
@@ -421,7 +416,6 @@ export class TasksService {
     return await this.taskDispatchersService.dispatchTask(
       postTaskSteps,
       postConfig,
-      options?.isLastTask,
     );
   }
 
