@@ -285,9 +285,12 @@ export class TasksService {
 
     await this.doUpdateDns(publisherType, publishConfig);
     await this.publisherService.updateDomainName(publisherType, publishConfig);
-    this.scheduleUpdateDomain(publishConfig, publisherType, 60000);
-    this.scheduleUpdateDomain(publishConfig, publisherType, 300000);
-    this.scheduleUpdateDomain(publishConfig, publisherType, 600000);
+    this.scheduleUpdateDomain(
+      publishConfig,
+      publisherType,
+      [60000, 300000, 600000],
+    );
+
     await this.siteConfigLogicService.updateSiteConfigStatus(
       publishConfig.site.configId,
       SiteStatus.Published,
@@ -305,18 +308,23 @@ export class TasksService {
   protected scheduleUpdateDomain(
     publishConfig: MetaWorker.Configs.PublishConfig,
     publisherType: MetaWorker.Enums.PublisherType,
-    timeout: number,
+    timeouts: number[],
   ) {
-    this.scheduleRegistry.addTimeout(
-      `update-site-domain-${publishConfig.site.configId}-${
-        new Date().getTime() + timeout
-      }`,
-      setTimeout(
-        () =>
-          this.publisherService.updateDomainName(publisherType, publishConfig),
-        timeout,
-      ),
-    );
+    for (const timeout of timeouts) {
+      this.scheduleRegistry.addTimeout(
+        `update-site-domain-${publishConfig.site.configId}-${
+          new Date().getTime() + timeout
+        }`,
+        setTimeout(
+          () =>
+            this.publisherService.updateDomainName(
+              publisherType,
+              publishConfig,
+            ),
+          timeout,
+        ),
+      );
+    }
   }
 
   protected async doCreatePost(
