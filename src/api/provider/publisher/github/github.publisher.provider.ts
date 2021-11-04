@@ -1,5 +1,7 @@
 import { MetaWorker } from '@metaio/worker-model';
 import { Inject, Injectable, LoggerService } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { SchedulerRegistry } from '@nestjs/schedule';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { Octokit } from 'octokit';
 
@@ -13,6 +15,8 @@ export class GitHubPublisherProvider implements PublisherProvider {
   constructor(
     @Inject(WINSTON_MODULE_NEST_PROVIDER)
     private readonly logger: LoggerService,
+    private readonly configService: ConfigService,
+    private readonly scheduleRegistry: SchedulerRegistry,
   ) {
     registerPublisherProvider(MetaWorker.Enums.PublisherType.GITHUB, this);
   }
@@ -23,6 +27,27 @@ export class GitHubPublisherProvider implements PublisherProvider {
     return `${publishConfig.git.publisher.username}.github.io`;
   }
   async updateDomainName(publishConfig: MetaWorker.Configs.PublishConfig) {
+    this.scheduleUpdateDomainName(
+      publishConfig,
+      this.configService.get<number[]>(
+        'publisher.github.update-domain-name.timeouts',
+      ),
+    );
+  }
+  protected scheduleUpdateDomainName(
+    publishConfig: MetaWorker.Configs.PublishConfig,
+    timeouts: number[],
+  ) {
+    for (const timeout of timeouts) {
+      this.scheduleRegistry.addTimeout(
+        `update-github-pages-domain-${publishConfig.site.configId}-${
+          new Date().getTime() + timeout
+        }`,
+        setTimeout(() => this.doUpdateDomainName(publishConfig), timeout),
+      );
+    }
+  }
+  async doUpdateDomainName(publishConfig: MetaWorker.Configs.PublishConfig) {
     const {
       git: { publisher },
       site,
@@ -57,6 +82,10 @@ export class GitHubPublisherProvider implements PublisherProvider {
         data = {
           ...dataBase,
           public: true,
+          https_enforced: this.configService.get<boolean>(
+            'provider.publisher.github.https_enforced',
+            false,
+          ),
         };
       }
       this.logger.verbose(

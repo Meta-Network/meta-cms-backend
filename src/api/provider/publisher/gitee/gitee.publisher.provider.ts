@@ -21,6 +21,6 @@ export class GiteePublisherProvider implements PublisherProvider {
     return `${publishConfig.git.publisher.username}.github.io`;
   }
   updateDomainName(publishConfig: MetaWorker.Configs.PublishConfig) {
-    throw new Error('Method not implemented.');
+    // Do nothing.Only Gitee Pages Pro supports custom domain
   }
 }
