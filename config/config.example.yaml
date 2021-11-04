@@ -113,7 +113,8 @@ task:
           app:
             name: meta-cms-worker-hexo
   workspace:
-    ttl: 60
+    lock:
+      ttl: 60
 
 post:
   preprocessor:
