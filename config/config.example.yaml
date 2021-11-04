@@ -50,10 +50,11 @@ provider:
   publisher:
     github:
       https_enfored:
-      update-domain-name-timeouts:
-        - 30000
-        - 300000
-        - 600000
+      update-domain-name:
+        timeouts:
+          - 30000
+          - 300000
+          - 600000
 
 task:
   processor:
