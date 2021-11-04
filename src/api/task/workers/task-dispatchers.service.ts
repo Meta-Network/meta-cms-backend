@@ -33,6 +33,7 @@ export class TaskDispatchersService {
       | MetaWorker.Configs.DeployConfig
       | MetaWorker.Configs.PublishConfig
       | MetaWorker.Configs.PostConfig,
+    exitTaskWorkspace = false,
   ) {
     const taskConfig = await this.initQueueTaskConfig(taskSteps, cfg);
     this.logger.log(
@@ -55,6 +56,13 @@ export class TaskDispatchersService {
       return await promise;
     } catch (err) {
       throw new InternalServerErrorException('Pipeline Exception');
+    } finally {
+      if (exitTaskWorkspace) {
+        this.removeSiteConfigTaskWorkspaceLock(
+          taskConfig.site.configId,
+          taskConfig.task.taskWorkspace,
+        );
+      }
     }
   }
 
@@ -133,7 +141,7 @@ export class TaskDispatchersService {
       | MetaWorker.Configs.DnsConfig,
   ) {
     const taskId = uuid(); // taskId and taskWorkspace hash
-    const taskWorkspace = await this.getTaskWorkspace(
+    const taskWorkspace = await this.getOrGenTaskWorkspace(
       taskId,
       cfg.site.configId,
     );
@@ -158,16 +166,26 @@ export class TaskDispatchersService {
     return taskConfig;
   }
 
-  protected async getTaskWorkspace(taskId: string, siteConfigId: number) {
-    let taskWorkspace = await this.tryGetSiteConfigTaskWorkspaceLock(
+  async getOrGenTaskWorkspace(
+    taskId: string,
+    siteConfigId: number,
+  ): Promise<string> {
+    const taskWorkspace = await this.tryGetSiteConfigTaskWorkspaceLock(
       siteConfigId,
     );
 
     if (taskWorkspace) {
       return taskWorkspace;
     }
+    return await this.doGenerateTaskWorkspace(taskId, siteConfigId);
+  }
+
+  protected async doGenerateTaskWorkspace(
+    taskId: string,
+    siteConfigId: number,
+  ): Promise<string> {
     const taskIdHash = crypto.createHash('sha256').update(taskId).digest('hex');
-    taskWorkspace = taskIdHash.substring(taskIdHash.length - 16);
+    const taskWorkspace = taskIdHash.substring(taskIdHash.length - 16);
     const _cache = await this.renewSiteConfigTaskWorkspaceLock(
       siteConfigId,
       taskWorkspace,
@@ -176,7 +194,6 @@ export class TaskDispatchersService {
       `Can not get task workspace from cache, generate new ${taskWorkspace} for config ${siteConfigId} ${_cache}`,
       TaskDispatchersService.name,
     );
-
     return taskWorkspace;
   }
 

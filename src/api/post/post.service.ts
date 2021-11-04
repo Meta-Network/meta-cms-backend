@@ -83,7 +83,7 @@ export class PostService {
     user: Partial<UCenterJWTPayload>,
     postId: number,
     publishPostDto: PublishPostDto,
-    draftFlag = false,
+    isDraft = false,
   ) {
     this.logger.verbose(
       `Find the post to publish postId: ${postId}`,
@@ -107,11 +107,11 @@ export class PostService {
       publishPostDto.configIds,
       user.id,
     );
-    // check site config & skip check in `doFetchContentAndCreatePost` method
-    for (const siteconfigId of publishPostDto.configIds) {
-      await this.tasksService.checkSiteConfigTaskWorkspace(siteconfigId);
-    }
-    return await this.doPublishPost(user, post, publishPostDto, draftFlag);
+
+    return await this.doPublishPost(user, post, publishPostDto, {
+      isDraft,
+      isLastTask: true,
+    });
   }
 
   async publishPendingPosts(
@@ -129,10 +129,7 @@ export class PostService {
       publishPostsDto.configIds,
       user.id,
     );
-    // check site config & skip check in `doFetchContentAndCreatePost` method
-    for (const siteconfigId of publishPostsDto.configIds) {
-      await this.tasksService.checkSiteConfigTaskWorkspace(siteconfigId);
-    }
+
     const posts = await this.postRepository.findByIds(postIds);
     const postInfos = [] as MetaWorker.Info.Post[];
     for (const post of posts) {
@@ -156,7 +153,10 @@ export class PostService {
     }
     for (const siteConfigId of publishPostsDto.configIds) {
       try {
-        await this.tasksService.createPost(user, postInfos, siteConfigId);
+        await this.tasksService.createPost(user, postInfos, siteConfigId, {
+          isDraft: false,
+          isLastTask: true,
+        });
         await this.updatePostSiteRelaStateBySiteConfigId(
           TaskCommonState.SUCCESS,
           postIds,
@@ -203,7 +203,10 @@ export class PostService {
     user: Partial<UCenterJWTPayload>,
     post: PostEntity,
     publishPostDto: PublishPostDto,
-    draftFlag: boolean,
+    options: {
+      isDraft: boolean;
+      isLastTask: boolean;
+    },
   ) {
     const postId = post.id;
 
@@ -213,7 +216,8 @@ export class PostService {
     }
 
     const relas = await this.doSavePostSiteConfigRelas(publishPostDto, postId);
-    for (const postSiteConfigRela of relas) {
+    for (let i = 0; i < relas.length; i++) {
+      const postSiteConfigRela = relas[i];
       this.logger.verbose(
         ` post to site: ${JSON.stringify(postSiteConfigRela)}`,
         this.constructor.name,
@@ -228,8 +232,8 @@ export class PostService {
           user,
           postInfo,
           postSiteConfigRela.siteConfig.id,
-          draftFlag,
-          true,
+          //  postSiteConfigRela->siteConfig->taskWorkspace, isLastTask scope: workspace
+          options,
         );
         postSiteConfigRela.state = TaskCommonState.SUCCESS;
         await this.postSiteConfigRepository.save(postSiteConfigRela);

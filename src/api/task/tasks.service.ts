@@ -54,7 +54,7 @@ export class TasksService {
   ): Promise<any> {
     await this.checkSiteConfigTaskWorkspace(siteConfigId);
 
-    return await this.doDeploySite(user, siteConfigId);
+    return await this.doDeploySite(user, siteConfigId, { isLastTask: true });
   }
   async deployAndPublishSite(
     user: Partial<UCenterJWTPayload>,
@@ -64,11 +64,12 @@ export class TasksService {
     const deploySiteTaskStepResults = await this.doDeploySite(
       user,
       siteConfigId,
-      true,
+      { isLastTask: false },
     );
     const publishSiteTaskStepResults = await this.doPublishSite(
       user,
       siteConfigId,
+      { isLastTask: true },
     );
     return Object.assign(deploySiteTaskStepResults, publishSiteTaskStepResults);
   }
@@ -81,6 +82,9 @@ export class TasksService {
     const publishSiteTaskStepResults = await this.doPublishSite(
       user,
       siteConfigId,
+      {
+        isLastTask: true,
+      },
     );
     return Object.assign(deploySiteTaskStepResults, publishSiteTaskStepResults);
   }
@@ -89,16 +93,17 @@ export class TasksService {
     user: Partial<UCenterJWTPayload>,
     post: MetaWorker.Info.Post | MetaWorker.Info.Post[],
     siteConfigId: number,
-    draftFlag = false,
-    skipCheckSiteConfigTaskWorkspace = false,
+    options?: {
+      isDraft: boolean;
+      isLastTask: boolean;
+    },
   ) {
-    if (!skipCheckSiteConfigTaskWorkspace) {
-      await this.checkSiteConfigTaskWorkspace(siteConfigId);
-    }
+    await this.checkSiteConfigTaskWorkspace(siteConfigId);
     return await this.doCheckoutCommitPush(
       user,
       siteConfigId,
-      async () => await this.doCreatePost(user, post, siteConfigId, draftFlag),
+      async () => await this.doCreatePost(user, post, siteConfigId, options),
+      options,
     );
   }
 
@@ -106,16 +111,17 @@ export class TasksService {
     user: Partial<UCenterJWTPayload>,
     post: MetaWorker.Info.Post,
     siteConfigId: number,
-    draftFlag = false,
-    skipCheckSiteConfigTaskWorkspace = false,
+    options?: {
+      isDraft: boolean;
+      isLastTask: boolean;
+    },
   ) {
-    if (!skipCheckSiteConfigTaskWorkspace) {
-      await this.checkSiteConfigTaskWorkspace(siteConfigId);
-    }
+    await this.checkSiteConfigTaskWorkspace(siteConfigId);
     return await this.doCheckoutCommitPush(
       user,
       siteConfigId,
-      async () => await this.doUpdatePost(user, post, siteConfigId, draftFlag),
+      async () => await this.doUpdatePost(user, post, siteConfigId, options),
+      options,
     );
   }
 
@@ -123,15 +129,16 @@ export class TasksService {
     user: Partial<UCenterJWTPayload>,
     post: MetaWorker.Info.Post,
     siteConfigId: number,
-    skipCheckSiteConfigTaskWorkspace = false,
+    options?: {
+      isLastTask: boolean;
+    },
   ) {
-    if (!skipCheckSiteConfigTaskWorkspace) {
-      await this.checkSiteConfigTaskWorkspace(siteConfigId);
-    }
+    await this.checkSiteConfigTaskWorkspace(siteConfigId);
     return await this.doCheckoutCommitPush(
       user,
       siteConfigId,
       async () => await this.doPublishDraft(user, post, siteConfigId),
+      options,
     );
   }
 
@@ -158,6 +165,9 @@ export class TasksService {
     user: Partial<UCenterJWTPayload>,
     siteConfigId: number,
     dispatchTaskFunc: () => Promise<any>,
+    options?: {
+      isLastTask: boolean;
+    },
   ) {
     const { deployConfig } = await this.generateDeployConfigAndRepoSize(
       user,
@@ -173,6 +183,7 @@ export class TasksService {
       await this.taskDispatchersService.dispatchTask(
         checkoutTaskSteps,
         deployConfig,
+        options?.isLastTask,
       );
 
     const commitPushTaskSteps: MetaWorker.Enums.TaskMethod[] = [
@@ -188,6 +199,7 @@ export class TasksService {
       await this.taskDispatchersService.dispatchTask(
         commitPushTaskSteps,
         deployConfig,
+        options?.isLastTask,
       );
     return Object.assign(
       checkoutTaskStepResults,
@@ -206,7 +218,9 @@ export class TasksService {
   protected async doDeploySite(
     user: Partial<UCenterJWTPayload>,
     siteConfigId: number,
-    overwriteTheme = false,
+    options?: {
+      isLastTask?: boolean;
+    },
   ) {
     await this.siteConfigLogicService.updateSiteConfigStatus(
       siteConfigId,
@@ -227,13 +241,17 @@ export class TasksService {
     taskSteps.push(...this.getDeployTaskMethodsByTemplateType(templateType));
     taskSteps.push(MetaWorker.Enums.TaskMethod.GENERATE_METASPACE_CONFIG);
     taskSteps.push(MetaWorker.Enums.TaskMethod.GIT_COMMIT_PUSH);
-    if (overwriteTheme) {
+    if (!options?.isLastTask) {
       taskSteps.push(MetaWorker.Enums.TaskMethod.GIT_OVERWRITE_THEME);
     }
     this.logger.verbose(`Adding CICD worker to queue`, TasksService.name);
 
     const deploySiteTaskStepResults =
-      await this.taskDispatchersService.dispatchTask(taskSteps, deployConfig);
+      await this.taskDispatchersService.dispatchTask(
+        taskSteps,
+        deployConfig,
+        options?.isLastTask,
+      );
     await this.siteConfigLogicService.updateSiteConfigStatus(
       siteConfigId,
       SiteStatus.Deployed,
@@ -244,6 +262,9 @@ export class TasksService {
   protected async doPublishSite(
     user: Partial<UCenterJWTPayload>,
     siteConfigId: number,
+    options?: {
+      isLastTask?: boolean;
+    },
   ) {
     const { publisherType, publishConfig, template } =
       await this.generatePublishConfigAndTemplate(user, siteConfigId);
@@ -252,6 +273,7 @@ export class TasksService {
       template.templateType,
       publisherType,
       publishConfig,
+      options,
     );
   }
 
@@ -260,6 +282,9 @@ export class TasksService {
     templateType: MetaWorker.Enums.TemplateType,
     publisherType: MetaWorker.Enums.PublisherType,
     publishConfig: MetaWorker.Configs.PublishConfig,
+    options?: {
+      isLastTask?: boolean;
+    },
   ) {
     this.logger.verbose(
       `Adding publisher worker to queue`,
@@ -279,6 +304,7 @@ export class TasksService {
       await this.taskDispatchersService.dispatchTask(
         publishTaskSteps,
         publishConfig,
+        options?.isLastTask,
       );
 
     await this.doUpdateDns(publisherType, publishConfig);
@@ -302,7 +328,10 @@ export class TasksService {
     user: Partial<UCenterJWTPayload>,
     post: MetaWorker.Info.Post | MetaWorker.Info.Post[],
     siteConfigId: number,
-    draftFlag = false,
+    options?: {
+      isDraft?: boolean;
+      isLastTask?: boolean;
+    },
   ) {
     const { postConfig, template } = await this.generatePostConfigAndTemplate(
       user,
@@ -317,12 +346,16 @@ export class TasksService {
     const postTaskSteps = [];
 
     postTaskSteps.push(
-      ...this.getCreatePostTaskMethodsByTemplateType(templateType, draftFlag),
+      ...this.getCreatePostTaskMethodsByTemplateType(
+        templateType,
+        options?.isDraft,
+      ),
     );
 
     return await this.taskDispatchersService.dispatchTask(
       postTaskSteps,
       postConfig,
+      options?.isLastTask,
     );
   }
 
@@ -330,7 +363,10 @@ export class TasksService {
     user: Partial<UCenterJWTPayload>,
     post: MetaWorker.Info.Post,
     siteConfigId: number,
-    draftFlag = false,
+    options?: {
+      isDraft?: boolean;
+      isLastTask?: boolean;
+    },
   ) {
     const { postConfig, template } = await this.generatePostConfigAndTemplate(
       user,
@@ -345,12 +381,16 @@ export class TasksService {
     const postTaskSteps = [];
 
     postTaskSteps.push(
-      ...this.getUpdatePostTaskMethodsByTemplateType(templateType, draftFlag),
+      ...this.getUpdatePostTaskMethodsByTemplateType(
+        templateType,
+        options?.isDraft,
+      ),
     );
 
     return await this.taskDispatchersService.dispatchTask(
       postTaskSteps,
       postConfig,
+      options?.isLastTask,
     );
   }
 
@@ -358,6 +398,9 @@ export class TasksService {
     user: Partial<UCenterJWTPayload>,
     post: MetaWorker.Info.Post,
     siteConfigId: number,
+    options?: {
+      isLastTask?: boolean;
+    },
   ) {
     const { postConfig, template } = await this.generatePostConfigAndTemplate(
       user,
@@ -378,6 +421,7 @@ export class TasksService {
     return await this.taskDispatchersService.dispatchTask(
       postTaskSteps,
       postConfig,
+      options?.isLastTask,
     );
   }
 
@@ -508,14 +552,16 @@ export class TasksService {
     return [MetaWorker.Enums.TaskMethod.HEXO_UPDATE_CONFIG];
   }
 
-  async checkSiteConfigTaskWorkspace(siteConfigId: number) {
+  protected async checkSiteConfigTaskWorkspace(
+    siteConfigId: number,
+    taskWorkspaceInUse?: string,
+  ) {
     // check task workspace is existed
-
-    if (
+    const taskWorkspace =
       await this.taskDispatchersService.tryGetSiteConfigTaskWorkspaceLock(
         siteConfigId,
-      )
-    ) {
+      );
+    if (taskWorkspace && taskWorkspace !== taskWorkspaceInUse) {
       throw new ConflictException(
         `Task workspace is existed:  site config ${siteConfigId}`,
       );
