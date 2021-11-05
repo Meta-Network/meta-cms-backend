@@ -85,10 +85,6 @@ export class PostController {
 
   @Get()
   @ApiOkResponse({ type: PostListResponse })
-  @ApiForbiddenResponse({
-    type: EmptyAccessTokenException,
-    description: 'When request user has no any access tokens',
-  })
   @ApiQuery({ name: 'page', type: Number, example: 1 })
   @ApiQuery({ name: 'limit', type: Number, example: 10 })
   @ApiQuery({ name: 'state', enum: PostState, example: 'pending' })
@@ -99,11 +95,6 @@ export class PostController {
     @Query('limit', ParseIntPipe, new DefaultValuePipe(10)) limit: number,
     @Query('state', new DefaultValuePipe(PostState.Pending)) state: PostState,
   ) {
-    const hasAnyToken = await this.accessTokenService.hasAny(uid);
-    if (!hasAnyToken) {
-      throw new EmptyAccessTokenException();
-    }
-
     const options = {
       page,
       limit,
