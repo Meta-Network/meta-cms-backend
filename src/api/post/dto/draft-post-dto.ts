@@ -1,11 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsArray,
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-  isString,
-} from 'class-validator';
+import { IsArray, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class DraftPostCreationDto {
   @ApiProperty()
@@ -37,6 +31,11 @@ export class DraftPostCreationDto {
   @IsOptional()
   @IsString()
   content: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  license: string;
 }
 
 export class DraftPostUpdateDto {
@@ -69,4 +68,9 @@ export class DraftPostUpdateDto {
   @IsOptional()
   @IsString()
   content: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  license: string;
 }

@@ -465,6 +465,7 @@ export class PostService {
     post.userId = userId;
     post.platform = 'editor';
     post.source = await this.createDraft(userId, content);
+    post.license = postDto.license;
     post.state = PostState.Pending;
 
     await this.postRepository.save(post);
