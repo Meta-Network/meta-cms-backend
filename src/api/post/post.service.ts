@@ -314,6 +314,7 @@ export class PostService {
       summary: post.summary,
       categories: post.categories,
       tags: post.tags,
+      license: post.license,
       createdAt: post.createdAt.toISOString(),
       updatedAt: post.updatedAt.toISOString(),
     } as MetaWorker.Info.Post;

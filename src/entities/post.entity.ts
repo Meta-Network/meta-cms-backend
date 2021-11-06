@@ -16,32 +16,32 @@ import { PostSiteConfigRelaEntity } from './postSiteConfigRela.entity';
 @Entity()
 @Index(['userId', 'state'])
 export class PostEntity extends BaseEntity {
-  @Column({ comment: 'UCenter user id' })
+  @Column({ comment: 'UCenter user id', nullable: false, default: 0 })
   @IsInt()
   @IsNotEmpty()
   userId: number;
 
-  @Column({ comment: 'Post title' })
+  @Column({ comment: 'Post title', nullable: false, default: '' })
   @IsString()
   @IsNotEmpty()
   title: string;
 
-  @Column({ comment: 'Post cover', nullable: true })
+  @Column({ comment: 'Post cover', nullable: false, default: '' })
   @IsString()
   @IsOptional()
   cover?: string;
 
-  @Column({ comment: 'Post summary', nullable: true })
+  @Column({ comment: 'Post summary', nullable: false, default: '' })
   @IsString()
   @IsOptional()
   summary?: string;
 
-  @Column({ comment: 'Source platform' })
+  @Column({ comment: 'Source platform', nullable: false, default: '' })
   @IsString()
   @IsNotEmpty()
   platform: string;
 
-  @Column({ comment: 'Post source' })
+  @Column({ comment: 'Post source', nullable: false, default: '' })
   @IsString()
   @IsNotEmpty()
   source: string;
@@ -64,6 +64,11 @@ export class PostEntity extends BaseEntity {
   @IsArray()
   @IsOptional()
   tags?: Array<string>;
+
+  @Column({ comment: 'Post license', nullable: false, default: '' })
+  @IsString()
+  @IsOptional()
+  license: string;
 
   @OneToMany(() => PostSiteConfigRelaEntity, (rela) => rela.post, {
     nullable: true,
