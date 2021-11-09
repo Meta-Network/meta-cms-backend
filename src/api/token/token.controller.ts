@@ -14,8 +14,8 @@ import {
   RequirdHttpHeadersNotFoundException,
 } from '../../exceptions';
 import { ParsePlatformPipe } from '../../pipes/parse-platform.pipe';
-import { AccessTokenService } from '../../synchronizer/access-token.service';
 import { TransformResponse } from '../../utils/responseClass';
+import { AccessTokenService } from '../synchronizer/access-token.service';
 
 class TokenListResponse extends TransformResponse<AccessTokenEntity> {
   @ApiProperty({ type: AccessTokenEntity, isArray: true })

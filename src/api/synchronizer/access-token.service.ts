@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Connection } from 'typeorm';
 
-import { AccessTokenEntity } from '../entities/accessToken.entity';
+import { AccessTokenEntity } from '../../entities/accessToken.entity';
 
 @Injectable()
 export class AccessTokenService {

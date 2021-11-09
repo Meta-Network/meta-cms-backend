@@ -37,13 +37,13 @@ import {
   RequirdHttpHeadersNotFoundException,
 } from '../../exceptions';
 import { ParsePlatformPipe } from '../../pipes/parse-platform.pipe';
-import { AccessTokenService } from '../../synchronizer/access-token.service';
 import { UCenterJWTPayload } from '../../types';
 import { PostState } from '../../types/enum';
 import {
   PaginationResponse,
   TransformResponse,
 } from '../../utils/responseClass';
+import { AccessTokenService } from '../synchronizer/access-token.service';
 import { DraftPostCreationDto, DraftPostUpdateDto } from './dto/draft-post-dto';
 import { PublishPostDto, PublishPostsDto } from './dto/publish-post.dto';
 import { PostService } from './post.service';

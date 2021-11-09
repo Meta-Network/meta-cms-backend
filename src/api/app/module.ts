@@ -14,7 +14,6 @@ import { BullConfigService } from '../../configs/bull';
 import { TypeORMConfigService } from '../../configs/typeorm';
 import { WinstonConfigService } from '../../configs/winston';
 import { TransformResponseInterceptor } from '../../interceptors/transform';
-import { SynchronizerModule } from '../../synchronizer/synchronizer.module';
 import { AppCacheModule } from '../cache/module';
 import { DomainModule } from '../domain/module';
 import { ImageModule } from '../image/image.module';
@@ -23,6 +22,7 @@ import { MetadataStorageModule } from '../provider/metadata-storage/metadata-sto
 import { PublisherModule } from '../provider/publisher/publisher.module';
 import { StorageModule } from '../provider/storage/module';
 import { SiteModule } from '../site/module';
+import { SynchronizerModule } from '../synchronizer/synchronizer.module';
 import { TasksModule } from '../task/tasks.module';
 import { ThemeTemplateModule } from '../theme/template/module';
 import { TokenModule } from '../token/token.module';
