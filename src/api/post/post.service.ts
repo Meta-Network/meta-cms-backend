@@ -14,14 +14,13 @@ import { In, Repository } from 'typeorm';
 import { DraftEntity } from '../../entities/draft.entity';
 import { PostEntity } from '../../entities/post.entity';
 import { PostSiteConfigRelaEntity } from '../../entities/postSiteConfigRela.entity';
-import { PostState } from '../../enums/postState';
 import {
   AccessDeniedException,
   InvalidStatusException,
   PublishFailedException,
 } from '../../exceptions';
 import { UCenterJWTPayload } from '../../types';
-import { TaskCommonState } from '../../types/enum';
+import { PostState, TaskCommonState } from '../../types/enum';
 import { SiteConfigLogicService } from '../site/config/logicService';
 import { TasksService } from '../task/tasks.service';
 import { DraftPostCreationDto, DraftPostUpdateDto } from './dto/draft-post-dto';

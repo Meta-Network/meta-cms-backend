@@ -37,7 +37,7 @@ export class DnsService {
         'provider.dns.cloudflare.token',
       );
       dns.env.zoneId = this.configService.get<string>(
-        'provider.dns.cloudflare.zone-id',
+        'provider.dns.cloudflare.zoneId',
       );
     }
     return dns;

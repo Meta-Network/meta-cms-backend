@@ -46,16 +46,25 @@ provider:
     type:
     cloudflare:
       token:
-      zone-id:
+      zoneId:
   publisher:
     github:
-      https_enfored:
-      update-domain-name:
+      httpsEnfored:
+      updateDomainName:
         timeouts:
           - 30000
           - 300000
           - 600000
-
+  metadataStorage:
+    ipfs:
+      fleek:
+        apiKey:
+        apiSecret:
+        folder: metadata
+      gateways:
+        - https://ipfs.fleek.co
+        # - https://ipfs.infura.io
+        # - https://ipfs.cf-ipfs.com
 task:
   processor:
     # Docker processor config
@@ -71,18 +80,11 @@ task:
           url: host.docker.internal:3100
         # For decompressing archived files
         7zip:
-          bin-name: 7zz
+          binName: 7zz
       volumes:
         # Mounts the volume into the /tmp in the container. For example: /var/docker/meta-cms-workspaces
         tmp:
-      # Gabbage collection
-      gc:
-        # Volume /tmp
-        tmp:
-          # Set to true for a dry run, meaning it does not delete anything but returns a JSON of files/directories it would have deleted
-          dry-run: false
-          # Files and directories whose age (in seconds) is above this value will be deleted
-          max-age: 604800
+
     mock:
       # mock progresss
       progress:
@@ -93,7 +95,7 @@ task:
         - value: 66
           timeout: 2000
       # Success rate of completing task steps
-      success-rate: 0.9
+      successRate: 0.9
       timeout: 2500
   worker:
     git:
@@ -127,8 +129,10 @@ task:
 post:
   preprocessor:
     urlprefix:
-meta-space:
+metaSpace:
   # camelCase. see MetaWorker.Info.Gateway
   gateway:
     ipfs:
+      baseUrl:
+    dataViewer:
       baseUrl:

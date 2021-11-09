@@ -30,7 +30,7 @@ export class GitHubPublisherProvider implements PublisherProvider {
     this.scheduleUpdateDomainName(
       publishConfig,
       this.configService.get<number[]>(
-        'provider.publisher.github.update-domain-name.timeouts',
+        'provider.publisher.github.updateDomainName.timeouts',
       ),
     );
   }

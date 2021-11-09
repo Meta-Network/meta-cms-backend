@@ -19,6 +19,7 @@ import { AppCacheModule } from '../cache/module';
 import { DomainModule } from '../domain/module';
 import { ImageModule } from '../image/image.module';
 import { PostModule } from '../post/post.module';
+import { MetadataStorageModule } from '../provider/metadata-storage/metadata-storage.module';
 import { PublisherModule } from '../provider/publisher/publisher.module';
 import { StorageModule } from '../provider/storage/module';
 import { SiteModule } from '../site/module';
@@ -57,6 +58,7 @@ import { TokenModule } from '../token/token.module';
     TokenModule,
     DomainModule,
     ImageModule,
+    MetadataStorageModule,
   ],
   providers: [
     {

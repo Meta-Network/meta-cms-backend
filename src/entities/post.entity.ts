@@ -8,8 +8,8 @@ import {
   IsString,
 } from 'class-validator';
 import { Column, Entity, Index, OneToMany } from 'typeorm';
+import { PostState } from '../types/enum';
 
-import { PostState } from '../enums/postState';
 import { BaseEntity } from './base.entity';
 import { PostSiteConfigRelaEntity } from './postSiteConfigRela.entity';
 

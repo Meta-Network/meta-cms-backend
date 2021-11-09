@@ -1,5 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import {
+  IsArray,
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+} from 'class-validator';
+
+import { MetadataStorageType } from '../../../types/enum';
 
 export class DraftPostCreationDto {
   @ApiProperty()
@@ -36,6 +44,15 @@ export class DraftPostCreationDto {
   @IsOptional()
   @IsString()
   license: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsEnum(MetadataStorageType)
+  authorDigestSignatureMetadataStorageType: MetadataStorageType;
+
+  @ApiProperty()
+  @IsOptional()
+  authorDigestSignatureMetadataRefer: string;
 }
 
 export class DraftPostUpdateDto {
@@ -73,4 +90,12 @@ export class DraftPostUpdateDto {
   @IsOptional()
   @IsString()
   license: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsEnum(MetadataStorageType)
+  authorDigestSignatureMetadataStorageType: MetadataStorageType;
+  @ApiProperty()
+  @IsOptional()
+  authorDigestSignatureMetadataRefer: string;
 }

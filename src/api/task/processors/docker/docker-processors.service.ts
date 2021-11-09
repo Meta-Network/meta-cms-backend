@@ -84,7 +84,7 @@ export class DockerProcessorsService {
         )}`,
         `WORKER_SECRET=${secret}`,
         `WORKER_7ZIP_BIN_NAME=${this.configService.get<string>(
-          'task.processor.docker.env.7zip.bin-name',
+          'task.processor.docker.env.7zip.binName',
         )}`,
         `WORKER_APP_NAME=${appName}`,
         `WORKER_BACKEND_URL=${this.configService.get<string>(

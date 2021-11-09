@@ -38,3 +38,15 @@ export enum TaskCommonState {
   SUCCESS = 'SUCCESS',
   FAIL = 'FAIL',
 }
+
+export enum PostState {
+  Pending = 'pending',
+  Published = 'published',
+  Ignored = 'ignored',
+  Drafted = 'drafted',
+  Invalid = 'invalid',
+}
+
+export enum MetadataStorageType {
+  IPFS = 'ipfs',
+}

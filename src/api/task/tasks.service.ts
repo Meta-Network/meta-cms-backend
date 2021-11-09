@@ -635,7 +635,7 @@ export class TasksService {
       git: {
         storage: gitInfo,
       },
-      gateway: this.configService.get('meta-space.gateway'),
+      gateway: this.configService.get('metaSpace.gateway'),
     };
     return {
       deployConfig,

@@ -42,7 +42,7 @@ export class TaskStepsJobProcessorMockImpl implements TaskStepsJobProcessor {
       setTimeout(
         () =>
           rnd <
-          this.configService.get<number>('task.processor.mock.success-rate')
+          this.configService.get<number>('task.processor.mock.successRate')
             ? resolve(job.id)
             : reject(new Error('Random Error')),
         this.configService.get<number>('task.processor.mock.timeout'),

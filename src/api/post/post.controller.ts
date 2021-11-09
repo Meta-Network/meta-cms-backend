@@ -30,7 +30,6 @@ import { IPaginationOptions } from 'nestjs-typeorm-paginate';
 import { MetaMicroserviceClient } from '../../constants';
 import { User } from '../../decorators';
 import { PostEntity } from '../../entities/post.entity';
-import { PostState } from '../../enums/postState';
 import {
   EmptyAccessTokenException,
   InvalidPlatformException,
@@ -40,6 +39,7 @@ import {
 import { ParsePlatformPipe } from '../../pipes/parse-platform.pipe';
 import { AccessTokenService } from '../../synchronizer/access-token.service';
 import { UCenterJWTPayload } from '../../types';
+import { PostState } from '../../types/enum';
 import {
   PaginationResponse,
   TransformResponse,
