@@ -74,7 +74,7 @@ export class PostEntity extends BaseEntity {
   @Column({
     comment: 'Post author digest request metadata storage type',
     nullable: false,
-    default: MetadataStorageType.IPFS,
+    default: '',
   })
   @IsEnum(MetadataStorageType)
   @IsOptional()
@@ -93,7 +93,7 @@ export class PostEntity extends BaseEntity {
     comment:
       'Post author digest sign with content server verification metadata storage type',
     nullable: false,
-    default: MetadataStorageType.IPFS,
+    default: '',
   })
   @IsEnum(MetadataStorageType)
   @IsOptional()

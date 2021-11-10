@@ -504,10 +504,15 @@ export class PostService {
     post.platform = 'editor';
     post.source = await this.createDraft(userId, content);
     post.license = postDto.license;
-    post.authorDigestRequestMetadataRefer = authorDigestRequestMetadataRefer;
-    post.serverVerificationMetadataRefer =
-      authorDigestSignWithContentServerVerificationMetadataRefer;
-    post.authorPublicKey = authorDigestSignatureMetadata.publicKey;
+    authorDigestRequestMetadataRefer &&
+      (post.authorDigestRequestMetadataRefer =
+        authorDigestRequestMetadataRefer);
+    authorDigestSignWithContentServerVerificationMetadataRefer &&
+      (post.serverVerificationMetadataRefer =
+        authorDigestSignWithContentServerVerificationMetadataRefer);
+    authorDigestSignatureMetadata &&
+      authorDigestSignatureMetadata.publicKey &&
+      (post.authorPublicKey = authorDigestSignatureMetadata.publicKey);
     post.state = PostState.Pending;
 
     await this.postRepository.save(post);
