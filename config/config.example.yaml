@@ -136,6 +136,12 @@ metaSpace:
       baseUrl:
     dataViewer:
       baseUrl:
+
+  prefix:
+    reserve:
+      - metanetwork
+    disable:
+      - fuck
 metaSignature:
   serverKeys:
     private:
