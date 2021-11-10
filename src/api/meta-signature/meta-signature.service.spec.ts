@@ -3,10 +3,12 @@ import {
   generateKeys,
   generatePostDigestRequestMetadata,
   generateSeed,
+  verifyAuthorDigestMetadataSignature,
   verifyDigest,
 } from '@metaio/meta-signature-util';
 import {
   AuthorDigestRequestMetadata,
+  AuthorSignatureMetadata,
   KeyPair,
 } from '@metaio/meta-signature-util/type/types';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -75,15 +77,15 @@ describe('MetaSignatureService', () => {
   it('generatePostDigestRequestMetadata', () => {
     const authorDigestRequestMetadata = generatePostDigestRequestMetadata({
       title: '测试标题',
-      categories: '分类一,分类二,test-case',
+      categories: '',
       content: '测试正文',
-      cover:
-        'https://ipfs.fleek.co/ipfs/QmeMcZwDkL1Kkj1zWtYBKQmLBZWS87ekZbJLpeYdobrZp4',
-      licence: 'CC-BY-4.0',
+      cover: '',
+      license: '',
       summary: '测试摘要',
-      tags: '标签一,标签二',
+      tags: '',
     });
     console.log(authorDigestRequestMetadata);
+    expect(verifyDigest(authorDigestRequestMetadata)).toBeTruthy();
   });
   describe('verify author digest', () => {
     it('Should return true', async () => {
@@ -97,14 +99,32 @@ describe('MetaSignatureService', () => {
         content: '测试正文',
         cover:
           'https://ipfs.fleek.co/ipfs/QmeMcZwDkL1Kkj1zWtYBKQmLBZWS87ekZbJLpeYdobrZp4',
-        licence: 'CC-BY-4.0',
+        license: 'CC-BY-4.0',
         summary: '测试摘要',
         tags: '标签一,标签二',
         digest:
-          '0x2068f5e16c85b39e3b7848a4b7475291e491f64aef2baf33be92e0f182944b58',
-        ts: 1636466942189,
+          '0x97564fdec6d57525ea7de9db908fda5fb0ab4f94908cb02ddd843c2a531a6554',
+        ts: 1636553657839,
       } as AuthorDigestRequestMetadata;
+
       expect(verifyDigest(authorDigestRequestMetadata)).toBeTruthy();
+      const authorDigestRequestMetadata2 = {
+        '@context': 'https://metanetwork.online/ns/cms',
+        type: 'author-digest',
+        algorithm: 'sha256',
+        version: '2021-11-01-01',
+        title: '测试标题',
+        categories: '',
+        content: '测试正文',
+        cover: '',
+        license: '',
+        summary: '测试摘要',
+        tags: '',
+        digest:
+          '0xea38d768d163acc752b6140b91d2c8899a4bbba8814b5e6f7e6edc75852be480',
+        ts: 1636553736703,
+      } as AuthorDigestRequestMetadata;
+      expect(verifyDigest(authorDigestRequestMetadata2)).toBeTruthy();
     });
     it('Should return false when digest is not correct', async () => {
       const authorDigestRequestMetadata = {
@@ -117,7 +137,7 @@ describe('MetaSignatureService', () => {
         content: '测试正文',
         cover:
           'https://ipfs.fleek.co/ipfs/QmeMcZwDkL1Kkj1zWtYBKQmLBZWS87ekZbJLpeYdobrZp4',
-        licence: 'CC-BY-4.0',
+        license: 'CC-BY-4.0',
         summary: '测试摘要',
         tags: '标签一,标签二',
         digest:
@@ -126,6 +146,33 @@ describe('MetaSignatureService', () => {
       } as AuthorDigestRequestMetadata;
       expect(verifyDigest(authorDigestRequestMetadata)).toBeFalsy();
     });
+    it('test fe sample', async () => {
+      const authorDigestRequestMetadata = {
+        '@context': 'https://metanetwork.online/ns/cms',
+        type: 'author-digest',
+        algorithm: 'sha256',
+        version: '2021-11-01-01',
+        title: '2021111013',
+        cover: '',
+        summary: '2021111013\n',
+        content: '2021111013\n',
+        license: '',
+        categories: '',
+        tags: '',
+        digest:
+          '0x854f8851aeb627e2e8791d271ca51cd72fb437b2ea51f79eacd10ad4a3762f9d',
+        ts: 1636547944915,
+      } as AuthorDigestRequestMetadata;
+
+      expect(verifyDigest(authorDigestRequestMetadata)).toBeTruthy();
+
+      const cid = await metadataStorageService.upload(
+        MetadataStorageType.IPFS,
+        'test-fe-sample',
+        JSON.stringify(authorDigestRequestMetadata),
+      );
+      console.log(cid);
+    });
   });
   it('generateAuthorDigestSign', async () => {
     const authorDigestRequestMetadata = {
@@ -133,30 +180,25 @@ describe('MetaSignatureService', () => {
       type: 'author-digest',
       algorithm: 'sha256',
       version: '2021-11-01-01',
-      title: '测试标题',
-      categories: '分类一,分类二,test-case',
-      content: '测试正文',
-      cover:
-        'https://ipfs.fleek.co/ipfs/QmeMcZwDkL1Kkj1zWtYBKQmLBZWS87ekZbJLpeYdobrZp4',
-      licence: 'CC-BY-4.0',
-      summary: '测试摘要',
-      tags: '标签一,标签二',
+      title: '2021111013',
+      cover: '',
+      summary: '2021111013\n',
+      content: '2021111013\n',
+      license: '',
+      categories: '',
+      tags: '',
       digest:
-        '0x2068f5e16c85b39e3b7848a4b7475291e491f64aef2baf33be92e0f182944b58',
-      ts: 1636466942189,
+        '0x854f8851aeb627e2e8791d271ca51cd72fb437b2ea51f79eacd10ad4a3762f9d',
+      ts: 1636547944915,
     } as AuthorDigestRequestMetadata;
     const authorSignatureMetadata = generateAuthorDigestSignMetadata(
       authorKeys,
       'meta-cms.vercel.mttk.net',
       authorDigestRequestMetadata.digest,
     );
-    console.log(authorSignatureMetadata);
     const cid = await metadataStorageService.upload(
       MetadataStorageType.IPFS,
-      `authorDigestSign/${moment().format('YYYYMMDDHHmmss')}/${han.letter(
-        authorSignatureMetadata.signature,
-        '-',
-      )}`,
+      'test-fe-sample-auth-sign',
       JSON.stringify(authorSignatureMetadata),
     );
     console.log(cid);
@@ -185,16 +227,39 @@ describe('MetaSignatureService', () => {
         ts: 1636529099232,
       });
     });
+
+    it('test fe sample', async () => {
+      const authorDigestSignatureMetadata = {
+        '@context': 'https://metanetwork.online/ns/cms',
+        type: 'author-digest-sign',
+        signatureAlgorithm: 'curve25519',
+        version: '2021-11-01-01',
+        publicKey:
+          '0x9262ac7152cdf516ad3628781821cc9d2151ff31b80218b4f57ebcf1cb826f4d',
+        digest:
+          '0x854f8851aeb627e2e8791d271ca51cd72fb437b2ea51f79eacd10ad4a3762f9d',
+        nonce: '0x29b2141f18ec97b2e668f164',
+        claim:
+          'I authorize publishing by metaspace.life from this device using key: 0x9262ac7152cdf516ad3628781821cc9d2151ff31b80218b4f57ebcf1cb826f4d',
+        signature:
+          '0x4c7d9143356296296b26d44e0f344a931581e0e0fe97d76d60f6d6b8800df42b9ac62c9caac05e19f329e70ce38a5bc11f7a87ff74ebd192936138c542502d04',
+        ts: 1636547944916,
+      } as AuthorSignatureMetadata;
+      console.log(
+        verifyAuthorDigestMetadataSignature(authorDigestSignatureMetadata),
+      );
+    });
   });
 
   describe('generateAuthorDigestSignWithContentServerVerificationMetadata', () => {
+    jest.setTimeout(15000);
     it('Should return authorDigestSignWithContentServerVerificationMetadata', async () => {
       const authorDigestSignWithContentServerVerificationMetadata =
         await metaSignatureService.generateAuthorDigestSignWithContentServerVerificationMetadata(
           MetadataStorageType.IPFS,
-          'bafybeifm62ueruik5omjld6ea4bv42yhz5rahfulm6rsh5nbglavkmkqzu',
+          'bafybeifxjlpsedmpe37r23ey67dfihui3srr63oxrm4sjknynrapiosxde',
           MetadataStorageType.IPFS,
-          'bafybeibascslzjqemjt5d3bxnt7hurgbsqfe7tr2lcgy7zi22mlfoap4cq',
+          'bafybeialibcpmaxh3b5bovovmxd2xhmwkuw7meoikjueapnb3i5ml6542i',
         );
       console.log(
         JSON.stringify(authorDigestSignWithContentServerVerificationMetadata),
@@ -203,6 +268,7 @@ describe('MetaSignatureService', () => {
   });
 
   describe('generateAndUploadAuthorDigestSignWithContentServerVerificationMetadata', () => {
+    jest.setTimeout(15000);
     it('Should return authorDigestSignWithContentServerVerificationMetadata & refer', async () => {
       const {
         authorDigestSignWithContentServerVerificationMetadataRefer,
@@ -212,9 +278,9 @@ describe('MetaSignatureService', () => {
           'YYYYMMDDHHmmss',
         )}/${han.letter('测试标题', '-')}`,
         MetadataStorageType.IPFS,
-        'bafybeifm62ueruik5omjld6ea4bv42yhz5rahfulm6rsh5nbglavkmkqzu',
+        'bafybeifxjlpsedmpe37r23ey67dfihui3srr63oxrm4sjknynrapiosxde',
         MetadataStorageType.IPFS,
-        'bafybeibascslzjqemjt5d3bxnt7hurgbsqfe7tr2lcgy7zi22mlfoap4cq',
+        'bafybeialibcpmaxh3b5bovovmxd2xhmwkuw7meoikjueapnb3i5ml6542i',
       );
       console.log(authorDigestSignWithContentServerVerificationMetadataRefer);
       console.log(
