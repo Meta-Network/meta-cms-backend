@@ -17,11 +17,17 @@ export class TemplateLogicService {
     type?: keyof typeof TemplateQueryType,
   ): Promise<ThemeTemplateEntity[]> {
     if (type === 'ALL')
-      return await this.templateRepository.find({ relations: ['theme'] });
+      return await this.templateRepository.find({
+        where: { enabled: true },
+        relations: ['theme'],
+      });
 
     if (type)
       return await this.templateRepository.find({
-        where: { templateType: MetaWorker.Enums.TemplateType[type] },
+        where: {
+          enabled: true,
+          templateType: MetaWorker.Enums.TemplateType[type],
+        },
         relations: ['theme'],
       });
 

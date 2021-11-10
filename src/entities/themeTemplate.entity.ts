@@ -93,4 +93,11 @@ export class ThemeTemplateEntity extends BaseEntity {
   @ApiHideProperty()
   @ApiResponseProperty({ type: ThemeEntity })
   theme: ThemeEntity;
+
+  @Column({
+    comment: 'Template enabled',
+    nullable: false,
+    default: false,
+  })
+  enabled?: boolean;
 }
