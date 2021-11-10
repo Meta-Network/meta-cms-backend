@@ -48,6 +48,15 @@ export class DraftPostCreationDto {
   @ApiProperty()
   @IsOptional()
   @IsEnum(MetadataStorageType)
+  authorDigestRequestMetadataStorageType: MetadataStorageType;
+
+  @ApiProperty()
+  @IsOptional()
+  authorDigestRequestMetadataRefer: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsEnum(MetadataStorageType)
   authorDigestSignatureMetadataStorageType: MetadataStorageType;
 
   @ApiProperty()
@@ -90,6 +99,15 @@ export class DraftPostUpdateDto {
   @IsOptional()
   @IsString()
   license: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsEnum(MetadataStorageType)
+  authorDigestRequestMetadataStorageType: MetadataStorageType;
+
+  @ApiProperty()
+  @IsOptional()
+  authorDigestRequestMetadataRefer: string;
 
   @ApiProperty()
   @IsOptional()

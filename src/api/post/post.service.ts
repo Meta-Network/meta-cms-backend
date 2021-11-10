@@ -1,3 +1,4 @@
+import { AuthorSignatureMetadata } from '@metaio/meta-signature-util/type/types';
 import { MetaWorker } from '@metaio/worker-model';
 import {
   BadRequestException,
@@ -7,6 +8,8 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { createHash, createPrivateKey, createPublicKey, sign } from 'crypto';
+import { han } from 'han';
+import moment from 'moment';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { IPaginationOptions, paginate } from 'nestjs-typeorm-paginate';
 import { In, Repository } from 'typeorm';
@@ -18,13 +21,21 @@ import {
   AccessDeniedException,
   InvalidStatusException,
   PublishFailedException,
+  ValidationException,
 } from '../../exceptions';
 import { UCenterJWTPayload } from '../../types';
-import { PostState, TaskCommonState } from '../../types/enum';
+import {
+  MetadataStorageType,
+  PostState,
+  TaskCommonState,
+} from '../../types/enum';
+import { MetaSignatureService } from '../meta-signature/meta-signature.service';
+import { MetadataStorageService } from '../provider/metadata-storage/metadata-storage.service';
 import { SiteConfigLogicService } from '../site/config/logicService';
 import { TasksService } from '../task/tasks.service';
 import { DraftPostCreationDto, DraftPostUpdateDto } from './dto/draft-post-dto';
 import { PublishPostDto, PublishPostsDto } from './dto/publish-post.dto';
+import { PostHelper } from './post.helper';
 import { PreProcessorService } from './preprocessor/preprocessor.service';
 import { EditorSourceService } from './sources/editor/editor-source.service';
 import { MatatakiSourceService } from './sources/matataki/matataki-source.service';
@@ -49,6 +60,8 @@ export class PostService {
     @InjectRepository(DraftEntity)
     private readonly draftRepository: Repository<DraftEntity>,
     private readonly editorSourceService: EditorSourceService,
+    private readonly metaSignatureService: MetaSignatureService,
+    private readonly postHelper: PostHelper,
   ) {}
 
   async getPostsByUserId(
@@ -457,27 +470,76 @@ export class PostService {
   }
   async createPost(
     userId: number,
-    { content, ...postDto }: DraftPostCreationDto,
+    {
+      content,
+      authorDigestRequestMetadataStorageType,
+      authorDigestRequestMetadataRefer,
+      authorDigestSignatureMetadataStorageType,
+      authorDigestSignatureMetadataRefer,
+      ...postDto
+    }: DraftPostCreationDto,
   ) {
+    const verificationKey = this.postHelper.createPostVerificationKey(
+      userId,
+      postDto.title,
+    );
+    const {
+      authorDigestSignatureMetadata,
+      authorDigestSignWithContentServerVerificationMetadataRefer,
+    } = await this.metaSignatureService.generateAndUploadAuthorDigestSignWithContentServerVerificationMetadata(
+      verificationKey,
+      authorDigestRequestMetadataStorageType,
+      authorDigestRequestMetadataRefer,
+      authorDigestSignatureMetadataStorageType,
+      authorDigestSignatureMetadataRefer,
+    );
     const post = this.postRepository.create(postDto);
 
     post.userId = userId;
     post.platform = 'editor';
     post.source = await this.createDraft(userId, content);
     post.license = postDto.license;
+    post.authorDigestRequestMetadataRefer = authorDigestRequestMetadataRefer;
+    post.serverVerificationMetadataRefer =
+      authorDigestSignWithContentServerVerificationMetadataRefer;
+    post.authorPublicKey = authorDigestSignatureMetadata.publicKey;
     post.state = PostState.Pending;
 
     await this.postRepository.save(post);
 
     return post;
   }
+
   async updatePost(postId: number, dto: DraftPostUpdateDto) {
     const post = (await this.postRepository.findOneOrFail(postId)) as DraftPost;
 
     if (post.platform !== 'editor') {
       throw new BadRequestException('post must be of editor platform');
     }
-
+    const {
+      authorDigestRequestMetadataStorageType,
+      authorDigestRequestMetadataRefer,
+      authorDigestSignatureMetadataStorageType,
+      authorDigestSignatureMetadataRefer,
+    } = dto;
+    const verificationKey = this.postHelper.createPostVerificationKey(
+      post.userId,
+      post.title,
+    );
+    const {
+      authorDigestSignatureMetadata,
+      authorDigestSignWithContentServerVerificationMetadataRefer,
+    } = await this.metaSignatureService.generateAndUploadAuthorDigestSignWithContentServerVerificationMetadata(
+      verificationKey,
+      authorDigestRequestMetadataStorageType,
+      authorDigestRequestMetadataRefer,
+      authorDigestSignatureMetadataStorageType,
+      authorDigestSignatureMetadataRefer,
+    );
+    post.authorDigestRequestMetadataRefer = authorDigestRequestMetadataRefer;
+    post.serverVerificationMetadataRefer =
+      authorDigestSignWithContentServerVerificationMetadataRefer;
+    post.authorPublicKey = authorDigestSignatureMetadata.publicKey;
     if (typeof dto.content === 'string') {
       await this.updateDraft(Number(post.source), dto.content);
     }

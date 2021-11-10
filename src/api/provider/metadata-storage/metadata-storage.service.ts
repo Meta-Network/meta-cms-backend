@@ -1,10 +1,11 @@
-import { Inject, LoggerService } from '@nestjs/common';
+import { Inject, Injectable, LoggerService } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
 import { MetadataStorageType } from '../../../types/enum';
 import { getMetadataStorageProvider } from './metadata-storage.provider';
 
+@Injectable()
 export class MetadataStorageService {
   constructor(
     @Inject(WINSTON_MODULE_NEST_PROVIDER)

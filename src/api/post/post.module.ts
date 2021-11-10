@@ -10,6 +10,8 @@ import { AccessTokenEntity } from '../../entities/accessToken.entity';
 import { DraftEntity } from '../../entities/draft.entity';
 import { PostEntity } from '../../entities/post.entity';
 import { PostSiteConfigRelaEntity } from '../../entities/postSiteConfigRela.entity';
+import { MetaSignatureModule } from '../meta-signature/meta-signature.module';
+import { MetadataStorageModule } from '../provider/metadata-storage/metadata-storage.module';
 import { SiteConfigModule } from '../site/config/module';
 import { AccessTokenService } from '../synchronizer/access-token.service';
 import { TasksModule } from '../task/tasks.module';
@@ -39,6 +41,8 @@ import { MatatakiSourceModule } from './sources/matataki/matataki.module';
     EditorModule,
     TasksModule,
     SiteConfigModule,
+    MetadataStorageModule,
+    MetaSignatureModule,
   ],
   controllers: [PostController],
   providers: [

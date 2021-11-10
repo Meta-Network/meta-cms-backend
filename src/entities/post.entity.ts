@@ -2,14 +2,15 @@ import { ApiHideProperty, ApiResponseProperty } from '@nestjs/swagger';
 import {
   IsArray,
   IsEnum,
+  IsHexadecimal,
   IsInt,
   IsNotEmpty,
   IsOptional,
   IsString,
 } from 'class-validator';
 import { Column, Entity, Index, OneToMany } from 'typeorm';
-import { PostState } from '../types/enum';
 
+import { PostState } from '../types/enum';
 import { BaseEntity } from './base.entity';
 import { PostSiteConfigRelaEntity } from './postSiteConfigRela.entity';
 
@@ -69,6 +70,34 @@ export class PostEntity extends BaseEntity {
   @IsString()
   @IsOptional()
   license: string;
+
+  @Column({
+    comment: 'Post author digest request refer',
+    nullable: false,
+    default: '',
+  })
+  @IsString()
+  @IsOptional()
+  authorDigestRequestMetadataRefer: string;
+
+  @Column({
+    comment: 'Post author digest sign with content server verification refer',
+    nullable: false,
+    default: '',
+  })
+  @IsString()
+  @IsOptional()
+  serverVerificationMetadataRefer: string;
+
+  @Index()
+  @Column({
+    comment: 'Post author public key',
+    nullable: false,
+    default: '',
+  })
+  @IsHexadecimal()
+  @IsOptional()
+  authorPublicKey: string;
 
   @OneToMany(() => PostSiteConfigRelaEntity, (rela) => rela.post, {
     nullable: true,

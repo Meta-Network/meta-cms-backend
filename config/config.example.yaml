@@ -136,3 +136,8 @@ metaSpace:
       baseUrl:
     dataViewer:
       baseUrl:
+metaSignature:
+  serverKeys:
+    private:
+    public:
+  serverDomain:

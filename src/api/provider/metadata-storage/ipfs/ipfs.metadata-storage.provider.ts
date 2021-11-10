@@ -27,9 +27,12 @@ export class IpfsMetadataStorageProvider implements MetadataStorageProvider {
       `Get metadata from IPFS Gateway: ${gateway}`,
       this.constructor.name,
     );
-    const res = await superagent.get(`${gateway}/ipfs/${refer}`);
-
-    return JSON.stringify(res.body);
+    try {
+      const res = await superagent.get(`${gateway}/ipfs/${refer}`);
+      return JSON.stringify(res.body);
+    } catch (err) {
+      console.log(`Error ${err}`);
+    }
   }
   async upload(contentKey: string, content: string): Promise<string> {
     const folder = this.configService.get<string>(
@@ -45,7 +48,7 @@ export class IpfsMetadataStorageProvider implements MetadataStorageProvider {
       key: `${folder}/${contentKey}`,
       data: content,
     });
-    console.log(uploadedFile);
+    this.logger.debug(uploadedFile, this.constructor.name);
     return uploadedFile.hash;
   }
 }
