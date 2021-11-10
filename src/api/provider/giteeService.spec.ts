@@ -35,7 +35,7 @@ describe('GiteeService', () => {
   });
 
   it('should be a created repo', async () => {
-    const data = await service.createGitHubRepo(
+    const data = await service.createGitRepo(
       giteeToken,
       giteeUsername,
       'test-repo',
@@ -52,7 +52,7 @@ describe('GiteeService', () => {
   });
 
   it('should be a empty repo', async () => {
-    const data = await service.createGitHubRepo(
+    const data = await service.createGitRepo(
       giteeToken,
       giteeUsername,
       'a-new-private-repo',
