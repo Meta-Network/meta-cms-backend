@@ -327,6 +327,11 @@ export class PostService {
       categories: post.categories,
       tags: post.tags,
       license: post.license,
+      authorDigestRequestMetadataStorageType:
+        post.authorDigestRequestMetadataStorageType,
+      authorDigestRequestMetadataRefer: post.authorDigestRequestMetadataRefer,
+      serverVerificationMetadataStorageType:
+        post.serverVerificationMetadataStorageType,
       createdAt: post.createdAt.toISOString(),
       updatedAt: post.updatedAt.toISOString(),
     } as MetaWorker.Info.Post;

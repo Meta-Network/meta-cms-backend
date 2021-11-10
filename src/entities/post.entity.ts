@@ -10,7 +10,7 @@ import {
 } from 'class-validator';
 import { Column, Entity, Index, OneToMany } from 'typeorm';
 
-import { PostState } from '../types/enum';
+import { MetadataStorageType, PostState } from '../types/enum';
 import { BaseEntity } from './base.entity';
 import { PostSiteConfigRelaEntity } from './postSiteConfigRela.entity';
 
@@ -72,6 +72,15 @@ export class PostEntity extends BaseEntity {
   license: string;
 
   @Column({
+    comment: 'Post author digest request metadata storage type',
+    nullable: false,
+    default: MetadataStorageType.IPFS,
+  })
+  @IsEnum(MetadataStorageType)
+  @IsOptional()
+  authorDigestRequestMetadataStorageType: MetadataStorageType;
+
+  @Column({
     comment: 'Post author digest request refer',
     nullable: false,
     default: '',
@@ -79,6 +88,16 @@ export class PostEntity extends BaseEntity {
   @IsString()
   @IsOptional()
   authorDigestRequestMetadataRefer: string;
+
+  @Column({
+    comment:
+      'Post author digest sign with content server verification metadata storage type',
+    nullable: false,
+    default: MetadataStorageType.IPFS,
+  })
+  @IsEnum(MetadataStorageType)
+  @IsOptional()
+  serverVerificationMetadataStorageType: MetadataStorageType;
 
   @Column({
     comment: 'Post author digest sign with content server verification refer',
