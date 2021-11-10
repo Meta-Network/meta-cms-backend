@@ -504,9 +504,19 @@ export class PostService {
     post.platform = 'editor';
     post.source = await this.createDraft(userId, content);
     post.license = postDto.license;
+    if (authorDigestRequestMetadataStorageType) {
+      post.authorDigestRequestMetadataStorageType =
+        authorDigestRequestMetadataStorageType;
+    }
+    if (authorDigestSignatureMetadataStorageType) {
+      //服务端签名和作者签名的metadata用一样的storageType
+      post.serverVerificationMetadataStorageType =
+        authorDigestSignatureMetadataStorageType;
+    }
     authorDigestRequestMetadataRefer &&
       (post.authorDigestRequestMetadataRefer =
         authorDigestRequestMetadataRefer);
+
     authorDigestSignWithContentServerVerificationMetadataRefer &&
       (post.serverVerificationMetadataRefer =
         authorDigestSignWithContentServerVerificationMetadataRefer);
