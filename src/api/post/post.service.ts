@@ -513,6 +513,30 @@ export class PostService {
     post.platform = 'editor';
     post.source = await this.createDraft(userId, content);
     post.license = postDto.license;
+    this.setPostMetadata(
+      post,
+      authorDigestRequestMetadataStorageType,
+      authorDigestRequestMetadataRefer,
+      authorDigestSignatureMetadataStorageType,
+      authorDigestSignatureMetadata,
+
+      authorDigestSignWithContentServerVerificationMetadataRefer,
+    );
+    post.state = PostState.Pending;
+
+    await this.postRepository.save(post);
+
+    return post;
+  }
+
+  setPostMetadata(
+    post: PostEntity,
+    authorDigestRequestMetadataStorageType: MetadataStorageType,
+    authorDigestRequestMetadataRefer: string,
+    authorDigestSignatureMetadataStorageType: MetadataStorageType,
+    authorDigestSignatureMetadata: AuthorSignatureMetadata,
+    authorDigestSignWithContentServerVerificationMetadataRefer: string,
+  ) {
     if (authorDigestRequestMetadataStorageType) {
       post.authorDigestRequestMetadataStorageType =
         authorDigestRequestMetadataStorageType;
@@ -532,11 +556,6 @@ export class PostService {
     authorDigestSignatureMetadata &&
       authorDigestSignatureMetadata.publicKey &&
       (post.authorPublicKey = authorDigestSignatureMetadata.publicKey);
-    post.state = PostState.Pending;
-
-    await this.postRepository.save(post);
-
-    return post;
   }
 
   async updatePost(postId: number, dto: DraftPostUpdateDto) {
@@ -566,10 +585,15 @@ export class PostService {
       authorDigestSignatureMetadataStorageType,
       authorDigestSignatureMetadataRefer,
     );
-    post.authorDigestRequestMetadataRefer = authorDigestRequestMetadataRefer;
-    post.serverVerificationMetadataRefer =
-      authorDigestSignWithContentServerVerificationMetadataRefer;
-    post.authorPublicKey = authorDigestSignatureMetadata.publicKey;
+    this.setPostMetadata(
+      post,
+      authorDigestRequestMetadataStorageType,
+      authorDigestRequestMetadataRefer,
+      authorDigestSignatureMetadataStorageType,
+      authorDigestSignatureMetadata,
+
+      authorDigestSignWithContentServerVerificationMetadataRefer,
+    );
     if (typeof dto.content === 'string') {
       await this.updateDraft(Number(post.source), dto.content);
     }
