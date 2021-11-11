@@ -41,9 +41,11 @@ export enum TaskCommonState {
 
 export enum PostState {
   Pending = 'pending',
+  PendingEdit = 'pending_edit',
   Published = 'published',
   SitePublished = 'site_published',
   Ignored = 'ignored',
+
   Drafted = 'drafted',
   Invalid = 'invalid',
 }

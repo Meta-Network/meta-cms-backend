@@ -111,7 +111,10 @@ export class PostService {
       throw new BadRequestException('post title is empty');
     }
 
-    if (post.state !== PostState.Pending) {
+    if (
+      post.state !== PostState.Pending &&
+      post.state !== PostState.PendingEdit
+    ) {
       throw new InvalidStatusException('invalid post state');
     }
 
@@ -599,7 +602,7 @@ export class PostService {
     }
 
     this.postRepository.merge(post, dto);
-
+    post.state = PostState.PendingEdit;
     await this.postRepository.save(post);
 
     if (typeof dto.content === 'string') {
