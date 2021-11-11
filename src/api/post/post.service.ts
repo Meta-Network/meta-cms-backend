@@ -334,6 +334,7 @@ export class PostService {
       authorDigestRequestMetadataRefer: post.authorDigestRequestMetadataRefer,
       serverVerificationMetadataStorageType:
         post.serverVerificationMetadataStorageType,
+      serverVerificationMetadataRefer: post.serverVerificationMetadataRefer,
       createdAt: post.createdAt.toISOString(),
       updatedAt: post.updatedAt.toISOString(),
     } as MetaWorker.Info.Post;
