@@ -602,7 +602,9 @@ export class PostService {
     }
 
     this.postRepository.merge(post, dto);
-    post.state = PostState.PendingEdit;
+    if (post.state !== PostState.Pending) {
+      post.state = PostState.PendingEdit;
+    }
     await this.postRepository.save(post);
 
     if (typeof dto.content === 'string') {
