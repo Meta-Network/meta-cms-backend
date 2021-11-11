@@ -261,6 +261,8 @@ export class PostService {
       }
     }
     post.state = PostState.Published;
+    // record title in storage for next updating
+    post.titleInStorage = post.title;
     return await this.postRepository.save(post);
   }
 
@@ -319,7 +321,7 @@ export class PostService {
     const processedContent = await this.preprocessorService.preprocess(
       sourceContent,
     );
-    return {
+    const postInfo = {
       title: post.title,
       source: processedContent,
       cover: post.cover,
@@ -335,6 +337,12 @@ export class PostService {
       createdAt: post.createdAt.toISOString(),
       updatedAt: post.updatedAt.toISOString(),
     } as MetaWorker.Info.Post;
+    // Change title
+    if (post.titleInStorage !== '' && post.titleInStorage !== post.title) {
+      postInfo.title = post.titleInStorage;
+      postInfo.META_SPACE_INTERNAL_NEW_TITLE = post.title;
+    }
+    return postInfo;
   }
 
   getSourceService(platform: string) {
@@ -536,6 +544,7 @@ export class PostService {
     if (post.platform !== 'editor') {
       throw new BadRequestException('post must be of editor platform');
     }
+
     const {
       authorDigestRequestMetadataStorageType,
       authorDigestRequestMetadataRefer,

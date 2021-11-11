@@ -27,6 +27,15 @@ export class PostEntity extends BaseEntity {
   @IsNotEmpty()
   title: string;
 
+  @Column({
+    comment: 'Post title in storage.For updating title',
+    nullable: false,
+    default: '',
+  })
+  @IsString()
+  @IsNotEmpty()
+  titleInStorage: string;
+
   @Column({ comment: 'Post cover', nullable: false, default: '' })
   @IsString()
   @IsOptional()
