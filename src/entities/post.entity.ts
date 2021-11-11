@@ -90,13 +90,31 @@ export class PostEntity extends BaseEntity {
   authorDigestRequestMetadataStorageType: MetadataStorageType;
 
   @Column({
-    comment: 'Post author digest request refer',
+    comment: 'Post author digest request metadata refer',
     nullable: false,
     default: '',
   })
   @IsString()
   @IsOptional()
   authorDigestRequestMetadataRefer: string;
+
+  @Column({
+    comment: 'Post author digest signature metadata storage type',
+    nullable: false,
+    default: '',
+  })
+  @IsEnum(MetadataStorageType)
+  @IsOptional()
+  authorDigestSignatureMetadataStorageType: MetadataStorageType;
+
+  @Column({
+    comment: 'Post author digest signature metadata refer',
+    nullable: false,
+    default: '',
+  })
+  @IsString()
+  @IsOptional()
+  authorDigestSignatureMetadataRefer: string;
 
   @Column({
     comment:

@@ -338,6 +338,10 @@ export class PostService {
       authorDigestRequestMetadataStorageType:
         post.authorDigestRequestMetadataStorageType,
       authorDigestRequestMetadataRefer: post.authorDigestRequestMetadataRefer,
+      authorDigestSignatureMetadataStorageType:
+        post.authorDigestSignatureMetadataStorageType,
+      authorDigestSignatureMetadataRefer:
+        post.authorDigestSignatureMetadataRefer,
       serverVerificationMetadataStorageType:
         post.serverVerificationMetadataStorageType,
       serverVerificationMetadataRefer: post.serverVerificationMetadataRefer,
@@ -524,6 +528,7 @@ export class PostService {
       authorDigestRequestMetadataStorageType,
       authorDigestRequestMetadataRefer,
       authorDigestSignatureMetadataStorageType,
+      authorDigestSignatureMetadataRefer,
       authorDigestSignatureMetadata,
 
       authorDigestSignWithContentServerVerificationMetadataRefer,
@@ -540,6 +545,7 @@ export class PostService {
     authorDigestRequestMetadataStorageType: MetadataStorageType,
     authorDigestRequestMetadataRefer: string,
     authorDigestSignatureMetadataStorageType: MetadataStorageType,
+    authorDigestSignatureMetadataRefer: string,
     authorDigestSignatureMetadata: AuthorSignatureMetadata,
     authorDigestSignWithContentServerVerificationMetadataRefer: string,
   ) {
@@ -550,7 +556,8 @@ export class PostService {
     if (authorDigestSignatureMetadataStorageType) {
       //服务端签名和作者签名的metadata用一样的storageType
       post.serverVerificationMetadataStorageType =
-        authorDigestSignatureMetadataStorageType;
+        post.authorDigestSignatureMetadataStorageType =
+          authorDigestSignatureMetadataStorageType;
     }
     authorDigestRequestMetadataRefer &&
       (post.authorDigestRequestMetadataRefer =
@@ -559,6 +566,9 @@ export class PostService {
     authorDigestSignWithContentServerVerificationMetadataRefer &&
       (post.serverVerificationMetadataRefer =
         authorDigestSignWithContentServerVerificationMetadataRefer);
+    authorDigestSignatureMetadataRefer &&
+      (post.authorDigestSignatureMetadataRefer =
+        authorDigestSignatureMetadataRefer);
     authorDigestSignatureMetadata &&
       authorDigestSignatureMetadata.publicKey &&
       (post.authorPublicKey = authorDigestSignatureMetadata.publicKey);
@@ -596,6 +606,7 @@ export class PostService {
       authorDigestRequestMetadataStorageType,
       authorDigestRequestMetadataRefer,
       authorDigestSignatureMetadataStorageType,
+      authorDigestSignatureMetadataRefer,
       authorDigestSignatureMetadata,
 
       authorDigestSignWithContentServerVerificationMetadataRefer,
