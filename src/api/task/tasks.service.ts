@@ -6,13 +6,16 @@ import {
   LoggerService,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { isNotEmpty } from 'class-validator';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
+import { TaskEvent } from '../../constants';
 import { DataNotFoundException, ValidationException } from '../../exceptions';
 import { UCenterJWTPayload } from '../../types';
-import { SiteStatus } from '../../types/enum';
-import { MetaNetworkService } from '../microservices/meta-network/meta-network.service';
+import { MetadataStorageType, SiteStatus } from '../../types/enum';
+import { MetaSignatureHelper } from '../meta-signature/meta-signature.helper';
+import { MetaSignatureService } from '../meta-signature/meta-signature.service';
 import { DnsService } from '../provider/dns/dns.service';
 import { PublisherService } from '../provider/publisher/publisher.service';
 import { StorageService } from '../provider/storage/service';
@@ -32,7 +35,9 @@ export class TasksService {
     private readonly publisherService: PublisherService,
     private readonly taskDispatchersService: TaskDispatchersService,
     private readonly dnsService: DnsService,
-    private readonly metaNetworkService: MetaNetworkService,
+    private readonly metaSignatureService: MetaSignatureService,
+    private readonly metaSignatureHelper: MetaSignatureHelper,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async isSiteConfigTaskWorkspaceLocked(userId: number, siteConfigId: number) {
@@ -59,25 +64,29 @@ export class TasksService {
   async deployAndPublishSite(
     user: Partial<UCenterJWTPayload>,
     siteConfigId: number,
+    authorPublishMetaSpaceRequestMetadataStorageType?: MetadataStorageType,
+    authorPublishMetaSpaceRequestMetadataRefer?: string,
   ) {
     await this.checkSiteConfigTaskWorkspace(siteConfigId);
+    const { authorPublishMetaSpaceServerVerificationMetadataRefer } =
+      await this.metaSignatureService.generateAndUploadPublishMetaSpaceServerVerificationMetadata(
+        this.metaSignatureHelper.createPublishMetaSpaceVerificationKey(
+          user.id,
+          siteConfigId,
+        ),
+        authorPublishMetaSpaceRequestMetadataStorageType,
+        authorPublishMetaSpaceRequestMetadataRefer,
+      );
+    //TODO 写合约，记录生成 authorPublishMetaSpaceServerVerificationMetadata 的时间戳
     const deploySiteTaskStepResults = await this.doDeploySite(
       user,
       siteConfigId,
-      { isLastTask: false },
-    );
-    const publishSiteTaskStepResults = await this.doPublishSite(
-      user,
-      siteConfigId,
-      { isLastTask: true },
-    );
-    return Object.assign(deploySiteTaskStepResults, publishSiteTaskStepResults);
-  }
-  async publishSite(user: Partial<UCenterJWTPayload>, siteConfigId: number) {
-    await this.checkSiteConfigTaskWorkspace(siteConfigId);
-    const deploySiteTaskStepResults = await this.doCheckoutForPublish(
-      user,
-      siteConfigId,
+      {
+        isLastTask: false,
+        authorPublishMetaSpaceServerVerificationMetadataStorageType:
+          authorPublishMetaSpaceRequestMetadataStorageType,
+        authorPublishMetaSpaceServerVerificationMetadataRefer,
+      },
     );
     const publishSiteTaskStepResults = await this.doPublishSite(
       user,
@@ -87,6 +96,33 @@ export class TasksService {
       },
     );
     return Object.assign(deploySiteTaskStepResults, publishSiteTaskStepResults);
+  }
+  async publishSite(
+    user: Partial<UCenterJWTPayload>,
+    siteConfigId: number,
+    authorPublishMetaSpaceRequestMetadataStorageType?: MetadataStorageType,
+    authorPublishMetaSpaceRequestMetadataRefer?: string,
+  ) {
+    await this.checkSiteConfigTaskWorkspace(siteConfigId);
+
+    const prepublisheSiteTaskStepResults = await this.doCheckoutForPublish(
+      user,
+      siteConfigId,
+      authorPublishMetaSpaceRequestMetadataStorageType,
+      authorPublishMetaSpaceRequestMetadataRefer,
+    );
+
+    const publishSiteTaskStepResults = await this.doPublishSite(
+      user,
+      siteConfigId,
+      {
+        isLastTask: true,
+      },
+    );
+    return Object.assign(
+      prepublisheSiteTaskStepResults,
+      publishSiteTaskStepResults,
+    );
   }
 
   async createPost(
@@ -145,20 +181,46 @@ export class TasksService {
   protected async doCheckoutForPublish(
     user: Partial<UCenterJWTPayload>,
     siteConfigId: number,
+    authorPublishMetaSpaceServerVerificationMetadataStorageType?: MetadataStorageType,
+    authorPublishMetaSpaceServerVerificationMetadataRefer?: string,
   ) {
     const { deployConfig } = await this.generateDeployConfigAndRepoSize(
       user,
       siteConfigId,
       [SiteStatus.Deployed, SiteStatus.Publishing, SiteStatus.Published],
     );
+    this.setDeployConfigMetadata(
+      deployConfig,
+      authorPublishMetaSpaceServerVerificationMetadataStorageType,
+      authorPublishMetaSpaceServerVerificationMetadataRefer,
+    );
+
     const deployTaskSteps: MetaWorker.Enums.TaskMethod[] = [];
     this.logger.verbose(`Adding CICD worker to queue`, TasksService.name);
     deployTaskSteps.push(MetaWorker.Enums.TaskMethod.GIT_CLONE_CHECKOUT);
-
+    if (
+      authorPublishMetaSpaceServerVerificationMetadataStorageType &&
+      authorPublishMetaSpaceServerVerificationMetadataRefer
+    ) {
+      deployTaskSteps.push(
+        MetaWorker.Enums.TaskMethod.GENERATE_METASPACE_CONFIG,
+      );
+      deployTaskSteps.push(MetaWorker.Enums.TaskMethod.GIT_COMMIT_PUSH);
+    }
     return await this.taskDispatchersService.dispatchTask(
       deployTaskSteps,
       deployConfig,
     );
+  }
+  setDeployConfigMetadata(
+    deployConfig: MetaWorker.Configs.DeployConfig,
+    authorPublishMetaSpaceServerVerificationMetadataStorageType: MetadataStorageType,
+    authorPublishMetaSpaceServerVerificationMetadataRefer: string,
+  ) {
+    //TODO deployConfig 追加 metadata相关信息
+    //     deployConfig.metadata = {
+    //       authorPublishMetaSpaceServerVerificationMetadataStorageType,
+    // authorPublishMetaSpaceServerVerificationMetadataRefer};
   }
 
   protected async doCheckoutCommitPush(
@@ -220,6 +282,8 @@ export class TasksService {
     siteConfigId: number,
     options?: {
       isLastTask?: boolean;
+      authorPublishMetaSpaceServerVerificationMetadataStorageType?: MetadataStorageType;
+      authorPublishMetaSpaceServerVerificationMetadataRefer?: string;
     },
   ) {
     await this.siteConfigLogicService.updateSiteConfigStatus(
@@ -229,7 +293,11 @@ export class TasksService {
     const { deployConfig, repoEmpty } =
       await this.generateDeployConfigAndRepoSize(user, siteConfigId);
     const taskSteps: MetaWorker.Enums.TaskMethod[] = [];
-
+    this.setDeployConfigMetadata(
+      deployConfig,
+      options?.authorPublishMetaSpaceServerVerificationMetadataStorageType,
+      options?.authorPublishMetaSpaceServerVerificationMetadataRefer,
+    );
     this.logger.verbose(`Adding storage worker to queue`, TasksService.name);
     if (repoEmpty) {
       taskSteps.push(MetaWorker.Enums.TaskMethod.GIT_INIT_PUSH);
@@ -239,6 +307,7 @@ export class TasksService {
 
     const { templateType } = deployConfig.template;
     taskSteps.push(...this.getDeployTaskMethodsByTemplateType(templateType));
+
     taskSteps.push(MetaWorker.Enums.TaskMethod.GENERATE_METASPACE_CONFIG);
     taskSteps.push(MetaWorker.Enums.TaskMethod.GIT_COMMIT_PUSH);
     if (!options?.isLastTask) {
@@ -314,13 +383,22 @@ export class TasksService {
       publishConfig.site.configId,
       SiteStatus.Published,
     );
+    // 有循环依赖，用事件来解决
+    this.eventEmitter.emit(TaskEvent.SITE_PUBLISHED, {
+      user,
+      publishConfig,
+    });
+    // await this.postService.updatePostStateBySiteConfigId(
+    //   PostState.SitePublished,
+    //   publishConfig.site.configId,
+    // );
     // this.logger.verbose(`Adding CDN worker to queue`, TasksService.name);
 
     // notify Meta-Network-BE
-    this.metaNetworkService.notifyMetaSpaceSiteCreated({
-      ...publishConfig.site,
-      userId: user.id,
-    });
+    // this.metaNetworkService.notifyMetaSpaceSiteCreated({
+    //   ...publishConfig.site,
+    //   userId: user.id,
+    // });
     return publishSiteTaskStepResults;
   }
 

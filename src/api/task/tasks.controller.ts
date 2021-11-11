@@ -11,12 +11,19 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { ApiOkResponse, ApiProperty, ApiTags } from '@nestjs/swagger';
-import { IsNotEmpty, IsNumber } from 'class-validator';
+import {
+  IsEnum,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
 import { SkipUCenterAuth, User } from '../../decorators';
 import { ValidationException } from '../../exceptions';
 import { UCenterJWTPayload } from '../../types';
+import { MetadataStorageType } from '../../types/enum';
 import { TransformResponse } from '../../utils/responseClass';
 import { PostMethodValidation } from '../../utils/validation';
 import { TasksService } from './tasks.service';
@@ -36,6 +43,14 @@ class PublishSiteFromConfigDto {
   @IsNumber()
   @IsNotEmpty()
   configId: number;
+  @ApiProperty()
+  @IsEnum(MetadataStorageType)
+  @IsOptional()
+  authorPublishMetaSpaceRequestMetadataStorageType?: MetadataStorageType;
+  @ApiProperty()
+  @IsString()
+  @IsOptional()
+  authorPublishMetaSpaceRequestMetadataRefer?: string;
 }
 @ApiTags('tasks')
 @Controller('tasks')
@@ -83,12 +98,21 @@ export class TasksController {
   ) {
     if (!body && !body.configId)
       throw new ValidationException('request body does not contain configId');
-    const siteConfigId = body.configId;
+    const {
+      configId: siteConfigId,
+      authorPublishMetaSpaceRequestMetadataStorageType,
+      authorPublishMetaSpaceRequestMetadataRefer,
+    } = body;
     this.logger.verbose(
-      `User ${user.id} request publish site from config ${siteConfigId}`,
+      `User ${user.id} request publish site from config ${siteConfigId} authorPublishMetaSpaceRequestMetadata ${authorPublishMetaSpaceRequestMetadataStorageType}://${authorPublishMetaSpaceRequestMetadataRefer}`,
       TasksController.name,
     );
-    return await this.service.publishSite(user, siteConfigId);
+    return await this.service.publishSite(
+      user,
+      siteConfigId,
+      authorPublishMetaSpaceRequestMetadataStorageType,
+      authorPublishMetaSpaceRequestMetadataRefer,
+    );
   }
 
   @Post('deploy-publish')
@@ -99,11 +123,20 @@ export class TasksController {
   ) {
     if (!body && !body.configId)
       throw new ValidationException('request body does not contain configId');
-    const siteConfigId = body.configId;
+    const {
+      configId: siteConfigId,
+      authorPublishMetaSpaceRequestMetadataStorageType,
+      authorPublishMetaSpaceRequestMetadataRefer,
+    } = body;
     this.logger.verbose(
-      `User ${user.id} request deploy&publish site from config ${siteConfigId}`,
+      `User ${user.id} request deploy&publish site from config ${siteConfigId} authorPublishMetaSpaceRequestMetadata ${authorPublishMetaSpaceRequestMetadataStorageType}://${authorPublishMetaSpaceRequestMetadataRefer}`,
       TasksController.name,
     );
-    return await this.service.deployAndPublishSite(user, siteConfigId);
+    return await this.service.deployAndPublishSite(
+      user,
+      siteConfigId,
+      authorPublishMetaSpaceRequestMetadataStorageType,
+      authorPublishMetaSpaceRequestMetadataRefer,
+    );
   }
 }

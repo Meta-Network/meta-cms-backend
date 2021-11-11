@@ -6,14 +6,14 @@ import {
   Injectable,
   LoggerService,
 } from '@nestjs/common';
+import { OnEvent } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
 import { createHash, createPrivateKey, createPublicKey, sign } from 'crypto';
-import { han } from 'han';
-import moment from 'moment';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { IPaginationOptions, paginate } from 'nestjs-typeorm-paginate';
 import { In, Repository } from 'typeorm';
 
+import { TaskEvent } from '../../constants';
 import { DraftEntity } from '../../entities/draft.entity';
 import { PostEntity } from '../../entities/post.entity';
 import { PostSiteConfigRelaEntity } from '../../entities/postSiteConfigRela.entity';
@@ -29,13 +29,12 @@ import {
   PostState,
   TaskCommonState,
 } from '../../types/enum';
+import { MetaSignatureHelper } from '../meta-signature/meta-signature.helper';
 import { MetaSignatureService } from '../meta-signature/meta-signature.service';
-import { MetadataStorageService } from '../provider/metadata-storage/metadata-storage.service';
 import { SiteConfigLogicService } from '../site/config/logicService';
 import { TasksService } from '../task/tasks.service';
 import { DraftPostCreationDto, DraftPostUpdateDto } from './dto/draft-post-dto';
 import { PublishPostDto, PublishPostsDto } from './dto/publish-post.dto';
-import { PostHelper } from './post.helper';
 import { PreProcessorService } from './preprocessor/preprocessor.service';
 import { EditorSourceService } from './sources/editor/editor-source.service';
 import { MatatakiSourceService } from './sources/matataki/matataki-source.service';
@@ -61,7 +60,7 @@ export class PostService {
     private readonly draftRepository: Repository<DraftEntity>,
     private readonly editorSourceService: EditorSourceService,
     private readonly metaSignatureService: MetaSignatureService,
-    private readonly postHelper: PostHelper,
+    private readonly metaSignatureHelper: MetaSignatureHelper,
   ) {}
 
   async getPostsByUserId(
@@ -89,6 +88,38 @@ export class PostService {
     await this.postRepository.save(post);
 
     return post;
+  }
+
+  @OnEvent(TaskEvent.SITE_PUBLISHED)
+  async handleSitePublished(event: {
+    publishConfig: MetaWorker.Configs.PublishConfig;
+    user: Partial<UCenterJWTPayload>;
+  }) {
+    const { publishConfig } = event;
+    const siteConfigId = publishConfig.site.configId;
+    this.logger.verbose(
+      `Update post state to site_published siteConfigId ${siteConfigId}`,
+      this.constructor.name,
+    );
+    await this.updatePostStateBySiteConfigId(
+      PostState.SitePublished,
+      siteConfigId,
+    );
+  }
+
+  async updatePostStateBySiteConfigId(state: PostState, siteConfigId: number) {
+    await this.postRepository.update(
+      {
+        siteConfigRelas: [
+          {
+            siteConfig: {
+              id: siteConfigId,
+            },
+          },
+        ],
+      },
+      { state },
+    );
   }
 
   async publishPendingPost(
@@ -503,7 +534,7 @@ export class PostService {
       ...postDto
     }: DraftPostCreationDto,
   ) {
-    const verificationKey = this.postHelper.createPostVerificationKey(
+    const verificationKey = this.metaSignatureHelper.createPostVerificationKey(
       userId,
       postDto.title,
     );
@@ -517,6 +548,7 @@ export class PostService {
       authorDigestSignatureMetadataStorageType,
       authorDigestSignatureMetadataRefer,
     );
+    // //TODO 写合约，记录生成 authorDigestSignWithContentServerVerificationMetadata的时间戳;
     const post = this.postRepository.create(postDto);
 
     post.userId = userId;
@@ -587,7 +619,7 @@ export class PostService {
       authorDigestSignatureMetadataStorageType,
       authorDigestSignatureMetadataRefer,
     } = dto;
-    const verificationKey = this.postHelper.createPostVerificationKey(
+    const verificationKey = this.metaSignatureHelper.createPostVerificationKey(
       post.userId,
       post.title,
     );

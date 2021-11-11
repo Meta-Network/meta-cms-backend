@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 
+import { MetaSignatureModule } from '../meta-signature/meta-signature.module';
 import { MetaNetworkModule } from '../microservices/meta-network/meta-network.module';
 import { DnsModule } from '../provider/dns/dns.module';
 import { PublisherModule } from '../provider/publisher/publisher.module';
@@ -27,6 +28,7 @@ import { TaskWorkersModule } from './workers/task-workers.module';
     DnsModule,
     PublisherModule,
     MetaNetworkModule,
+    MetaSignatureModule,
   ],
   controllers: [TasksController],
   providers: [TasksService],

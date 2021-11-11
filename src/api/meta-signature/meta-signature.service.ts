@@ -1,7 +1,9 @@
 import {
   generateAuthorDigestSignServerVerificationMetadata,
   generateAuthorDigestSignWithContentServerVerificationMetadata,
+  generatePublishMetaSpaceServerVerificationMetadata,
   verifyAuthorDigestMetadataSignature,
+  verifyAuthorPublishMetaSpaceRequestMetadataSignature,
   verifyDigest,
 } from '@metaio/meta-signature-util';
 import {
@@ -223,6 +225,130 @@ export class MetaSignatureService {
       authorDigestSignWithContentServerVerificationMetadata,
       authorDigestRequestMetadata,
       authorDigestSignatureMetadata,
+    };
+  }
+
+  async validateAuthorPublishMetaSpaceRequestMetadata(
+    authorPublishMetaSpaceRequestMetadataStorageType: MetadataStorageType,
+    authorPublishMetaSpaceRequestMetadataRefer: string,
+  ): Promise<AuthorSignatureMetadata> {
+    let authorPublishMetaSpaceRequestMetadata: AuthorSignatureMetadata;
+
+    this.logger.debug(
+      `Get ${authorPublishMetaSpaceRequestMetadataStorageType} ${authorPublishMetaSpaceRequestMetadataRefer}`,
+      this.constructor.name,
+    );
+    const authorPublishMetaSppaceRequestMetadataText =
+      await this.metadataStorageService.get(
+        authorPublishMetaSpaceRequestMetadataStorageType,
+        authorPublishMetaSpaceRequestMetadataRefer,
+      );
+    if (!authorPublishMetaSppaceRequestMetadataText) {
+      throw new ValidationException(
+        'AuthorPublishMetaSpaceRequestMetadata must not be empty',
+      );
+    }
+
+    try {
+      authorPublishMetaSpaceRequestMetadata = JSON.parse(
+        authorPublishMetaSppaceRequestMetadataText,
+      ) as AuthorSignatureMetadata;
+    } catch (err) {
+      throw new ValidationException(
+        `Invalid authorPublishMetaSpaceRequestMetadata: ${authorPublishMetaSppaceRequestMetadataText}`,
+      );
+    }
+    this.logger.debug(
+      `Verify authorPublishMetaSpaceRequestMetadata: ${authorPublishMetaSppaceRequestMetadataText}`,
+      this.constructor.name,
+    );
+    if (
+      !verifyAuthorPublishMetaSpaceRequestMetadataSignature(
+        authorPublishMetaSpaceRequestMetadata,
+      )
+    ) {
+      throw new ValidationException(
+        `Invalid authorPublishMetaSpaceRequestMetadata: ${authorPublishMetaSppaceRequestMetadataText}`,
+      );
+    }
+    return authorPublishMetaSpaceRequestMetadata;
+  }
+
+  async generatePublishMetaSpaceServerVerificationMetadata(
+    authorPublishMetaSpaceRequestMetadataStorageType: MetadataStorageType,
+    authorPublishMetaSpaceRequestMetadataRefer: string,
+  ): Promise<{
+    authorPublishMetaSpaceRequestMetadata: AuthorSignatureMetadata;
+    authorPublishMetaSpaceServerVerificationMetadata: SignatureMetadata;
+  }> {
+    const authorPublishMetaSpaceRequestMetadata =
+      await this.validateAuthorPublishMetaSpaceRequestMetadata(
+        authorPublishMetaSpaceRequestMetadataStorageType,
+        authorPublishMetaSpaceRequestMetadataRefer,
+      );
+
+    const authorPublishMetaSpaceServerVerificationMetadata =
+      generatePublishMetaSpaceServerVerificationMetadata(
+        this.configService.get('metaSignature.serverKeys'),
+        this.configService.get('metaSignature.serverDomain'),
+        authorPublishMetaSpaceRequestMetadata,
+        authorPublishMetaSpaceRequestMetadataRefer,
+      );
+
+    return {
+      authorPublishMetaSpaceRequestMetadata,
+      authorPublishMetaSpaceServerVerificationMetadata,
+    };
+  }
+
+  async generateAndUploadPublishMetaSpaceServerVerificationMetadata(
+    verificationKey: string,
+    authorPublishMetaSpaceRequestMetadataStorageType: MetadataStorageType,
+    authorPublishMetaSpaceRequestMetadataRefer: string,
+  ): Promise<{
+    authorPublishMetaSpaceServerVerificationMetadataRefer: string;
+    authorPublishMetaSpaceServerVerificationMetadata: SignatureMetadata;
+    authorPublishMetaSpaceRequestMetadata: AuthorSignatureMetadata;
+  }> {
+    if (
+      !authorPublishMetaSpaceRequestMetadataStorageType &&
+      !authorPublishMetaSpaceRequestMetadataRefer
+    ) {
+      // author didn't sign. skip
+      return {
+        authorPublishMetaSpaceServerVerificationMetadataRefer: '',
+        authorPublishMetaSpaceServerVerificationMetadata: null,
+        authorPublishMetaSpaceRequestMetadata: null,
+      };
+    }
+    if (!authorPublishMetaSpaceRequestMetadataStorageType) {
+      throw new ValidationException(
+        'AuthorPublishMetaSpaceRequestMetadataStorageType must not be empty',
+      );
+    }
+    if (!authorPublishMetaSpaceRequestMetadataRefer) {
+      throw new ValidationException(
+        'AuthorPublishMetaSpaceRequestMetadataRefer must not be empty',
+      );
+    }
+    const {
+      authorPublishMetaSpaceRequestMetadata,
+      authorPublishMetaSpaceServerVerificationMetadata,
+    } = await this.generatePublishMetaSpaceServerVerificationMetadata(
+      authorPublishMetaSpaceRequestMetadataStorageType,
+      authorPublishMetaSpaceRequestMetadataRefer,
+    );
+
+    const authorPublishMetaSpaceServerVerificationMetadataRefer =
+      await this.metadataStorageService.upload(
+        authorPublishMetaSpaceRequestMetadataStorageType,
+        `authorPublishMetaSpaceServerVerificationMetadata/${verificationKey}`,
+        JSON.stringify(authorPublishMetaSpaceServerVerificationMetadata),
+      );
+    return {
+      authorPublishMetaSpaceServerVerificationMetadataRefer,
+      authorPublishMetaSpaceServerVerificationMetadata,
+      authorPublishMetaSpaceRequestMetadata,
     };
   }
 }

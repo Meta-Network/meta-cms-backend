@@ -1,5 +1,6 @@
 import {
   generateAuthorDigestSignMetadata,
+  generateAuthorPublishMetaSpaceRequestMetadata,
   generateKeys,
   generatePostDigestRequestMetadata,
   generateSeed,
@@ -19,16 +20,15 @@ import { WinstonModule } from 'nest-winston';
 
 import { configBuilder } from '../../configs';
 import { WinstonConfigService } from '../../configs/winston';
-import { ValidationException } from '../../exceptions';
 import { MetadataStorageType } from '../../types/enum';
-import { PostHelper } from '../post/post.helper';
 import { MetadataStorageModule } from '../provider/metadata-storage/metadata-storage.module';
 import { MetadataStorageService } from '../provider/metadata-storage/metadata-storage.service';
+import { MetaSignatureHelper } from './meta-signature.helper';
 import { MetaSignatureService } from './meta-signature.service';
 
 describe('MetaSignatureService', () => {
   let configService: ConfigService;
-  let postHelper: PostHelper;
+  let metaSignatureHelper: MetaSignatureHelper;
   let metadataStorageService: MetadataStorageService;
   let metaSignatureService: MetaSignatureService;
   const authorKeys = {
@@ -51,11 +51,11 @@ describe('MetaSignatureService', () => {
         }),
         MetadataStorageModule,
       ],
-      providers: [MetaSignatureService, PostHelper],
+      providers: [MetaSignatureService, MetaSignatureHelper],
     }).compile();
 
     configService = module.get<ConfigService>(ConfigService);
-    postHelper = module.get<PostHelper>(PostHelper);
+    metaSignatureHelper = module.get<MetaSignatureHelper>(MetaSignatureHelper);
     metadataStorageService = module.get<MetadataStorageService>(
       MetadataStorageService,
     );
@@ -285,6 +285,87 @@ describe('MetaSignatureService', () => {
       console.log(authorDigestSignWithContentServerVerificationMetadataRefer);
       console.log(
         JSON.stringify(authorDigestSignWithContentServerVerificationMetadata),
+      );
+    });
+  });
+
+  describe('generateAuthorPublishMetaSpaceRequestMetadata', () => {
+    it('Should return authorPublishMetaSpaceRequestMetadata', async () => {
+      const authorPublishMetaSpaceRequestMetadata =
+        await generateAuthorPublishMetaSpaceRequestMetadata(
+          authorKeys,
+          'meta-cms.vercel.mttk.net',
+        );
+      console.log(authorPublishMetaSpaceRequestMetadata);
+      expect(authorPublishMetaSpaceRequestMetadata).toBeDefined();
+      // const cid = await metadataStorageService.upload(
+      //   MetadataStorageType.IPFS,
+      //   'authorPublishMetaSpaceRequestSample',
+      //   JSON.stringify(authorPublishMetaSpaceRequestMetadata),
+      // );
+      // console.log(`autorPublishMetaSpaceRequestMetadataRefer: ${cid}`);
+    });
+  });
+
+  describe('generatePublishMetaSpaceServerVerificationMetadata', () => {
+    it('Should return authorPublishMetaSpaceRequestMetadata & authorPublishMetaSpaceServerVerificationMetadata if refer is valid', async () => {
+      const {
+        authorPublishMetaSpaceRequestMetadata,
+        authorPublishMetaSpaceServerVerificationMetadata,
+      } = await metaSignatureService.generatePublishMetaSpaceServerVerificationMetadata(
+        MetadataStorageType.IPFS,
+        'bafybeihwh5bnbf4kkexaftap4udgcrccdukud5elb6t34g4yg3efuc4fzq',
+      );
+      expect(authorPublishMetaSpaceRequestMetadata).toEqual({
+        '@context': 'https://metanetwork.online/ns/cms',
+        type: 'author-publish-meta-space-request',
+        signatureAlgorithm: 'curve25519',
+        version: '2021-11-01-01',
+        publicKey:
+          '0x54f329c1651d2281eb6dca96a0bdb70e2cc3821905bcb853db935f0180aa8a4e',
+        nonce: '0x5e55c0ef15c254ea4c35af19',
+        claim:
+          'I authorize publishing Meta Space by meta-cms.vercel.mttk.net from this device using key: 0x54f329c1651d2281eb6dca96a0bdb70e2cc3821905bcb853db935f0180aa8a4e',
+        signature:
+          '0x39cdd6287680dd3aa4bf2fd30f8b94348d4a2d80420f598ef686cf756be5fc3f73d55752f0b241b89207fdfe7d351af98730f199ee3a161601a2568fb2911c87',
+        ts: 1636644718420,
+      });
+      expect(authorPublishMetaSpaceServerVerificationMetadata).toBeDefined();
+    });
+  });
+
+  describe('generateAndUploadPublishMetaSpaceServerVerificationMetadata', () => {
+    jest.setTimeout(15000);
+    it('Should return authorPublishMetaSpaceRequestMetadata & authorPublishMetaSpaceServerVerificationMetadata & authorPublishMetaSpaceServerVerificationMetadataRefer if authorPublishMetaSpaceRequestMetadataRefer is valid', async () => {
+      const {
+        authorPublishMetaSpaceRequestMetadata,
+        authorPublishMetaSpaceServerVerificationMetadata,
+        authorPublishMetaSpaceServerVerificationMetadataRefer,
+      } = await metaSignatureService.generateAndUploadPublishMetaSpaceServerVerificationMetadata(
+        metaSignatureHelper.createPublishMetaSpaceVerificationKey(14, 96),
+        MetadataStorageType.IPFS,
+        'bafybeihwh5bnbf4kkexaftap4udgcrccdukud5elb6t34g4yg3efuc4fzq',
+      );
+      expect(authorPublishMetaSpaceRequestMetadata).toEqual({
+        '@context': 'https://metanetwork.online/ns/cms',
+        type: 'author-publish-meta-space-request',
+        signatureAlgorithm: 'curve25519',
+        version: '2021-11-01-01',
+        publicKey:
+          '0x54f329c1651d2281eb6dca96a0bdb70e2cc3821905bcb853db935f0180aa8a4e',
+        nonce: '0x5e55c0ef15c254ea4c35af19',
+        claim:
+          'I authorize publishing Meta Space by meta-cms.vercel.mttk.net from this device using key: 0x54f329c1651d2281eb6dca96a0bdb70e2cc3821905bcb853db935f0180aa8a4e',
+        signature:
+          '0x39cdd6287680dd3aa4bf2fd30f8b94348d4a2d80420f598ef686cf756be5fc3f73d55752f0b241b89207fdfe7d351af98730f199ee3a161601a2568fb2911c87',
+        ts: 1636644718420,
+      });
+      expect(authorPublishMetaSpaceServerVerificationMetadata).toBeDefined();
+      console.log(
+        JSON.stringify(authorPublishMetaSpaceServerVerificationMetadata),
+      );
+      console.log(
+        `authorPublishMetaSpaceServerVerificationMetadataRefer: ${authorPublishMetaSpaceServerVerificationMetadataRefer}`,
       );
     });
   });

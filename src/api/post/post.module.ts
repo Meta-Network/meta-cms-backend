@@ -16,7 +16,6 @@ import { SiteConfigModule } from '../site/config/module';
 import { AccessTokenService } from '../synchronizer/access-token.service';
 import { TasksModule } from '../task/tasks.module';
 import { PostController } from './post.controller';
-import { PostHelper } from './post.helper';
 import { PostService } from './post.service';
 import { PreprocessorModule } from './preprocessor/preprocessor.module';
 import { EditorModule } from './sources/editor/editor.module';
@@ -47,7 +46,6 @@ import { MatatakiSourceModule } from './sources/matataki/matataki.module';
   ],
   controllers: [PostController],
   providers: [
-    PostHelper,
     PostService,
     AccessTokenService,
     {

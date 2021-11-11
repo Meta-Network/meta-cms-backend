@@ -23,3 +23,7 @@ export enum MetaMicroserviceClient {
   Network = 'NETWORK_MS_CLIENT',
   CMS = 'CMS_MS_CLIENT',
 }
+
+export enum TaskEvent {
+  SITE_PUBLISHED = 'site.published',
+}

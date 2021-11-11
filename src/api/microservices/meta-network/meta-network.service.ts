@@ -1,10 +1,17 @@
 import { MetaWorker } from '@metaio/worker-model';
-import { Inject, LoggerService, OnApplicationBootstrap } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  LoggerService,
+  OnApplicationBootstrap,
+} from '@nestjs/common';
+import { OnEvent } from '@nestjs/event-emitter';
 import { ClientProxy } from '@nestjs/microservices';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
-import { MetaMicroserviceClient } from '../../../constants';
-
+import { MetaMicroserviceClient, TaskEvent } from '../../../constants';
+import { UCenterJWTPayload } from '../../../types';
+@Injectable()
 export class MetaNetworkService implements OnApplicationBootstrap {
   constructor(
     @Inject(WINSTON_MODULE_NEST_PROVIDER)
@@ -12,6 +19,18 @@ export class MetaNetworkService implements OnApplicationBootstrap {
     @Inject(MetaMicroserviceClient.Network)
     private readonly networkClient: ClientProxy,
   ) {}
+
+  @OnEvent(TaskEvent.SITE_PUBLISHED)
+  async handleSitePublished(event: {
+    publishConfig: MetaWorker.Configs.PublishConfig;
+    user: Partial<UCenterJWTPayload>;
+  }) {
+    const { publishConfig, user } = event;
+    this.notifyMetaSpaceSiteCreated({
+      ...publishConfig.site,
+      userId: user.id,
+    });
+  }
 
   async notifyMetaSpaceSiteCreated(
     site: MetaWorker.Info.CmsSiteInfo &
