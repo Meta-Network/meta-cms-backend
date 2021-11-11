@@ -156,7 +156,10 @@ export class PostService {
         throw new BadRequestException('post title is empty');
       }
 
-      if (post.state !== PostState.Pending) {
+      if (
+        post.state !== PostState.Pending &&
+        post.state !== PostState.PendingEdit
+      ) {
         throw new InvalidStatusException('invalid post state');
       }
       const postInfo = await this.doGeneratePostInfo(post);
