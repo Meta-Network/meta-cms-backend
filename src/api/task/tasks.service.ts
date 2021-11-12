@@ -381,11 +381,8 @@ export class TasksService {
 
     await this.doUpdateDns(publisherType, publishConfig);
     await this.publisherService.updateDomainName(publisherType, publishConfig);
-
-    await this.siteConfigLogicService.updateSiteConfigStatus(
-      publishConfig.site.configId,
-      SiteStatus.Published,
-    );
+    // 更新状态和最后一次发布时间
+    await this.siteConfigLogicService.setPublished(publishConfig.site.configId);
     // 有循环依赖，用事件来解决
     this.eventEmitter.emit(TaskEvent.SITE_PUBLISHED, {
       user,

@@ -10,7 +10,7 @@ import {
   RelationNotFoundException,
   ResourceIsInUseException,
 } from '../../../exceptions';
-import { SiteStatus } from '../../../types/enum';
+import { PostState, SiteStatus } from '../../../types/enum';
 import { checkConfigIsDeletable } from '../../../utils/validation';
 import { SiteConfigBaseService } from '../../site/config/baseService';
 import { SiteInfoLogicService } from '../../site/info/logicService';
@@ -123,6 +123,16 @@ export class SiteConfigLogicService {
       relations: ['siteInfo'],
     });
     return config;
+  }
+
+  async setPublished(siteConfigId: number): Promise<SiteConfigEntity> {
+    const config = await this.siteConfigBaseService.readOne(siteConfigId);
+    const update = await this.siteConfigBaseService.update(config, {
+      ...config,
+      status: SiteStatus.Published,
+      lastPublishedAt: new Date(),
+    });
+    return update;
   }
 
   /** For internal use only */

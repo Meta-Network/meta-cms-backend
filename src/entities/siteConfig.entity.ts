@@ -211,6 +211,11 @@ export class SiteConfigEntity extends BaseEntity {
   @ApiResponseProperty({ example: SiteStatus.Configured })
   status?: SiteStatus = SiteStatus.Configured;
 
+  @Column({ comment: 'Site last published at' })
+  @ApiHideProperty()
+  @ApiResponseProperty({ example: '2021-07-27T11:39:39.150Z' })
+  readonly lastPublishedAt: Date;
+
   @ManyToOne(() => SiteInfoEntity, (info) => info.configs)
   @ApiHideProperty()
   siteInfo: SiteInfoEntity;
