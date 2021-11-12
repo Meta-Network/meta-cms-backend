@@ -217,10 +217,13 @@ export class TasksService {
     authorPublishMetaSpaceServerVerificationMetadataStorageType: MetadataStorageType,
     authorPublishMetaSpaceServerVerificationMetadataRefer: string,
   ) {
-    //TODO deployConfig 追加 metadata相关信息
-    //     deployConfig.metadata = {
-    //       authorPublishMetaSpaceServerVerificationMetadataStorageType,
-    // authorPublishMetaSpaceServerVerificationMetadataRefer};
+    deployConfig.metadata = {
+      authorPublishMetaSpaceServerVerificationMetadata: {
+        storageType:
+          authorPublishMetaSpaceServerVerificationMetadataStorageType,
+        refer: authorPublishMetaSpaceServerVerificationMetadataRefer,
+      },
+    };
   }
 
   protected async doCheckoutCommitPush(
