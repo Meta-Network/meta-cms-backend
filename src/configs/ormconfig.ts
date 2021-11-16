@@ -23,6 +23,7 @@ interface Config {
     username: string;
     password: string;
     database: string;
+    charset: string;
   };
 }
 
@@ -36,6 +37,7 @@ const options: ConnectionOptions = {
   username: config.db.username,
   password: config.db.password,
   database: config.db.database,
+  charset: config.db.charset || 'utf8mb4_0900_ai_ci',
   entities: [
     SiteInfoEntity,
     SiteConfigEntity,
