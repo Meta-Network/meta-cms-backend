@@ -35,10 +35,12 @@ export class DomainValidateService {
 
   private async checkPrefixIsReserve(value: string): Promise<boolean> {
     const prefixPattern = /^[a-z0-9-]{3,15}$/;
-    const replacePattern =
+    const metanetworkPattern =
       /.*[mw]+[e3]+t+[a6]+[nu]+[e3]+t+(?:[w]|u{2}|v{2})+[o0]+r+k+.*/;
+    const metaspacePattern = /.*[mw]+[e3]+t+[a6]+[s5]+[pbq]+[a6]+[c]+[e3]+.*/;
     const isMatchPrefixPattern = prefixPattern.test(value);
-    const isMatchReplacePattern = replacePattern.test(value);
+    const isMatchReplacePattern =
+      metanetworkPattern.test(value) || metaspacePattern.test(value);
     const isListInclude = this.reserveList.includes(value);
     if (isMatchPrefixPattern && (isMatchReplacePattern || isListInclude)) {
       return true;
