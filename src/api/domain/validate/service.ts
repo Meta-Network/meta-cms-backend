@@ -56,15 +56,16 @@ export class DomainValidateService {
   public async validateMetaSpacePrefix(
     prefix: string,
   ): Promise<DomainvalidateResult> {
-    const reserve = await this.checkPrefixIsReserve(prefix);
+    const lowerCasePrefix = prefix.toLocaleLowerCase();
+    const reserve = await this.checkPrefixIsReserve(lowerCasePrefix);
     if (reserve) {
       return { value: prefix, status: DomainvalidateStatus.Reserve };
     }
-    const banned = await this.checkPrefixIsBanned(prefix);
+    const banned = await this.checkPrefixIsBanned(lowerCasePrefix);
     if (banned) {
       return { value: prefix, status: DomainvalidateStatus.Disable };
     }
-    const occupied = await this.checkPrefixIsExists(prefix);
+    const occupied = await this.checkPrefixIsExists(lowerCasePrefix);
     if (occupied) {
       return { value: prefix, status: DomainvalidateStatus.Occupied };
     }
