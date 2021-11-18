@@ -1,6 +1,7 @@
 import { Controller, Get, Param, ParseIntPipe, Post } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
+  ApiCookieAuth,
   ApiCreatedResponse,
   ApiOkResponse,
   ApiProperty,
@@ -27,8 +28,9 @@ class TokenEntityResponse extends TransformResponse<AccessTokenEntity> {
   readonly data: AccessTokenEntity;
 }
 
-@Controller('token')
+@ApiCookieAuth()
 @ApiTags('token')
+@Controller('token')
 @ApiBadRequestResponse({
   type: RequirdHttpHeadersNotFoundException,
   description: 'When cookie with access token not provided',

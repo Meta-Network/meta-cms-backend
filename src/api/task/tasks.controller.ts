@@ -10,7 +10,12 @@ import {
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
-import { ApiOkResponse, ApiProperty, ApiTags } from '@nestjs/swagger';
+import {
+  ApiCookieAuth,
+  ApiOkResponse,
+  ApiProperty,
+  ApiTags,
+} from '@nestjs/swagger';
 import {
   IsEnum,
   IsNotEmpty,
@@ -20,7 +25,7 @@ import {
 } from 'class-validator';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
-import { SkipUCenterAuth, User } from '../../decorators';
+import { User } from '../../decorators';
 import { ValidationException } from '../../exceptions';
 import { UCenterJWTPayload } from '../../types';
 import { MetadataStorageType } from '../../types/enum';
@@ -53,6 +58,7 @@ class PublishSiteFromConfigDto {
   authorPublishMetaSpaceRequestMetadataRefer?: string;
 }
 @ApiTags('tasks')
+@ApiCookieAuth()
 @Controller('tasks')
 export class TasksController {
   constructor(

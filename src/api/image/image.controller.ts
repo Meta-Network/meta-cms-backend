@@ -7,7 +7,7 @@ import {
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
-import { ApiProperty, ApiTags } from '@nestjs/swagger';
+import { ApiCookieAuth, ApiProperty, ApiTags } from '@nestjs/swagger';
 import { lastValueFrom } from 'rxjs';
 
 export class UploadUrlDto {
@@ -16,6 +16,7 @@ export class UploadUrlDto {
 }
 
 @Controller('image')
+@ApiCookieAuth()
 @ApiTags('image')
 export class ImageController {
   constructor(private readonly httpService: HttpService) {}

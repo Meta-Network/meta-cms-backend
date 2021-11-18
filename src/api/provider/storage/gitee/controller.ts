@@ -13,6 +13,7 @@ import {
 import {
   ApiBadRequestResponse,
   ApiConflictResponse,
+  ApiCookieAuth,
   ApiCreatedResponse,
   ApiForbiddenResponse,
   ApiNotFoundResponse,
@@ -51,6 +52,7 @@ class GiteeStorageDeleteResponse extends TransformResponse<DeleteResult> {
 }
 
 @ApiTags('storage')
+@ApiCookieAuth()
 @Controller('storage/gitee')
 export class GiteeStorageController {
   constructor(private readonly logicService: GiteeStorageLogicService) {}

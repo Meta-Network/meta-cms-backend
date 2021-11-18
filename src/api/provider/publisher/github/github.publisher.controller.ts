@@ -13,6 +13,7 @@ import {
 import {
   ApiBadRequestResponse,
   ApiConflictResponse,
+  ApiCookieAuth,
   ApiCreatedResponse,
   ApiForbiddenResponse,
   ApiNotFoundResponse,
@@ -51,6 +52,7 @@ class GitHubPublisherDeleteResponse extends TransformResponse<DeleteResult> {
 }
 
 @ApiTags('publisher')
+@ApiCookieAuth()
 @Controller('publisher/github')
 export class GitHubPublisherController {
   constructor(private readonly publisherService: GitHubPublisherService) {}

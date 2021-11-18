@@ -13,6 +13,7 @@ import {
 import {
   ApiBadRequestResponse,
   ApiConflictResponse,
+  ApiCookieAuth,
   ApiCreatedResponse,
   ApiForbiddenResponse,
   ApiNotFoundResponse,
@@ -51,6 +52,7 @@ class GitHubStorageDeleteResponse extends TransformResponse<DeleteResult> {
 }
 
 @ApiTags('storage')
+@ApiCookieAuth()
 @Controller('storage/github')
 export class GitHubStorageController {
   constructor(private readonly logicService: GitHubStorageLogicService) {}

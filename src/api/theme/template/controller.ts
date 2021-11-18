@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
+  ApiCookieAuth,
   ApiOkResponse,
   ApiProperty,
   ApiQuery,
@@ -25,6 +26,7 @@ class TemplateListResponse extends TransformResponse<ThemeTemplateEntity> {
 }
 
 @ApiTags('theme')
+@ApiCookieAuth()
 @Controller('templates')
 export class TemplateController {
   constructor(private readonly logicService: TemplateLogicService) {}

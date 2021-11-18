@@ -24,7 +24,6 @@ class FindMetaSpacePrefixResponse extends TransformResponse<SiteConfigEntity> {
 }
 
 @ApiTags('domain')
-@ApiCookieAuth()
 @Controller('domain/find')
 export class DomainFindController {
   constructor(private readonly service: DomainFindService) {}

@@ -13,6 +13,7 @@ import {
 import {
   ApiBadRequestResponse,
   ApiConflictResponse,
+  ApiCookieAuth,
   ApiCreatedResponse,
   ApiForbiddenResponse,
   ApiNotFoundResponse,
@@ -51,6 +52,7 @@ class GiteePublisherDeleteResponse extends TransformResponse<DeleteResult> {
 }
 
 @ApiTags('publisher')
+@ApiCookieAuth()
 @Controller('publisher/gitee')
 export class GiteePublisherController {
   constructor(private readonly publisherService: GiteePublisherLogicService) {}
