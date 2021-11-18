@@ -11,6 +11,7 @@ import {
   Length,
   Matches,
 } from 'class-validator';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import moment from 'moment';
 import momentTimezone from 'moment-timezone';
 import { Column, Entity, Index, ManyToOne } from 'typeorm';
@@ -50,10 +51,9 @@ export class SiteConfigEntity extends BaseEntity {
    * @default null
    * @example 1
    */
-  @Column({ comment: 'Site theme template id', nullable: true, default: null })
+  @Column({ comment: 'Site theme template id' })
   @IsInt()
-  @IsOptional()
-  templateId?: number | null = null;
+  templateId: number;
 
   /**
    * Site domain
@@ -69,16 +69,14 @@ export class SiteConfigEntity extends BaseEntity {
   /**
    * Meta space prefix
    * @type varchar(255)
-   * @default ''
    * @example 'example'
    */
-  @Column({ comment: 'Meta space prefix', nullable: true })
+  @Column({ comment: 'Meta space prefix' })
   @IsString()
   @Length(3, 16)
   @Matches('\\w{3,16}')
-  @IsOptional()
   @Index({ unique: true })
-  metaSpacePrefix?: string = null;
+  metaSpacePrefix: string;
 
   /**
    * Site store type
