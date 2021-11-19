@@ -62,7 +62,7 @@ export class SiteConfigEntity extends BaseEntity {
    * @example 'www.example.com'
    */
   @Column({ comment: 'Site domain', nullable: true })
-  @IsFQDN()
+  @IsString()
   @IsOptional()
   domain?: string | null = null;
 
