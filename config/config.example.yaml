@@ -137,12 +137,12 @@ metaSpace:
       baseUrl:
     dataViewer:
       baseUrl:
-
   prefix:
     reserve:
       - metanetwork
     disable:
       - fuck
+  baseDomain: metaspaces.life
 metaSignature:
   serverKeys:
     private:
