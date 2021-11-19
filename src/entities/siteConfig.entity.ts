@@ -2,7 +2,6 @@ import { MetaWorker } from '@metaio/worker-model';
 import { ApiHideProperty, ApiResponseProperty } from '@nestjs/swagger';
 import {
   IsEnum,
-  IsFQDN,
   IsIn,
   IsInt,
   IsLocale,

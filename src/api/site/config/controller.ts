@@ -24,6 +24,7 @@ import {
   ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
+import { isFQDN } from 'class-validator';
 import { DeleteResult } from 'typeorm';
 
 import { SkipUCenterAuth, User } from '../../../decorators';
@@ -125,6 +126,12 @@ export class SiteConfigController {
     @Query('siteInfoId', ParseIntPipe) siteId: number,
     @Body() createDto: SiteConfigEntity,
   ) {
+    if (createDto.domain) {
+      const isDomain = isFQDN(createDto.domain);
+      if (!isDomain) {
+        throw new ValidationException('domain must be a FQDN');
+      }
+    }
     return await this.service.createSiteConfig(uid, siteId, createDto);
   }
 
@@ -148,6 +155,12 @@ export class SiteConfigController {
     @Param('configId', ParseIntPipe) configId: number,
     @Body() updateDto: SiteConfigEntity,
   ) {
+    if (updateDto.domain) {
+      const isDomain = isFQDN(updateDto.domain);
+      if (!isDomain) {
+        throw new ValidationException('domain must be a FQDN');
+      }
+    }
     const validate = Object.assign(new SiteConfigEntity(), updateDto);
     await validatePatchRequestBody(validate);
 
