@@ -161,6 +161,24 @@ export class TasksService {
     );
   }
 
+  async deletePost(
+    user: Partial<UCenterJWTPayload>,
+    post: MetaWorker.Info.Post,
+    siteConfigId: number,
+    options?: {
+      isDraft: boolean;
+      isLastTask: boolean;
+    },
+  ) {
+    await this.checkSiteConfigTaskWorkspace(siteConfigId);
+    return await this.doCheckoutCommitPush(
+      user,
+      siteConfigId,
+      async () => await this.doDeletePost(user, post, siteConfigId, options),
+      options,
+    );
+  }
+
   async publishDraft(
     user: Partial<UCenterJWTPayload>,
     post: MetaWorker.Info.Post,
@@ -174,6 +192,23 @@ export class TasksService {
       user,
       siteConfigId,
       async () => await this.doPublishDraft(user, post, siteConfigId),
+      options,
+    );
+  }
+
+  async moveToDraft(
+    user: Partial<UCenterJWTPayload>,
+    post: MetaWorker.Info.Post,
+    siteConfigId: number,
+    options?: {
+      isLastTask: boolean;
+    },
+  ) {
+    await this.checkSiteConfigTaskWorkspace(siteConfigId);
+    return await this.doCheckoutCommitPush(
+      user,
+      siteConfigId,
+      async () => await this.doMoveToDraft(user, post, siteConfigId),
       options,
     );
   }
@@ -470,6 +505,38 @@ export class TasksService {
     );
   }
 
+  protected async doDeletePost(
+    user: Partial<UCenterJWTPayload>,
+    post: MetaWorker.Info.Post,
+    siteConfigId: number,
+    options: { isDraft: boolean },
+  ) {
+    const { postConfig, template } = await this.generatePostConfigAndTemplate(
+      user,
+      post,
+      siteConfigId,
+    );
+    const templateType = template.templateType;
+    this.logger.verbose(
+      `Adding post delete worker to queue`,
+      this.constructor.name,
+    );
+    const postTaskSteps = [];
+
+    postTaskSteps.push(
+      ...this.getDeletePostTaskMethodsByTemplateType(
+        templateType,
+        options?.isDraft,
+      ),
+    );
+
+    return await this.taskDispatchersService.dispatchTask(
+      postTaskSteps,
+      postConfig,
+      // 必定不是最后一个任务
+    );
+  }
+
   protected async doPublishDraft(
     user: Partial<UCenterJWTPayload>,
     post: MetaWorker.Info.Post,
@@ -497,6 +564,33 @@ export class TasksService {
     );
   }
 
+  protected async doMoveToDraft(
+    user: Partial<UCenterJWTPayload>,
+    post: MetaWorker.Info.Post,
+    siteConfigId: number,
+  ) {
+    const { postConfig, template } = await this.generatePostConfigAndTemplate(
+      user,
+      post,
+      siteConfigId,
+    );
+    const templateType = template.templateType;
+    this.logger.verbose(
+      `Adding move post to draft worker to queue`,
+      this.constructor.name,
+    );
+    const postTaskSteps = [];
+
+    postTaskSteps.push(
+      ...this.getMoveToDraftTaskMethodsByTemplateType(templateType),
+    );
+
+    return await this.taskDispatchersService.dispatchTask(
+      postTaskSteps,
+      postConfig,
+    );
+  }
+
   protected async doUpdateDns(
     publisherType: MetaWorker.Enums.PublisherType,
     publishConfig: MetaWorker.Configs.PublishConfig,
@@ -513,11 +607,20 @@ export class TasksService {
     await this.dnsService.updateDnsRecord(dnsRecord);
   }
 
-  protected getPublishTaskMethodsByTemplateType(
-    templateType: MetaWorker.Enums.TemplateType,
-  ): MetaWorker.Enums.TaskMethod[] {
-    // HEXO
-    return [MetaWorker.Enums.TaskMethod.HEXO_GENERATE_DEPLOY];
+  protected async checkSiteConfigTaskWorkspace(
+    siteConfigId: number,
+    taskWorkspaceInUse?: string,
+  ) {
+    // check task workspace is existed
+    const taskWorkspace =
+      await this.taskDispatchersService.tryGetSiteConfigTaskWorkspaceLock(
+        siteConfigId,
+      );
+    if (taskWorkspace && taskWorkspace !== taskWorkspaceInUse) {
+      throw new ConflictException(
+        `Task workspace is existed:  site config ${siteConfigId}`,
+      );
+    }
   }
 
   protected async generatePublishConfigAndTemplate(
@@ -617,63 +720,6 @@ export class TasksService {
     };
   }
 
-  protected getDeployTaskMethodsByTemplateType(
-    templateType: MetaWorker.Enums.TemplateType,
-  ): MetaWorker.Enums.TaskMethod[] {
-    // HEXO
-    return [MetaWorker.Enums.TaskMethod.HEXO_UPDATE_CONFIG];
-  }
-
-  protected async checkSiteConfigTaskWorkspace(
-    siteConfigId: number,
-    taskWorkspaceInUse?: string,
-  ) {
-    // check task workspace is existed
-    const taskWorkspace =
-      await this.taskDispatchersService.tryGetSiteConfigTaskWorkspaceLock(
-        siteConfigId,
-      );
-    if (taskWorkspace && taskWorkspace !== taskWorkspaceInUse) {
-      throw new ConflictException(
-        `Task workspace is existed:  site config ${siteConfigId}`,
-      );
-    }
-  }
-
-  protected getCreatePostTaskMethodsByTemplateType(
-    templateType: MetaWorker.Enums.TemplateType,
-    draftFlag = false,
-  ): MetaWorker.Enums.TaskMethod[] {
-    // HEXO
-    if (MetaWorker.Enums.TemplateType.HEXO === templateType) {
-      if (draftFlag) {
-        return [MetaWorker.Enums.TaskMethod.HEXO_CREATE_DRAFT];
-      }
-      return [MetaWorker.Enums.TaskMethod.HEXO_CREATE_POST];
-    }
-  }
-  protected getUpdatePostTaskMethodsByTemplateType(
-    templateType: MetaWorker.Enums.TemplateType,
-    draftFlag = false,
-  ): MetaWorker.Enums.TaskMethod[] {
-    // HEXO
-    if (MetaWorker.Enums.TemplateType.HEXO === templateType) {
-      if (draftFlag) {
-        return [MetaWorker.Enums.TaskMethod.HEXO_UPDATE_DRAFT];
-      }
-      return [MetaWorker.Enums.TaskMethod.HEXO_UPDATE_POST];
-    }
-  }
-
-  protected getPublishDraftTaskMethodsByTemplateType(
-    templateType: MetaWorker.Enums.TemplateType,
-  ): MetaWorker.Enums.TaskMethod[] {
-    // HEXO
-    if (MetaWorker.Enums.TemplateType.HEXO === templateType) {
-      return [MetaWorker.Enums.TaskMethod.HEXO_PUBLISH_DRAFT];
-    }
-  }
-
   protected async generateDeployConfigAndRepoSize(
     user: Partial<UCenterJWTPayload>,
     configId: number,
@@ -719,5 +765,76 @@ export class TasksService {
       deployConfig,
       repoEmpty,
     };
+  }
+
+  protected getPublishTaskMethodsByTemplateType(
+    templateType: MetaWorker.Enums.TemplateType,
+  ): MetaWorker.Enums.TaskMethod[] {
+    // HEXO
+    if (MetaWorker.Enums.TemplateType.HEXO === templateType) {
+      return [MetaWorker.Enums.TaskMethod.HEXO_GENERATE_DEPLOY];
+    }
+  }
+  protected getDeployTaskMethodsByTemplateType(
+    templateType: MetaWorker.Enums.TemplateType,
+  ): MetaWorker.Enums.TaskMethod[] {
+    // HEXO
+    if (MetaWorker.Enums.TemplateType.HEXO === templateType) {
+      return [MetaWorker.Enums.TaskMethod.HEXO_UPDATE_CONFIG];
+    }
+  }
+
+  protected getCreatePostTaskMethodsByTemplateType(
+    templateType: MetaWorker.Enums.TemplateType,
+    draftFlag = false,
+  ): MetaWorker.Enums.TaskMethod[] {
+    // HEXO
+    if (MetaWorker.Enums.TemplateType.HEXO === templateType) {
+      if (draftFlag) {
+        return [MetaWorker.Enums.TaskMethod.HEXO_CREATE_DRAFT];
+      }
+      return [MetaWorker.Enums.TaskMethod.HEXO_CREATE_POST];
+    }
+  }
+  protected getUpdatePostTaskMethodsByTemplateType(
+    templateType: MetaWorker.Enums.TemplateType,
+    draftFlag = false,
+  ): MetaWorker.Enums.TaskMethod[] {
+    // HEXO
+    if (MetaWorker.Enums.TemplateType.HEXO === templateType) {
+      if (draftFlag) {
+        return [MetaWorker.Enums.TaskMethod.HEXO_UPDATE_DRAFT];
+      }
+      return [MetaWorker.Enums.TaskMethod.HEXO_UPDATE_POST];
+    }
+  }
+  protected getDeletePostTaskMethodsByTemplateType(
+    templateType: MetaWorker.Enums.TemplateType,
+    draftFlag = false,
+  ): MetaWorker.Enums.TaskMethod[] {
+    // HEXO
+    if (MetaWorker.Enums.TemplateType.HEXO === templateType) {
+      if (draftFlag) {
+        return []; // TODO: Draft Support
+      }
+      return [MetaWorker.Enums.TaskMethod.HEXO_DELETE_POST];
+    }
+  }
+
+  protected getPublishDraftTaskMethodsByTemplateType(
+    templateType: MetaWorker.Enums.TemplateType,
+  ): MetaWorker.Enums.TaskMethod[] {
+    // HEXO
+    if (MetaWorker.Enums.TemplateType.HEXO === templateType) {
+      return [MetaWorker.Enums.TaskMethod.HEXO_PUBLISH_DRAFT];
+    }
+  }
+  protected getMoveToDraftTaskMethodsByTemplateType(
+    templateType: MetaWorker.Enums.TemplateType,
+  ): MetaWorker.Enums.TaskMethod[] {
+    // HEXO
+    if (MetaWorker.Enums.TemplateType.HEXO === templateType) {
+      return [MetaWorker.Enums.TaskMethod.HEXO_MOVETO_DRAFT];
+    }
   }
 }
