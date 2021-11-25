@@ -163,7 +163,7 @@ export class TasksService {
 
   async deletePost(
     user: Partial<UCenterJWTPayload>,
-    post: MetaWorker.Info.Post,
+    post: MetaWorker.Info.Post | MetaWorker.Info.Post[],
     siteConfigId: number,
     options?: {
       isDraft: boolean;
@@ -507,7 +507,7 @@ export class TasksService {
 
   protected async doDeletePost(
     user: Partial<UCenterJWTPayload>,
-    post: MetaWorker.Info.Post,
+    post: MetaWorker.Info.Post | MetaWorker.Info.Post[],
     siteConfigId: number,
     options: { isDraft: boolean },
   ) {
@@ -815,7 +815,7 @@ export class TasksService {
     // HEXO
     if (MetaWorker.Enums.TemplateType.HEXO === templateType) {
       if (draftFlag) {
-        return []; // TODO: Draft Support
+        return []; // TODO(550): Draft Support
       }
       return [MetaWorker.Enums.TaskMethod.HEXO_DELETE_POST];
     }

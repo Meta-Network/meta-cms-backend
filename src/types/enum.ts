@@ -45,9 +45,15 @@ export enum PostState {
   Published = 'published',
   SitePublished = 'site_published',
   Ignored = 'ignored',
-
+  Deleted = 'deleted',
   Drafted = 'drafted',
   Invalid = 'invalid',
+}
+
+export enum PostAction {
+  CREATE = 'CREATE',
+  UPDATE = 'UPDATE',
+  DELETE = 'DELETE',
 }
 
 export enum MetadataStorageType {

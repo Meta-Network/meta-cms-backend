@@ -113,6 +113,7 @@ export class PostController {
   ) {
     return await this.postService.publishPendingPost(user, postId, body);
   }
+
   @Post('publish')
   @ApiCreatedResponse({ type: PostEntityResponse })
   @ApiBadRequestResponse({
@@ -124,6 +125,19 @@ export class PostController {
     @Body() body: PublishPostsDto,
   ) {
     return await this.postService.publishPendingPosts(user, body);
+  }
+
+  @Post('delete')
+  @ApiCreatedResponse({ type: PostEntityResponse })
+  @ApiBadRequestResponse({
+    type: RequirdHttpHeadersNotFoundException,
+    description: 'When cookie with access token not provided',
+  })
+  async deletePosts(
+    @User() user: UCenterJWTPayload,
+    @Body() body: PublishPostsDto,
+  ) {
+    return await this.postService.deletePublishedPosts(user, body);
   }
 
   @Post(':postId(\\d+)/ignore')
@@ -218,6 +232,7 @@ export class PostController {
   ) {
     return await this.postService.createPost(uid, dto);
   }
+
   @Patch(':postId(\\d+)')
   @ApiOkResponse({ type: PostEntityResponse })
   async updateDraftPost(
