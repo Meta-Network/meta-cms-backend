@@ -21,7 +21,6 @@ import {
   AccessDeniedException,
   InvalidStatusException,
   PublishFailedException,
-  ValidationException,
 } from '../../exceptions';
 import { UCenterJWTPayload } from '../../types';
 import {

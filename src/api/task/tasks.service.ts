@@ -636,7 +636,7 @@ export class TasksService {
       this.constructor.name,
     );
 
-    const { site, template, theme, storage, publisher } =
+    const { site, template, storage, publisher } =
       await this.siteService.generateMetaWorkerSiteInfo(user, configId, [
         SiteStatus.Deployed,
         SiteStatus.Publishing,
