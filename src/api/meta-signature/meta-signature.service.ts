@@ -1,16 +1,16 @@
 import {
-  generateAuthorDigestSignServerVerificationMetadata,
-  generateAuthorDigestSignWithContentServerVerificationMetadata,
-  generatePublishMetaSpaceServerVerificationMetadata,
-  verifyAuthorDigestMetadataSignature,
-  verifyAuthorPublishMetaSpaceRequestMetadataSignature,
-  verifyDigest,
+  authorDigest,
+  authorDigestSign,
+  authorPublishMetaSpaceRequest,
+  authorPublishMetaSpaceServerVerificationSign,
+  serverVerificationSign,
+  serverVerificationSignWithContent,
 } from '@metaio/meta-signature-util';
 import {
   AuthorDigestRequestMetadata,
   AuthorSignatureMetadata,
   SignatureMetadata,
-} from '@metaio/meta-signature-util/type/types';
+} from '@metaio/meta-signature-util/lib/type/types';
 import { Inject, Injectable, LoggerService } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
@@ -62,7 +62,7 @@ export class MetaSignatureService {
       `Verify digest: ${authorDigestRequestMetadataText}`,
       this.constructor.name,
     );
-    if (!verifyDigest(authorDigestRequestMetadata)) {
+    if (!authorDigest.verify(authorDigestRequestMetadata)) {
       throw new ValidationException(
         `Invalid digest: ${authorDigestRequestMetadataText}`,
       );
@@ -104,7 +104,7 @@ export class MetaSignatureService {
       `Verify signature: ${authorDigestSignatureMetadataText}`,
       this.constructor.name,
     );
-    if (!verifyAuthorDigestMetadataSignature(authorDigestSignatureMetadata)) {
+    if (!authorDigestSign.verify(authorDigestSignatureMetadata)) {
       throw new ValidationException(
         `Invalid authorDigestSignatureMetadata: ${authorDigestSignatureMetadataText}`,
       );
@@ -133,14 +133,14 @@ export class MetaSignatureService {
         authorDigestSignatureMetadataRefer,
       );
     const authorDigestSignServerVerificationMetadata =
-      generateAuthorDigestSignServerVerificationMetadata(
+      serverVerificationSign.generate(
         this.configService.get('metaSignature.serverKeys'),
         this.configService.get('metaSignature.serverDomain'),
         authorDigestSignatureMetadata,
         authorDigestSignatureMetadataRefer,
       );
     const authorDigestSignWithContentServerVerificationMetadata =
-      generateAuthorDigestSignWithContentServerVerificationMetadata(
+      serverVerificationSignWithContent.generate(
         authorDigestRequestMetadata,
         authorDigestRequestMetadataRefer,
         authorDigestSignServerVerificationMetadata,
@@ -263,7 +263,7 @@ export class MetaSignatureService {
       this.constructor.name,
     );
     if (
-      !verifyAuthorPublishMetaSpaceRequestMetadataSignature(
+      !authorPublishMetaSpaceRequest.verify(
         authorPublishMetaSpaceRequestMetadata,
       )
     ) {
@@ -288,7 +288,7 @@ export class MetaSignatureService {
       );
 
     const authorPublishMetaSpaceServerVerificationMetadata =
-      generatePublishMetaSpaceServerVerificationMetadata(
+      authorPublishMetaSpaceServerVerificationSign.generate(
         this.configService.get('metaSignature.serverKeys'),
         this.configService.get('metaSignature.serverDomain'),
         authorPublishMetaSpaceRequestMetadata,

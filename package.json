@@ -26,7 +26,7 @@
   "dependencies": {
     "@fleekhq/fleek-storage-js": "^1.0.20",
     "@metaio/auth-sdk": "^0.2.2",
-    "@metaio/meta-signature-util": "^0.2.0",
+    "@metaio/meta-signature-util": "^0.3.1",
     "@metaio/microservice-model": "^1.0.1",
     "@metaio/worker-model": "1.6.5",
     "@nestjs/axios": "^0.0.1",

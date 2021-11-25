@@ -1,4 +1,4 @@
-import { AuthorSignatureMetadata } from '@metaio/meta-signature-util/type/types';
+import { AuthorSignatureMetadata } from '@metaio/meta-signature-util/lib/type/types';
 import { MetaWorker } from '@metaio/worker-model';
 import {
   BadRequestException,

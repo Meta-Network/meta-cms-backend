@@ -1,17 +1,15 @@
 import {
-  generateAuthorDigestSignMetadata,
-  generateAuthorPublishMetaSpaceRequestMetadata,
+  authorDigest,
+  authorDigestSign,
+  authorPublishMetaSpaceRequest,
   generateKeys,
-  generatePostDigestRequestMetadata,
   generateSeed,
-  verifyAuthorDigestMetadataSignature,
-  verifyDigest,
 } from '@metaio/meta-signature-util';
 import {
   AuthorDigestRequestMetadata,
   AuthorSignatureMetadata,
   KeyPair,
-} from '@metaio/meta-signature-util/type/types';
+} from '@metaio/meta-signature-util/lib/type/types';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
 import han from 'han';
@@ -75,7 +73,7 @@ describe('MetaSignatureService', () => {
     expect(keys.private).not.toBe(keys.public);
   });
   it('generatePostDigestRequestMetadata', () => {
-    const authorDigestRequestMetadata = generatePostDigestRequestMetadata({
+    const authorDigestRequestMetadata = authorDigest.generate({
       title: '测试标题',
       categories: '',
       content: '测试正文',
@@ -85,15 +83,15 @@ describe('MetaSignatureService', () => {
       tags: '',
     });
     console.log(authorDigestRequestMetadata);
-    expect(verifyDigest(authorDigestRequestMetadata)).toBeTruthy();
+    expect(authorDigest.verify(authorDigestRequestMetadata)).toBeTruthy();
   });
   describe('verify author digest', () => {
     it('Should return true', async () => {
       const authorDigestRequestMetadata = {
         '@context': 'https://metanetwork.online/ns/cms',
-        type: 'author-digest',
+        '@type': 'author-digest',
+        '@version': '2021-11-01-01',
         algorithm: 'sha256',
-        version: '2021-11-01-01',
         title: '测试标题',
         categories: '分类一,分类二,test-case',
         content: '测试正文',
@@ -107,12 +105,12 @@ describe('MetaSignatureService', () => {
         ts: 1636553657839,
       } as AuthorDigestRequestMetadata;
 
-      expect(verifyDigest(authorDigestRequestMetadata)).toBeTruthy();
+      expect(authorDigest.verify(authorDigestRequestMetadata)).toBeTruthy();
       const authorDigestRequestMetadata2 = {
         '@context': 'https://metanetwork.online/ns/cms',
-        type: 'author-digest',
+        '@type': 'author-digest',
+        '@version': '2021-11-01-01',
         algorithm: 'sha256',
-        version: '2021-11-01-01',
         title: '测试标题',
         categories: '',
         content: '测试正文',
@@ -124,14 +122,14 @@ describe('MetaSignatureService', () => {
           '0xea38d768d163acc752b6140b91d2c8899a4bbba8814b5e6f7e6edc75852be480',
         ts: 1636553736703,
       } as AuthorDigestRequestMetadata;
-      expect(verifyDigest(authorDigestRequestMetadata2)).toBeTruthy();
+      expect(authorDigest.verify(authorDigestRequestMetadata2)).toBeTruthy();
     });
     it('Should return false when digest is not correct', async () => {
       const authorDigestRequestMetadata = {
         '@context': 'https://metanetwork.online/ns/cms',
-        type: 'author-digest',
+        '@type': 'author-digest',
+        '@version': '2021-11-01-01',
         algorithm: 'sha256',
-        version: '2021-11-01-01',
         title: '测试标题',
         categories: '分类一,分类二,test-case',
         content: '测试正文',
@@ -144,14 +142,14 @@ describe('MetaSignatureService', () => {
           '0x2068f5e16c85b39e3b7848a4b7475291e491f64aef2baf33be92e0f182944b59',
         ts: 1636466942189,
       } as AuthorDigestRequestMetadata;
-      expect(verifyDigest(authorDigestRequestMetadata)).toBeFalsy();
+      expect(authorDigest.verify(authorDigestRequestMetadata)).toBeFalsy();
     });
     it('test fe sample', async () => {
       const authorDigestRequestMetadata = {
         '@context': 'https://metanetwork.online/ns/cms',
-        type: 'author-digest',
+        '@type': 'author-digest',
+        '@version': '2021-11-01-01',
         algorithm: 'sha256',
-        version: '2021-11-01-01',
         title: '2021111013',
         cover: '',
         summary: '2021111013\n',
@@ -164,7 +162,7 @@ describe('MetaSignatureService', () => {
         ts: 1636547944915,
       } as AuthorDigestRequestMetadata;
 
-      expect(verifyDigest(authorDigestRequestMetadata)).toBeTruthy();
+      expect(authorDigest.verify(authorDigestRequestMetadata)).toBeTruthy();
 
       const cid = await metadataStorageService.upload(
         MetadataStorageType.IPFS,
@@ -177,9 +175,9 @@ describe('MetaSignatureService', () => {
   it('generateAuthorDigestSign', async () => {
     const authorDigestRequestMetadata = {
       '@context': 'https://metanetwork.online/ns/cms',
-      type: 'author-digest',
+      '@type': 'author-digest',
+      '@version': '2021-11-01-01',
       algorithm: 'sha256',
-      version: '2021-11-01-01',
       title: '2021111013',
       cover: '',
       summary: '2021111013\n',
@@ -191,7 +189,7 @@ describe('MetaSignatureService', () => {
         '0x854f8851aeb627e2e8791d271ca51cd72fb437b2ea51f79eacd10ad4a3762f9d',
       ts: 1636547944915,
     } as AuthorDigestRequestMetadata;
-    const authorSignatureMetadata = generateAuthorDigestSignMetadata(
+    const authorSignatureMetadata = authorDigestSign.generate(
       authorKeys,
       'meta-cms.vercel.mttk.net',
       authorDigestRequestMetadata.digest,
@@ -212,9 +210,9 @@ describe('MetaSignatureService', () => {
         );
       expect(authorDigestSignatureMetadata).toEqual({
         '@context': 'https://metanetwork.online/ns/cms',
-        type: 'author-digest-sign',
+        '@type': 'author-digest-sign',
+        '@version': '2021-11-01-01',
         signatureAlgorithm: 'curve25519',
-        version: '2021-11-01-01',
         publicKey:
           '0x54f329c1651d2281eb6dca96a0bdb70e2cc3821905bcb853db935f0180aa8a4e',
         digest:
@@ -231,9 +229,9 @@ describe('MetaSignatureService', () => {
     it('test fe sample', async () => {
       const authorDigestSignatureMetadata = {
         '@context': 'https://metanetwork.online/ns/cms',
-        type: 'author-digest-sign',
+        '@type': 'author-digest-sign',
+        '@version': '2021-11-01-01',
         signatureAlgorithm: 'curve25519',
-        version: '2021-11-01-01',
         publicKey:
           '0x9262ac7152cdf516ad3628781821cc9d2151ff31b80218b4f57ebcf1cb826f4d',
         digest:
@@ -245,9 +243,7 @@ describe('MetaSignatureService', () => {
           '0x4c7d9143356296296b26d44e0f344a931581e0e0fe97d76d60f6d6b8800df42b9ac62c9caac05e19f329e70ce38a5bc11f7a87ff74ebd192936138c542502d04',
         ts: 1636547944916,
       } as AuthorSignatureMetadata;
-      console.log(
-        verifyAuthorDigestMetadataSignature(authorDigestSignatureMetadata),
-      );
+      console.log(authorDigestSign.verify(authorDigestSignatureMetadata));
     });
   });
 
@@ -289,10 +285,10 @@ describe('MetaSignatureService', () => {
     });
   });
 
-  describe('generateAuthorPublishMetaSpaceRequestMetadata', () => {
+  describe('authorPublishMetaSpaceRequest.generate', () => {
     it('Should return authorPublishMetaSpaceRequestMetadata', async () => {
       const authorPublishMetaSpaceRequestMetadata =
-        await generateAuthorPublishMetaSpaceRequestMetadata(
+        await authorPublishMetaSpaceRequest.generate(
           authorKeys,
           'meta-cms.vercel.mttk.net',
         );
