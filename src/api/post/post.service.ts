@@ -21,11 +21,11 @@ import {
   AccessDeniedException,
   InvalidStatusException,
   PublishFailedException,
-  ValidationException,
 } from '../../exceptions';
 import { UCenterJWTPayload } from '../../types';
 import {
   MetadataStorageType,
+  PostAction,
   PostState,
   TaskCommonState,
 } from '../../types/enum';
@@ -228,6 +228,73 @@ export class PostService {
     posts.forEach((post) => (post.state = PostState.Published));
     return await this.postRepository.save(posts);
   }
+
+  async deletePublishedPosts(
+    user: Partial<UCenterJWTPayload>,
+    publishPostsDto: PublishPostsDto,
+  ) {
+    const { postIds, configIds } = publishPostsDto;
+    this.logger.verbose(
+      `Find the post to delete postIds: ${postIds}`,
+      this.constructor.name,
+    );
+    await this.siteConfigLogicService.validateSiteConfigsUserId(
+      configIds,
+      user.id,
+    );
+
+    const posts = await this.postRepository.findByIds(postIds);
+    // Check post
+    posts.forEach((post) => {
+      if (post.userId !== user.id) {
+        throw new AccessDeniedException('access denied, user id inconsistent');
+      }
+      if (post.title.length === 0) {
+        throw new BadRequestException('post title is empty');
+      }
+      if (post.state !== PostState.Published) {
+        throw new InvalidStatusException('invalid post state');
+      }
+    });
+
+    const postInfos = [] as MetaWorker.Info.Post[];
+    for (const post of posts) {
+      const postInfo = await this.doGeneratePostInfo(post);
+      if (postInfo) {
+        postInfos.push(postInfo);
+      }
+    }
+
+    for (const siteConfigId of configIds) {
+      try {
+        await this.tasksService.deletePost(user, postInfos, siteConfigId, {
+          isDraft: false,
+          isLastTask: true,
+        });
+        await this.updatePostSiteRelaActionBySiteConfigId(
+          PostAction.DELETE,
+          postIds,
+          siteConfigId,
+        );
+      } catch (err) {
+        this.logger.error(
+          `Delete posts fail: ${postIds}`,
+          err,
+          this.constructor.name,
+        );
+        // TODO: How to rollback action state
+        // await this.updatePostSiteRelaActionBySiteConfigId(
+        //   PostAction.DELETE,
+        //   postIds,
+        //   siteConfigId,
+        // );
+        throw err;
+      }
+    }
+    posts.forEach((post) => (post.state = PostState.Deleted));
+    return await this.postRepository.softRemove(posts);
+  }
+
   async updatePostSiteRelaStateBySiteConfigId(
     state: TaskCommonState,
     postIds: number[],
@@ -244,6 +311,26 @@ export class PostService {
       },
       {
         state,
+      },
+    );
+  }
+
+  async updatePostSiteRelaActionBySiteConfigId(
+    action: PostAction,
+    postIds: number[],
+    siteConfigId: number,
+  ) {
+    await this.postSiteConfigRepository.update(
+      {
+        siteConfig: {
+          id: siteConfigId,
+        },
+        post: {
+          id: In(postIds),
+        },
+      },
+      {
+        action,
       },
     );
   }

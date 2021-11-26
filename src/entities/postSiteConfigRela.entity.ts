@@ -1,8 +1,7 @@
-import { Post } from '@nestjs/common';
-import { IsEnum, IsInt, IsNotEmpty } from 'class-validator';
-import { Column, Entity, Index, ManyToOne, OneToMany, OneToOne } from 'typeorm';
+import { IsEnum } from 'class-validator';
+import { Column, Entity, Index, ManyToOne } from 'typeorm';
 
-import { TaskCommonState } from '../types/enum';
+import { PostAction, TaskCommonState } from '../types/enum';
 import { BaseEntity } from './base.entity';
 import { PostEntity } from './post.entity';
 import { SiteConfigEntity } from './siteConfig.entity';
@@ -15,6 +14,7 @@ export class PostSiteConfigRelaEntity extends BaseEntity {
 
   @ManyToOne(() => SiteConfigEntity, (config) => config.id)
   siteConfig: SiteConfigEntity;
+
   @Column({
     comment: 'Post publish state',
     type: 'enum',
@@ -23,4 +23,13 @@ export class PostSiteConfigRelaEntity extends BaseEntity {
   })
   @IsEnum(TaskCommonState)
   state: TaskCommonState;
+
+  @Column({
+    comment: 'Post action',
+    type: 'enum',
+    enum: PostAction,
+    default: PostAction.CREATE,
+  })
+  @IsEnum(PostAction)
+  action: PostAction;
 }
