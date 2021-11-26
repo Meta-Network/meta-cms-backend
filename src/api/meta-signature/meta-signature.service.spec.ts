@@ -90,7 +90,7 @@ describe('MetaSignatureService', () => {
       const authorDigestRequestMetadata = {
         '@context': 'https://metanetwork.online/ns/cms',
         '@type': 'author-digest',
-        '@version': '2021-11-01-01',
+        '@version': '1.0.0',
         algorithm: 'sha256',
         title: '测试标题',
         categories: '分类一,分类二,test-case',
@@ -109,7 +109,7 @@ describe('MetaSignatureService', () => {
       const authorDigestRequestMetadata2 = {
         '@context': 'https://metanetwork.online/ns/cms',
         '@type': 'author-digest',
-        '@version': '2021-11-01-01',
+        '@version': '1.0.0',
         algorithm: 'sha256',
         title: '测试标题',
         categories: '',
@@ -128,7 +128,7 @@ describe('MetaSignatureService', () => {
       const authorDigestRequestMetadata = {
         '@context': 'https://metanetwork.online/ns/cms',
         '@type': 'author-digest',
-        '@version': '2021-11-01-01',
+        '@version': '1.0.0',
         algorithm: 'sha256',
         title: '测试标题',
         categories: '分类一,分类二,test-case',
@@ -148,7 +148,7 @@ describe('MetaSignatureService', () => {
       const authorDigestRequestMetadata = {
         '@context': 'https://metanetwork.online/ns/cms',
         '@type': 'author-digest',
-        '@version': '2021-11-01-01',
+        '@version': '1.0.0',
         algorithm: 'sha256',
         title: '2021111013',
         cover: '',
@@ -176,7 +176,7 @@ describe('MetaSignatureService', () => {
     const authorDigestRequestMetadata = {
       '@context': 'https://metanetwork.online/ns/cms',
       '@type': 'author-digest',
-      '@version': '2021-11-01-01',
+      '@version': '1.0.0',
       algorithm: 'sha256',
       title: '2021111013',
       cover: '',
@@ -211,7 +211,7 @@ describe('MetaSignatureService', () => {
       expect(authorDigestSignatureMetadata).toEqual({
         '@context': 'https://metanetwork.online/ns/cms',
         '@type': 'author-digest-sign',
-        '@version': '2021-11-01-01',
+        '@version': '1.0.0',
         signatureAlgorithm: 'curve25519',
         publicKey:
           '0x54f329c1651d2281eb6dca96a0bdb70e2cc3821905bcb853db935f0180aa8a4e',
@@ -230,7 +230,7 @@ describe('MetaSignatureService', () => {
       const authorDigestSignatureMetadata = {
         '@context': 'https://metanetwork.online/ns/cms',
         '@type': 'author-digest-sign',
-        '@version': '2021-11-01-01',
+        '@version': '1.0.0',
         signatureAlgorithm: 'curve25519',
         publicKey:
           '0x9262ac7152cdf516ad3628781821cc9d2151ff31b80218b4f57ebcf1cb826f4d',
@@ -315,8 +315,9 @@ describe('MetaSignatureService', () => {
       expect(authorPublishMetaSpaceRequestMetadata).toEqual({
         '@context': 'https://metanetwork.online/ns/cms',
         type: 'author-publish-meta-space-request',
-        signatureAlgorithm: 'curve25519',
         version: '2021-11-01-01',
+        signatureAlgorithm: 'curve25519',
+
         publicKey:
           '0x54f329c1651d2281eb6dca96a0bdb70e2cc3821905bcb853db935f0180aa8a4e',
         nonce: '0x5e55c0ef15c254ea4c35af19',
@@ -345,8 +346,8 @@ describe('MetaSignatureService', () => {
       expect(authorPublishMetaSpaceRequestMetadata).toEqual({
         '@context': 'https://metanetwork.online/ns/cms',
         type: 'author-publish-meta-space-request',
-        signatureAlgorithm: 'curve25519',
         version: '2021-11-01-01',
+        signatureAlgorithm: 'curve25519',
         publicKey:
           '0x54f329c1651d2281eb6dca96a0bdb70e2cc3821905bcb853db935f0180aa8a4e',
         nonce: '0x5e55c0ef15c254ea4c35af19',
