@@ -58,4 +58,5 @@ export enum PostAction {
 
 export enum MetadataStorageType {
   IPFS = 'ipfs',
+  ARWEAVE = 'arweave',
 }

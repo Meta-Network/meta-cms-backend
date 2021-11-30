@@ -66,6 +66,12 @@ provider:
         - https://ipfs.fleek.co
         # - https://ipfs.infura.io
         # - https://ipfs.cf-ipfs.com
+    arweave:
+      walletKeyPath:
+      host: 'arweave.net'
+      port: 443
+      protocol: 'https'
+
 task:
   processor:
     # Docker processor config
