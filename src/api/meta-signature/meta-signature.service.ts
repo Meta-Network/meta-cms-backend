@@ -1,16 +1,14 @@
 import {
   authorDigest,
+  AuthorDigestMetadata,
   authorDigestSign,
   authorPublishMetaSpaceRequest,
   authorPublishMetaSpaceServerVerificationSign,
+  AuthorSignatureMetadata,
   serverVerificationSign,
   serverVerificationSignWithContent,
-} from '@metaio/meta-signature-util';
-import {
-  AuthorDigestRequestMetadata,
-  AuthorSignatureMetadata,
   SignatureMetadata,
-} from '@metaio/meta-signature-util/lib/type/types';
+} from '@metaio/meta-signature-util';
 import { Inject, Injectable, LoggerService } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
@@ -31,8 +29,8 @@ export class MetaSignatureService {
   async validateAuthorDigestRequestMetadata(
     authorDigestRequestMetadataStorageType: MetadataStorageType,
     authorDigestRequestMetadataRefer: string,
-  ): Promise<AuthorDigestRequestMetadata> {
-    let authorDigestRequestMetadata: AuthorDigestRequestMetadata;
+  ): Promise<AuthorDigestMetadata> {
+    let authorDigestRequestMetadata: AuthorDigestMetadata;
 
     this.logger.debug(
       `Get ${authorDigestRequestMetadataStorageType} ${authorDigestRequestMetadataRefer}`,
@@ -52,7 +50,7 @@ export class MetaSignatureService {
     try {
       authorDigestRequestMetadata = JSON.parse(
         authorDigestRequestMetadataText,
-      ) as AuthorDigestRequestMetadata;
+      ) as AuthorDigestMetadata;
     } catch (err) {
       throw new ValidationException(
         `Invalid digest: ${authorDigestRequestMetadata}`,
@@ -118,7 +116,7 @@ export class MetaSignatureService {
     authorDigestSignatureMetadataStorageType: MetadataStorageType,
     authorDigestSignatureMetadataRefer: string,
   ): Promise<{
-    authorDigestRequestMetadata: AuthorDigestRequestMetadata;
+    authorDigestRequestMetadata: AuthorDigestMetadata;
     authorDigestSignatureMetadata: AuthorSignatureMetadata;
     authorDigestSignWithContentServerVerificationMetadata: SignatureMetadata;
   }> {
@@ -160,7 +158,7 @@ export class MetaSignatureService {
   ): Promise<{
     authorDigestSignWithContentServerVerificationMetadataRefer: string;
     authorDigestSignWithContentServerVerificationMetadata: SignatureMetadata;
-    authorDigestRequestMetadata: AuthorDigestRequestMetadata;
+    authorDigestRequestMetadata: AuthorDigestMetadata;
     authorDigestSignatureMetadata: AuthorSignatureMetadata;
   }> {
     if (

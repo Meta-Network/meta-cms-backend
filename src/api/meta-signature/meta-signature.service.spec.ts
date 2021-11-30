@@ -1,15 +1,13 @@
 import {
   authorDigest,
+  AuthorDigestMetadata,
   authorDigestSign,
   authorPublishMetaSpaceRequest,
+  AuthorSignatureMetadata,
   generateKeys,
   generateSeed,
-} from '@metaio/meta-signature-util';
-import {
-  AuthorDigestRequestMetadata,
-  AuthorSignatureMetadata,
   KeyPair,
-} from '@metaio/meta-signature-util/lib/type/types';
+} from '@metaio/meta-signature-util';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
 import han from 'han';
@@ -103,7 +101,7 @@ describe('MetaSignatureService', () => {
         digest:
           '0x97564fdec6d57525ea7de9db908fda5fb0ab4f94908cb02ddd843c2a531a6554',
         ts: 1636553657839,
-      } as AuthorDigestRequestMetadata;
+      } as AuthorDigestMetadata;
 
       expect(authorDigest.verify(authorDigestRequestMetadata)).toBeTruthy();
       const authorDigestRequestMetadata2 = {
@@ -121,7 +119,7 @@ describe('MetaSignatureService', () => {
         digest:
           '0xea38d768d163acc752b6140b91d2c8899a4bbba8814b5e6f7e6edc75852be480',
         ts: 1636553736703,
-      } as AuthorDigestRequestMetadata;
+      } as AuthorDigestMetadata;
       expect(authorDigest.verify(authorDigestRequestMetadata2)).toBeTruthy();
     });
     it('Should return false when digest is not correct', async () => {
@@ -141,7 +139,7 @@ describe('MetaSignatureService', () => {
         digest:
           '0x2068f5e16c85b39e3b7848a4b7475291e491f64aef2baf33be92e0f182944b59',
         ts: 1636466942189,
-      } as AuthorDigestRequestMetadata;
+      } as AuthorDigestMetadata;
       expect(authorDigest.verify(authorDigestRequestMetadata)).toBeFalsy();
     });
     it('test fe sample', async () => {
@@ -160,7 +158,7 @@ describe('MetaSignatureService', () => {
         digest:
           '0x854f8851aeb627e2e8791d271ca51cd72fb437b2ea51f79eacd10ad4a3762f9d',
         ts: 1636547944915,
-      } as AuthorDigestRequestMetadata;
+      } as AuthorDigestMetadata;
 
       expect(authorDigest.verify(authorDigestRequestMetadata)).toBeTruthy();
 
@@ -188,7 +186,7 @@ describe('MetaSignatureService', () => {
       digest:
         '0x854f8851aeb627e2e8791d271ca51cd72fb437b2ea51f79eacd10ad4a3762f9d',
       ts: 1636547944915,
-    } as AuthorDigestRequestMetadata;
+    } as AuthorDigestMetadata;
     const authorSignatureMetadata = authorDigestSign.generate(
       authorKeys,
       'meta-cms.vercel.mttk.net',
