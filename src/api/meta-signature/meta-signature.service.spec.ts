@@ -2,8 +2,8 @@ import {
   authorDigest,
   AuthorDigestMetadata,
   authorDigestSign,
+  AuthorPostSignatureMetadata,
   authorPublishMetaSpaceRequest,
-  AuthorSignatureMetadata,
   generateKeys,
   generateSeed,
   KeyPair,
@@ -187,7 +187,7 @@ describe('MetaSignatureService', () => {
         '0x854f8851aeb627e2e8791d271ca51cd72fb437b2ea51f79eacd10ad4a3762f9d',
       ts: 1636547944915,
     } as AuthorDigestMetadata;
-    const authorSignatureMetadata = authorDigestSign.generate(
+    const AuthorPostSignatureMetadata = authorDigestSign.generate(
       authorKeys,
       'meta-cms.vercel.mttk.net',
       authorDigestRequestMetadata.digest,
@@ -195,7 +195,7 @@ describe('MetaSignatureService', () => {
     const cid = await metadataStorageService.upload(
       MetadataStorageType.IPFS,
       'test-fe-sample-auth-sign',
-      JSON.stringify(authorSignatureMetadata),
+      JSON.stringify(AuthorPostSignatureMetadata),
     );
     console.log(cid);
   });
@@ -240,7 +240,7 @@ describe('MetaSignatureService', () => {
         signature:
           '0x4c7d9143356296296b26d44e0f344a931581e0e0fe97d76d60f6d6b8800df42b9ac62c9caac05e19f329e70ce38a5bc11f7a87ff74ebd192936138c542502d04',
         ts: 1636547944916,
-      } as AuthorSignatureMetadata;
+      } as AuthorPostSignatureMetadata;
       console.log(authorDigestSign.verify(authorDigestSignatureMetadata));
     });
   });

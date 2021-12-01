@@ -1,4 +1,4 @@
-import { AuthorSignatureMetadata } from '@metaio/meta-signature-util';
+import { AuthorPostSignatureMetadata } from '@metaio/meta-signature-util';
 import { MetaWorker } from '@metaio/worker-model';
 import {
   BadRequestException,
@@ -665,7 +665,7 @@ export class PostService {
     authorDigestRequestMetadataRefer: string,
     authorDigestSignatureMetadataStorageType: MetadataStorageType,
     authorDigestSignatureMetadataRefer: string,
-    authorDigestSignatureMetadata: AuthorSignatureMetadata,
+    authorDigestSignatureMetadata: AuthorPostSignatureMetadata,
     authorDigestSignWithContentServerVerificationMetadataRefer: string,
   ) {
     if (authorDigestRequestMetadataStorageType) {

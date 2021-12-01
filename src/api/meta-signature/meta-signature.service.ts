@@ -2,9 +2,9 @@ import {
   authorDigest,
   AuthorDigestMetadata,
   authorDigestSign,
+  AuthorPostSignatureMetadata,
   authorPublishMetaSpaceRequest,
   authorPublishMetaSpaceServerVerificationSign,
-  AuthorSignatureMetadata,
   serverVerificationSign,
   serverVerificationSignWithContent,
   SignatureMetadata,
@@ -71,8 +71,8 @@ export class MetaSignatureService {
   async validateAuthorDigestSignatureMetadata(
     authorDigestSignatureMetadataStorageType: MetadataStorageType,
     authorDigestSignatureMetadataRefer: string,
-  ): Promise<AuthorSignatureMetadata> {
-    let authorDigestSignatureMetadata: AuthorSignatureMetadata;
+  ): Promise<AuthorPostSignatureMetadata> {
+    let authorDigestSignatureMetadata: AuthorPostSignatureMetadata;
 
     this.logger.debug(
       `Get ${authorDigestSignatureMetadataStorageType} ${authorDigestSignatureMetadataRefer}`,
@@ -92,7 +92,7 @@ export class MetaSignatureService {
     try {
       authorDigestSignatureMetadata = JSON.parse(
         authorDigestSignatureMetadataText,
-      ) as AuthorSignatureMetadata;
+      ) as AuthorPostSignatureMetadata;
     } catch (err) {
       throw new ValidationException(
         `Invalid authorDigestSignatureMetadata: ${authorDigestSignatureMetadataText}`,
@@ -117,7 +117,7 @@ export class MetaSignatureService {
     authorDigestSignatureMetadataRefer: string,
   ): Promise<{
     authorDigestRequestMetadata: AuthorDigestMetadata;
-    authorDigestSignatureMetadata: AuthorSignatureMetadata;
+    authorDigestSignatureMetadata: AuthorPostSignatureMetadata;
     authorDigestSignWithContentServerVerificationMetadata: SignatureMetadata;
   }> {
     const authorDigestRequestMetadata =
@@ -159,7 +159,7 @@ export class MetaSignatureService {
     authorDigestSignWithContentServerVerificationMetadataRefer: string;
     authorDigestSignWithContentServerVerificationMetadata: SignatureMetadata;
     authorDigestRequestMetadata: AuthorDigestMetadata;
-    authorDigestSignatureMetadata: AuthorSignatureMetadata;
+    authorDigestSignatureMetadata: AuthorPostSignatureMetadata;
   }> {
     if (
       !authorDigestRequestMetadataRefer &&
@@ -229,8 +229,8 @@ export class MetaSignatureService {
   async validateAuthorPublishMetaSpaceRequestMetadata(
     authorPublishMetaSpaceRequestMetadataStorageType: MetadataStorageType,
     authorPublishMetaSpaceRequestMetadataRefer: string,
-  ): Promise<AuthorSignatureMetadata> {
-    let authorPublishMetaSpaceRequestMetadata: AuthorSignatureMetadata;
+  ): Promise<AuthorPostSignatureMetadata> {
+    let authorPublishMetaSpaceRequestMetadata: AuthorPostSignatureMetadata;
 
     this.logger.debug(
       `Get ${authorPublishMetaSpaceRequestMetadataStorageType} ${authorPublishMetaSpaceRequestMetadataRefer}`,
@@ -250,7 +250,7 @@ export class MetaSignatureService {
     try {
       authorPublishMetaSpaceRequestMetadata = JSON.parse(
         authorPublishMetaSppaceRequestMetadataText,
-      ) as AuthorSignatureMetadata;
+      ) as AuthorPostSignatureMetadata;
     } catch (err) {
       throw new ValidationException(
         `Invalid authorPublishMetaSpaceRequestMetadata: ${authorPublishMetaSppaceRequestMetadataText}`,
@@ -276,7 +276,7 @@ export class MetaSignatureService {
     authorPublishMetaSpaceRequestMetadataStorageType: MetadataStorageType,
     authorPublishMetaSpaceRequestMetadataRefer: string,
   ): Promise<{
-    authorPublishMetaSpaceRequestMetadata: AuthorSignatureMetadata;
+    authorPublishMetaSpaceRequestMetadata: AuthorPostSignatureMetadata;
     authorPublishMetaSpaceServerVerificationMetadata: SignatureMetadata;
   }> {
     const authorPublishMetaSpaceRequestMetadata =
@@ -306,7 +306,7 @@ export class MetaSignatureService {
   ): Promise<{
     authorPublishMetaSpaceServerVerificationMetadataRefer: string;
     authorPublishMetaSpaceServerVerificationMetadata: SignatureMetadata;
-    authorPublishMetaSpaceRequestMetadata: AuthorSignatureMetadata;
+    authorPublishMetaSpaceRequestMetadata: AuthorPostSignatureMetadata;
   }> {
     if (
       !authorPublishMetaSpaceRequestMetadataStorageType &&
