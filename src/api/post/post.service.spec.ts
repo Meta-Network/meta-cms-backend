@@ -6,7 +6,6 @@ import { WinstonModule } from 'nest-winston';
 
 import { configBuilder } from '../../configs';
 import { WinstonConfigService } from '../../configs/winston';
-import { MetadataStorageModule } from '../provider/metadata-storage/metadata-storage.module';
 import { PostService } from './post.service';
 
 describe('PostService', () => {
@@ -29,6 +28,7 @@ describe('PostService', () => {
 
     configService = module.get<ConfigService>(ConfigService);
     postService = new PostService(
+      null,
       null,
       null,
       null,
