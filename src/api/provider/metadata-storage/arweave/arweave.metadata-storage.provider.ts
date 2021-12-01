@@ -46,7 +46,7 @@ export class ArweaveMetadataStorageProvider implements MetadataStorageProvider {
       host,
       port,
       protocol,
-      logging: true,
+      // logging: true,
     });
 
     this.arweave = arweave;
