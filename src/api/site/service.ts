@@ -44,6 +44,9 @@ export class SiteService {
   ): Promise<GenerateMetaWorkerSiteInfo> {
     this.logger.verbose(`Generate meta worker site info`, SiteService.name);
     const metaSpaceBase = this.config.get<string>('metaSpace.baseDomain');
+    if (!metaSpaceBase) {
+      throw new Error('Config key metaSpace.baseDomain: no value');
+    }
     this.logger.verbose(
       `Get site config from SiteConfigLogicService`,
       SiteService.name,

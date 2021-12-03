@@ -36,7 +36,7 @@ export class ArweaveMetadataStorageProvider implements MetadataStorageProvider {
     );
     if (!walletKeyPath) {
       throw new Error(
-        'provider.metadataStorage.arweave.walletKeyPath: no value',
+        'Config key provider.metadataStorage.arweave.walletKeyPath: no value',
       );
     }
     const walletKeyData = fs.readFileSync(walletKeyPath, { encoding: 'utf-8' });
