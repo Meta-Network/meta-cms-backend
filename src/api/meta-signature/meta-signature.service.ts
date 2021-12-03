@@ -5,9 +5,9 @@ import {
   AuthorPostSignatureMetadata,
   authorPublishMetaSpaceRequest,
   authorPublishMetaSpaceServerVerificationSign,
+  BaseSignatureMetadata,
   serverVerificationSign,
   serverVerificationSignWithContent,
-  SignatureMetadata,
 } from '@metaio/meta-signature-util';
 import { Inject, Injectable, LoggerService } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -118,7 +118,7 @@ export class MetaSignatureService {
   ): Promise<{
     authorDigestRequestMetadata: AuthorDigestMetadata;
     authorDigestSignatureMetadata: AuthorPostSignatureMetadata;
-    authorDigestSignWithContentServerVerificationMetadata: SignatureMetadata;
+    authorDigestSignWithContentServerVerificationMetadata: BaseSignatureMetadata;
   }> {
     const authorDigestRequestMetadata =
       await this.validateAuthorDigestRequestMetadata(
@@ -149,6 +149,7 @@ export class MetaSignatureService {
       authorDigestSignWithContentServerVerificationMetadata,
     };
   }
+
   async generateAndUploadAuthorDigestSignWithContentServerVerificationMetadata(
     verificationKey: string,
     authorDigestRequestMetadataStorageType: MetadataStorageType,
@@ -157,7 +158,7 @@ export class MetaSignatureService {
     authorDigestSignatureMetadataRefer: string,
   ): Promise<{
     authorDigestSignWithContentServerVerificationMetadataRefer: string;
-    authorDigestSignWithContentServerVerificationMetadata: SignatureMetadata;
+    authorDigestSignWithContentServerVerificationMetadata: BaseSignatureMetadata;
     authorDigestRequestMetadata: AuthorDigestMetadata;
     authorDigestSignatureMetadata: AuthorPostSignatureMetadata;
   }> {
@@ -277,7 +278,7 @@ export class MetaSignatureService {
     authorPublishMetaSpaceRequestMetadataRefer: string,
   ): Promise<{
     authorPublishMetaSpaceRequestMetadata: AuthorPostSignatureMetadata;
-    authorPublishMetaSpaceServerVerificationMetadata: SignatureMetadata;
+    authorPublishMetaSpaceServerVerificationMetadata: BaseSignatureMetadata;
   }> {
     const authorPublishMetaSpaceRequestMetadata =
       await this.validateAuthorPublishMetaSpaceRequestMetadata(
@@ -305,7 +306,7 @@ export class MetaSignatureService {
     authorPublishMetaSpaceRequestMetadataRefer: string,
   ): Promise<{
     authorPublishMetaSpaceServerVerificationMetadataRefer: string;
-    authorPublishMetaSpaceServerVerificationMetadata: SignatureMetadata;
+    authorPublishMetaSpaceServerVerificationMetadata: BaseSignatureMetadata;
     authorPublishMetaSpaceRequestMetadata: AuthorPostSignatureMetadata;
   }> {
     if (
