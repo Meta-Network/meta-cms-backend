@@ -145,7 +145,7 @@ export class TasksService {
 
   async updatePost(
     user: Partial<UCenterJWTPayload>,
-    post: MetaWorker.Info.Post,
+    post: MetaWorker.Info.Post | MetaWorker.Info.Post[],
     siteConfigId: number,
     options?: {
       isDraft: boolean;
@@ -473,7 +473,7 @@ export class TasksService {
 
   protected async doUpdatePost(
     user: Partial<UCenterJWTPayload>,
-    post: MetaWorker.Info.Post,
+    post: MetaWorker.Info.Post | MetaWorker.Info.Post[],
     siteConfigId: number,
     options?: {
       isDraft?: boolean;
