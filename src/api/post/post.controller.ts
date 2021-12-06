@@ -5,10 +5,12 @@ import {
   Get,
   Inject,
   Param,
+  ParseBoolPipe,
   ParseIntPipe,
   Patch,
   Post,
   Query,
+  UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
@@ -42,9 +44,14 @@ import {
   PaginationResponse,
   TransformResponse,
 } from '../../utils/responseClass';
+import { PostMethodValidation } from '../../utils/validation';
 import { AccessTokenService } from '../synchronizer/access-token.service';
 import { DraftPostCreationDto, DraftPostUpdateDto } from './dto/draft-post-dto';
-import { PublishPostDto, PublishPostsDto } from './dto/publish-post.dto';
+import {
+  PublishPostDto,
+  PublishPostsDto,
+  PublishStoragePostsDto,
+} from './dto/publish-post.dto';
 import { PostService } from './post.service';
 
 class PostPagination extends PaginationResponse<PostEntity> {
@@ -81,6 +88,52 @@ export class PostController {
     @Inject('REDIS')
     private readonly redisClient: Redis,
   ) {}
+
+  @Post('storage/publish')
+  @ApiQuery({ name: 'draft', type: Boolean, example: false })
+  @ApiCreatedResponse({ type: PostEntityResponse })
+  @UsePipes(new ValidationPipe(PostMethodValidation))
+  public async publishPostsToStorage(
+    @User() user: UCenterJWTPayload,
+    @Query('draft', ParseBoolPipe, new DefaultValuePipe(false)) draft: boolean,
+    @Body() body: PublishStoragePostsDto,
+  ) {
+    return await this.postService.publishPostsToStorage(user, body, draft);
+  }
+
+  @Post('storage/update')
+  @ApiQuery({ name: 'draft', type: Boolean, example: false })
+  @ApiCreatedResponse({ type: PostEntityResponse })
+  @UsePipes(new ValidationPipe(PostMethodValidation))
+  public async updatePostsToStorage(
+    @User() user: UCenterJWTPayload,
+    @Query('draft', ParseBoolPipe, new DefaultValuePipe(false)) draft: boolean,
+    @Body() body: PublishStoragePostsDto,
+  ) {
+    return await this.postService.updatePostsInStorage(user, body, draft);
+  }
+
+  @Post('storage/delete')
+  @ApiQuery({ name: 'draft', type: Boolean, example: false })
+  @ApiCreatedResponse({ type: PostEntityResponse })
+  @UsePipes(new ValidationPipe(PostMethodValidation))
+  public async deletePostOnStorage(
+    @User() user: UCenterJWTPayload,
+    @Query('draft', ParseBoolPipe, new DefaultValuePipe(false)) draft: boolean,
+    @Body() body: PublishStoragePostsDto,
+  ) {
+    return await this.postService.deletePostsOnStorage(user, body, draft);
+  }
+
+  @Post('storage/move')
+  @ApiCreatedResponse({ type: PostEntityResponse })
+  @UsePipes(new ValidationPipe(PostMethodValidation))
+  public async movePostsToDraftInStorage(
+    @User() user: UCenterJWTPayload,
+    @Body() body: PublishStoragePostsDto,
+  ) {
+    return await this.postService.movePostsToDraftInStorage(user, body);
+  }
 
   @Get()
   @ApiOkResponse({ type: PostListResponse })
