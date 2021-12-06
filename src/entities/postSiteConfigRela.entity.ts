@@ -12,6 +12,10 @@ export class PostSiteConfigRelaEntity extends BaseEntity {
   @ManyToOne(() => PostEntity, (post) => post.id)
   post: PostEntity;
 
+  @Index()
+  @Column({ comment: 'Post title' })
+  postTitle: string;
+
   @ManyToOne(() => SiteConfigEntity, (config) => config.id)
   siteConfig: SiteConfigEntity;
 
