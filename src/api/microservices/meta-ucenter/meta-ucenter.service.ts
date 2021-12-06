@@ -40,7 +40,7 @@ export class MetaUCenterService implements OnApplicationBootstrap {
         },
       );
       const result = await firstValueFrom(gitTokenFromUCenter);
-      const token = new MetaInternalResult(result);
+      const token = new MetaInternalResult<string>(result);
       if (!token.isSuccess()) {
         this.logger.error(
           `User  ${platform} social token not found: ${token.message}, code: ${token.code}`,

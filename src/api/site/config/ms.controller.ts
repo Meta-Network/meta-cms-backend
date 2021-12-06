@@ -2,7 +2,7 @@ import { MetaInternalResult } from '@metaio/microservice-model';
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 
-import { SiteConfigLogicService } from './logicService';
+import { FetchSiteInfosReturn, SiteConfigLogicService } from './logicService';
 
 @Controller()
 export class SiteConfigMsController {
@@ -14,7 +14,7 @@ export class SiteConfigMsController {
     queries: {
       modifiedAfter: Date;
     },
-  ): Promise<MetaInternalResult> {
+  ): Promise<MetaInternalResult<FetchSiteInfosReturn[]>> {
     return this.service.fetchSiteInfos(queries);
   }
 }

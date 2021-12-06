@@ -10,10 +10,20 @@ import {
   RelationNotFoundException,
   ResourceIsInUseException,
 } from '../../../exceptions';
-import { PostState, SiteStatus } from '../../../types/enum';
+import { SiteStatus } from '../../../types/enum';
 import { checkConfigIsDeletable } from '../../../utils/validation';
 import { SiteConfigBaseService } from '../../site/config/baseService';
 import { SiteInfoLogicService } from '../../site/info/logicService';
+
+export type FetchSiteInfosReturn = {
+  configId: number;
+  userId: number;
+  title: string;
+  subtitle: string;
+  description: string;
+  domain: string;
+  metaSpacePrefix: string;
+};
 
 @Injectable()
 export class SiteConfigLogicService {
@@ -150,11 +160,11 @@ export class SiteConfigLogicService {
 
   async fetchSiteInfos(queries: {
     modifiedAfter: Date;
-  }): Promise<MetaInternalResult> {
+  }): Promise<MetaInternalResult<FetchSiteInfosReturn[]>> {
     const siteConfigs = await this.siteConfigBaseService.readByModifedAfter(
       queries.modifiedAfter,
     );
-    const result = new MetaInternalResult({
+    const result = new MetaInternalResult<FetchSiteInfosReturn[]>({
       serviceCode: ServiceCode.CMS,
     });
 
