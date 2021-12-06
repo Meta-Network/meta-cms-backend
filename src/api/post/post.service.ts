@@ -9,9 +9,11 @@ import {
 import { OnEvent } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
 import { createHash, createPrivateKey, createPublicKey, sign } from 'crypto';
+import han from 'han';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { IPaginationOptions, paginate } from 'nestjs-typeorm-paginate';
-import { In, Repository } from 'typeorm';
+import { PartialDeep } from 'type-fest';
+import { In, Repository, UpdateResult } from 'typeorm';
 
 import { TaskEvent } from '../../constants';
 import { DraftEntity } from '../../entities/draft.entity';
@@ -29,6 +31,8 @@ import {
   PostState,
   TaskCommonState,
 } from '../../types/enum';
+import { iso8601ToDate } from '../../utils';
+import { isEachType } from '../../utils/typeGuard';
 import { MetaSignatureHelper } from '../meta-signature/meta-signature.helper';
 import { MetaSignatureService } from '../meta-signature/meta-signature.service';
 import { SiteConfigLogicService } from '../site/config/logicService';
@@ -43,7 +47,6 @@ import {
 import { PreProcessorService } from './preprocessor/preprocessor.service';
 import { EditorSourceService } from './sources/editor/editor-source.service';
 import { MatatakiSourceService } from './sources/matataki/matataki-source.service';
-
 export type PostEntityLike = Omit<PostEntity, 'id' | 'siteConfigRelas'>;
 
 export interface DraftPost extends PostEntity {
@@ -155,6 +158,8 @@ export class PostService {
       authorDigestSignatureMetadataRefer,
       serverVerificationMetadataStorageType,
       serverVerificationMetadataRefer,
+      createdAt,
+      updatedAt,
     } = post;
     const processedContent = await this.preprocessorService.preprocess(source);
     const postInfo: MetaWorker.Info.Post = {
@@ -171,8 +176,8 @@ export class PostService {
       authorDigestSignatureMetadataRefer,
       serverVerificationMetadataStorageType,
       serverVerificationMetadataRefer,
-      createdAt: post.createdAt.toISOString(),
-      updatedAt: post.updatedAt.toISOString(),
+      createdAt: iso8601ToDate(createdAt).toISOString(),
+      updatedAt: iso8601ToDate(updatedAt).toISOString(),
     };
     // Change title
     if (post.titleInStorage !== '' && post.titleInStorage !== post.title) {
@@ -206,6 +211,82 @@ export class PostService {
     return postEntities;
   }
 
+  private async createPostSiteConfigRelas(
+    publishPostDto: PublishStoragePostsDto,
+    postKey: number | string,
+    action: PostAction,
+  ): Promise<PostSiteConfigRelaEntity[]> {
+    const relas = publishPostDto.configIds.map((configId) => {
+      if (typeof postKey === 'number') {
+        const rela: PartialDeep<PostSiteConfigRelaEntity> = {
+          siteConfig: {
+            id: configId,
+          },
+          post: {
+            id: postKey,
+          },
+          state: TaskCommonState.DOING,
+          action,
+        };
+        return rela;
+      } else {
+        const rela: PartialDeep<PostSiteConfigRelaEntity> = {
+          siteConfig: {
+            id: configId,
+          },
+          postTitle: postKey,
+          state: TaskCommonState.DOING,
+          action,
+        };
+        return rela;
+      }
+    });
+    this.logger.verbose(
+      `Saving post site config relations post key: ${postKey}`,
+      this.constructor.name,
+    );
+
+    return await this.postSiteConfigRepository.save(relas);
+  }
+
+  private async updatePostSiteConfigRelaStateAndActionBySiteConfigId(
+    state: TaskCommonState,
+    action: PostAction,
+    postKeys: number[] | string[],
+    siteConfigId: number,
+  ): Promise<UpdateResult> {
+    if (isEachType(postKeys, 'number')) {
+      return await this.postSiteConfigRepository.update(
+        {
+          siteConfig: {
+            id: siteConfigId,
+          },
+          post: {
+            id: In(postKeys),
+          },
+        },
+        {
+          state,
+          action,
+        },
+      );
+    }
+    if (isEachType(postKeys, 'string')) {
+      return await this.postSiteConfigRepository.update(
+        {
+          siteConfig: {
+            id: siteConfigId,
+          },
+          postTitle: In(postKeys),
+        },
+        {
+          state,
+          action,
+        },
+      );
+    }
+  }
+
   public async publishPostsToStorage(
     user: Partial<UCenterJWTPayload>,
     publishPostDto: PublishStoragePostsDto,
@@ -218,6 +299,9 @@ export class PostService {
     const postEntities = await this.commonStoragePostsProcess(
       user,
       publishPostDto,
+    );
+    const postKeys: string[] = postEntities.map((p) =>
+      han.letter(p.title, '-'),
     );
     // Check post entities
     postEntities.forEach((post) => {
@@ -239,7 +323,11 @@ export class PostService {
     for (const post of postEntities) {
       const postInfo = await this.generatePostInfoFromStoragePostEntity(post);
       postInfos.push(postInfo);
-      // TODO(550): doSavePostSiteConfigRelas
+      await this.createPostSiteConfigRelas(
+        publishPostDto,
+        han.letter(post.title, '-'),
+        PostAction.CREATE,
+      );
     }
     // Create post task
     for (const configId of publishPostDto.configIds) {
@@ -248,10 +336,20 @@ export class PostService {
           isDraft,
           isLastTask: true,
         });
-        // TODO(550): updatePostSiteRelaStateBySiteConfigId TaskCommonState.SUCCESS PostAction.CREATE
+        await this.updatePostSiteConfigRelaStateAndActionBySiteConfigId(
+          TaskCommonState.SUCCESS,
+          PostAction.CREATE,
+          postKeys,
+          configId,
+        );
       } catch (err) {
         this.logger.error(`Create posts fail`, err, this.constructor.name);
-        // TODO(550): updatePostSiteRelaStateBySiteConfigId TaskCommonState.FAIL PostAction.CREATE
+        await this.updatePostSiteConfigRelaStateAndActionBySiteConfigId(
+          TaskCommonState.FAIL,
+          PostAction.CREATE,
+          postKeys,
+          configId,
+        );
         throw err;
       }
     }
@@ -273,6 +371,9 @@ export class PostService {
       user,
       publishPostDto,
     );
+    const postKeys: string[] = postEntities.map((p) =>
+      han.letter(p.title, '-'),
+    );
     // Check post entities
     postEntities.forEach((post) => {
       if (post.userId !== user.id) {
@@ -290,7 +391,11 @@ export class PostService {
     for (const post of postEntities) {
       const postInfo = await this.generatePostInfoFromStoragePostEntity(post);
       postInfos.push(postInfo);
-      // TODO(550): doSavePostSiteConfigRelas
+      await this.createPostSiteConfigRelas(
+        publishPostDto,
+        han.letter(post.title, '-'),
+        PostAction.UPDATE,
+      );
     }
     // Create post task
     for (const configId of publishPostDto.configIds) {
@@ -299,10 +404,20 @@ export class PostService {
           isDraft,
           isLastTask: true,
         });
-        // TODO(550): updatePostSiteRelaStateBySiteConfigId TaskCommonState.SUCCESS PostAction.UPDATE
+        await this.updatePostSiteConfigRelaStateAndActionBySiteConfigId(
+          TaskCommonState.SUCCESS,
+          PostAction.UPDATE,
+          postKeys,
+          configId,
+        );
       } catch (err) {
         this.logger.error(`Create posts fail`, err, this.constructor.name);
-        // TODO(550): updatePostSiteRelaStateBySiteConfigId TaskCommonState.FAIL PostAction.UPDATE
+        await this.updatePostSiteConfigRelaStateAndActionBySiteConfigId(
+          TaskCommonState.FAIL,
+          PostAction.UPDATE,
+          postKeys,
+          configId,
+        );
         throw err;
       }
     }
@@ -324,6 +439,9 @@ export class PostService {
       user,
       publishPostDto,
     );
+    const postKeys: string[] = postEntities.map((p) =>
+      han.letter(p.title, '-'),
+    );
     // Check post entities
     postEntities.forEach((post) => {
       if (post.userId !== user.id) {
@@ -341,7 +459,11 @@ export class PostService {
     for (const post of postEntities) {
       const postInfo = await this.generatePostInfoFromStoragePostEntity(post);
       postInfos.push(postInfo);
-      // TODO(550): doSavePostSiteConfigRelas
+      await this.createPostSiteConfigRelas(
+        publishPostDto,
+        han.letter(post.title, '-'),
+        PostAction.DELETE,
+      );
     }
     // Create post task
     for (const configId of publishPostDto.configIds) {
@@ -350,10 +472,20 @@ export class PostService {
           isDraft,
           isLastTask: true,
         });
-        // TODO(550): updatePostSiteRelaStateBySiteConfigId TaskCommonState.SUCCESS PostAction.DELETE
+        await this.updatePostSiteConfigRelaStateAndActionBySiteConfigId(
+          TaskCommonState.SUCCESS,
+          PostAction.DELETE,
+          postKeys,
+          configId,
+        );
       } catch (err) {
         this.logger.error(`Delete posts fail`, err, this.constructor.name);
-        // TODO(550): updatePostSiteRelaStateBySiteConfigId TaskCommonState.FAIL PostAction.DELETE
+        await this.updatePostSiteConfigRelaStateAndActionBySiteConfigId(
+          TaskCommonState.FAIL,
+          PostAction.DELETE,
+          postKeys,
+          configId,
+        );
         throw err;
       }
     }

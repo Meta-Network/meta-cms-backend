@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { ArrayNotEmpty, IsArray, IsInstance, IsNumber } from 'class-validator';
+import { ArrayNotEmpty, IsArray, IsNumber } from 'class-validator';
 
 import { StoragePostDto } from './post.dto';
 
@@ -29,6 +29,5 @@ export class PublishStoragePostsDto {
   @ApiProperty({ description: 'Storage post object' })
   @IsArray()
   @ArrayNotEmpty()
-  @IsInstance(StoragePostDto, { each: true })
   posts: StoragePostDto[];
 }

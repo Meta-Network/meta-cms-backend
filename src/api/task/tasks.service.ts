@@ -815,7 +815,7 @@ export class TasksService {
     // HEXO
     if (MetaWorker.Enums.TemplateType.HEXO === templateType) {
       if (draftFlag) {
-        return []; // TODO(550): Draft Support
+        throw new Error('Function not implemented.'); // TODO(550): Draft Support
       }
       return [MetaWorker.Enums.TaskMethod.HEXO_DELETE_POST];
     }
