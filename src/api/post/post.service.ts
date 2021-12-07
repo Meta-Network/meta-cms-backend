@@ -47,6 +47,7 @@ import {
 import { PreProcessorService } from './preprocessor/preprocessor.service';
 import { EditorSourceService } from './sources/editor/editor-source.service';
 import { MatatakiSourceService } from './sources/matataki/matataki-source.service';
+
 export type PostEntityLike = Omit<PostEntity, 'id' | 'siteConfigRelas'>;
 
 export interface DraftPost extends PostEntity {
@@ -180,7 +181,7 @@ export class PostService {
       updatedAt: iso8601ToDate(updatedAt).toISOString(),
     };
     // Change title
-    if (post.titleInStorage !== '' && post.titleInStorage !== post.title) {
+    if (post.titleInStorage && post.titleInStorage !== post.title) {
       postInfo.title = post.titleInStorage;
       postInfo.META_SPACE_INTERNAL_NEW_TITLE = post.title;
     }
@@ -905,7 +906,7 @@ export class PostService {
       updatedAt: post.updatedAt.toISOString(),
     } as MetaWorker.Info.Post;
     // Change title
-    if (post.titleInStorage !== '' && post.titleInStorage !== post.title) {
+    if (post.titleInStorage && post.titleInStorage !== post.title) {
       postInfo.title = post.titleInStorage;
       postInfo.META_SPACE_INTERNAL_NEW_TITLE = post.title;
     }
