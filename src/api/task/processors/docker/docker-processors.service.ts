@@ -82,6 +82,7 @@ export class DockerProcessorsService {
         `DEBUG=${this.configService.get<string>(
           'task.processor.docker.env.logging.level',
         )}`,
+        `NO_COLOR=true`,
         `WORKER_SECRET=${secret}`,
         `WORKER_7ZIP_BIN_NAME=${this.configService.get<string>(
           'task.processor.docker.env.7zip.binName',
