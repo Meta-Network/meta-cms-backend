@@ -354,8 +354,12 @@ export class PostService {
         throw err;
       }
     }
-    // Set post state is published
-    postEntities.forEach((post) => (post.state = PostState.Published));
+    // Set post state
+    postEntities.forEach((post) =>
+      isDraft
+        ? (post.state = PostState.Drafted)
+        : (post.state = PostState.Published),
+    );
     return postEntities;
   }
 
@@ -422,8 +426,12 @@ export class PostService {
         throw err;
       }
     }
-    // Set post state is published
-    postEntities.forEach((post) => (post.state = PostState.Published));
+    // Set post state
+    postEntities.forEach((post) =>
+      isDraft
+        ? (post.state = PostState.Drafted)
+        : (post.state = PostState.Published),
+    );
     return postEntities;
   }
 
@@ -495,11 +503,92 @@ export class PostService {
     return postEntities;
   }
 
-  public async movePostsToDraftInStorage(
+  public async movePostsInStorage(
     user: Partial<UCenterJWTPayload>,
     publishPostDto: PublishStoragePostsDto,
-  ): Promise<void> {
-    throw new Error('Function not implemented.');
+    toDraft = false,
+  ): Promise<PostEntityLike[]> {
+    // If toDraft is true, call HEXO_MOVETO_DRAFT
+    // else call HEXO_PUBLISH_DRAFT
+    this.logger.verbose(
+      `Call movePostsInStorage, toDraft: ${toDraft}`,
+      this.constructor.name,
+    );
+    const postEntities = await this.commonStoragePostsProcess(
+      user,
+      publishPostDto,
+    );
+    const postKeys: string[] = postEntities.map((p) =>
+      han.letter(p.title, '-'),
+    );
+    // Check post entities
+    postEntities.forEach((post) => {
+      if (post.userId !== user.id) {
+        throw new AccessDeniedException('access denied, user id inconsistent');
+      }
+      if (post.title.length === 0) {
+        throw new BadRequestException('post title is empty');
+      }
+      if (toDraft && post.state !== PostState.Published) {
+        // HEXO_MOVETO_DRAFT
+        throw new InvalidStatusException(
+          'Invalid post state: post state must be published when move a post to draft',
+        );
+      }
+      if (!toDraft && post.state !== PostState.Drafted) {
+        // HEXO_PUBLISH_DRAFT
+        throw new InvalidStatusException(
+          'Invalid post state: post state must be drafted when publish a draft to post',
+        );
+      }
+    });
+    // Generate post task worker info
+    const postInfos = [] as MetaWorker.Info.Post[];
+    for (const post of postEntities) {
+      const postInfo = await this.generatePostInfoFromStoragePostEntity(post);
+      postInfos.push(postInfo);
+      await this.createPostSiteConfigRelas(
+        publishPostDto,
+        han.letter(post.title, '-'),
+        PostAction.UPDATE, // maybe move is an UPDATE action
+      );
+    }
+    // Create post task
+    for (const configId of publishPostDto.configIds) {
+      try {
+        if (toDraft) {
+          await this.tasksService.moveToDraft(user, postInfos, configId, {
+            isLastTask: true,
+          });
+        } else {
+          await this.tasksService.publishDraft(user, postInfos, configId, {
+            isLastTask: true,
+          });
+        }
+        await this.updatePostSiteConfigRelaStateAndActionBySiteConfigId(
+          TaskCommonState.SUCCESS,
+          PostAction.UPDATE, // maybe move is an UPDATE action
+          postKeys,
+          configId,
+        );
+      } catch (err) {
+        this.logger.error(`Create posts fail`, err, this.constructor.name);
+        await this.updatePostSiteConfigRelaStateAndActionBySiteConfigId(
+          TaskCommonState.FAIL,
+          PostAction.UPDATE, // maybe move is an UPDATE action
+          postKeys,
+          configId,
+        );
+        throw err;
+      }
+    }
+    // Set post state
+    postEntities.forEach((post) =>
+      toDraft
+        ? (post.state = PostState.Drafted)
+        : (post.state = PostState.Published),
+    );
+    return postEntities;
   }
 
   async getPostsByUserId(

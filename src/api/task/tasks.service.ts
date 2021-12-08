@@ -181,7 +181,7 @@ export class TasksService {
 
   async publishDraft(
     user: Partial<UCenterJWTPayload>,
-    post: MetaWorker.Info.Post,
+    post: MetaWorker.Info.Post | MetaWorker.Info.Post[],
     siteConfigId: number,
     options?: {
       isLastTask: boolean;
@@ -198,7 +198,7 @@ export class TasksService {
 
   async moveToDraft(
     user: Partial<UCenterJWTPayload>,
-    post: MetaWorker.Info.Post,
+    post: MetaWorker.Info.Post | MetaWorker.Info.Post[],
     siteConfigId: number,
     options?: {
       isLastTask: boolean;
@@ -539,7 +539,7 @@ export class TasksService {
 
   protected async doPublishDraft(
     user: Partial<UCenterJWTPayload>,
-    post: MetaWorker.Info.Post,
+    post: MetaWorker.Info.Post | MetaWorker.Info.Post[],
     siteConfigId: number,
   ) {
     const { postConfig, template } = await this.generatePostConfigAndTemplate(
@@ -566,7 +566,7 @@ export class TasksService {
 
   protected async doMoveToDraft(
     user: Partial<UCenterJWTPayload>,
-    post: MetaWorker.Info.Post,
+    post: MetaWorker.Info.Post | MetaWorker.Info.Post[],
     siteConfigId: number,
   ) {
     const { postConfig, template } = await this.generatePostConfigAndTemplate(

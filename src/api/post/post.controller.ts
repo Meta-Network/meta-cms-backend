@@ -91,7 +91,7 @@ export class PostController {
 
   @Post('storage/publish')
   @ApiQuery({ name: 'draft', type: Boolean, example: false })
-  @ApiCreatedResponse({ type: PostEntityResponse })
+  @ApiOkResponse({ type: PostEntityResponse })
   @UsePipes(new ValidationPipe(PostMethodValidation))
   public async publishPostsToStorage(
     @User() user: UCenterJWTPayload,
@@ -103,7 +103,7 @@ export class PostController {
 
   @Post('storage/update')
   @ApiQuery({ name: 'draft', type: Boolean, example: false })
-  @ApiCreatedResponse({ type: PostEntityResponse })
+  @ApiOkResponse({ type: PostEntityResponse })
   @UsePipes(new ValidationPipe(PostMethodValidation))
   public async updatePostsToStorage(
     @User() user: UCenterJWTPayload,
@@ -115,7 +115,7 @@ export class PostController {
 
   @Post('storage/delete')
   @ApiQuery({ name: 'draft', type: Boolean, example: false })
-  @ApiCreatedResponse({ type: PostEntityResponse })
+  @ApiOkResponse({ type: PostEntityResponse })
   @UsePipes(new ValidationPipe(PostMethodValidation))
   public async deletePostOnStorage(
     @User() user: UCenterJWTPayload,
@@ -126,13 +126,15 @@ export class PostController {
   }
 
   @Post('storage/move')
-  @ApiCreatedResponse({ type: PostEntityResponse })
+  @ApiQuery({ name: 'draft', type: Boolean, example: false })
+  @ApiOkResponse({ type: PostEntityResponse })
   @UsePipes(new ValidationPipe(PostMethodValidation))
-  public async movePostsToDraftInStorage(
+  public async movePostsInStorage(
     @User() user: UCenterJWTPayload,
+    @Query('draft', ParseBoolPipe, new DefaultValuePipe(false)) draft: boolean,
     @Body() body: PublishStoragePostsDto,
   ) {
-    return await this.postService.movePostsToDraftInStorage(user, body);
+    return await this.postService.movePostsInStorage(user, body, draft);
   }
 
   @Get()
