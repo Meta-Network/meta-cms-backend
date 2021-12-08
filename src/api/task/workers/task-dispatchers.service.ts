@@ -55,6 +55,7 @@ export class TaskDispatchersService {
     try {
       return await promise;
     } catch (err) {
+      this.logger.error(`Pipeline Exception: ${err}`, this.constructor.name);
       throw new InternalServerErrorException('Pipeline Exception');
     } finally {
       if (exitTaskWorkspace) {
