@@ -27,9 +27,14 @@ export class HexoWorkersService extends TaskWorkersService {
       taskDispatchersService,
       [
         MetaWorker.Enums.TaskMethod.HEXO_UPDATE_CONFIG,
-        MetaWorker.Enums.TaskMethod.HEXO_CREATE_POST,
         MetaWorker.Enums.TaskMethod.HEXO_GENERATE_DEPLOY,
+        MetaWorker.Enums.TaskMethod.HEXO_CREATE_POST,
         MetaWorker.Enums.TaskMethod.HEXO_UPDATE_POST,
+        MetaWorker.Enums.TaskMethod.HEXO_DELETE_POST,
+        MetaWorker.Enums.TaskMethod.HEXO_CREATE_DRAFT,
+        MetaWorker.Enums.TaskMethod.HEXO_UPDATE_DRAFT,
+        MetaWorker.Enums.TaskMethod.HEXO_PUBLISH_DRAFT,
+        MetaWorker.Enums.TaskMethod.HEXO_MOVETO_DRAFT,
       ],
       taskWorkerJobProcessor,
     );
