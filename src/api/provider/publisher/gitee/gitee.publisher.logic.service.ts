@@ -131,7 +131,7 @@ export class GiteePublisherLogicService implements SpecificPublisherService {
     return await this.baseService.delete(publisher.id);
   }
 
-  private async getPublisherConfigById(
+  public async getPublisherConfigById(
     sid: number,
   ): Promise<GiteePublisherProviderEntity> {
     const res = await this.baseService.read(sid);

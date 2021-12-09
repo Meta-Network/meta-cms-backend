@@ -5,6 +5,7 @@ import { SchedulerRegistry } from '@nestjs/schedule';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { Octokit } from 'octokit';
 
+import { GitPublisherProviderEntity } from '../../../../entities/provider/publisher/git.entity';
 import {
   PublisherProvider,
   registerPublisherProvider,
@@ -21,12 +22,22 @@ export class GitHubPublisherProvider implements PublisherProvider {
     registerPublisherProvider(MetaWorker.Enums.PublisherType.GITHUB, this);
   }
   private readonly octokit: Octokit;
-  getTargetOriginDomain(
+
+  public getTargetOriginDomain(
     publishConfig: MetaWorker.Configs.PublishConfig,
   ): string {
     return `${publishConfig.git.publisher.username}.github.io`;
   }
-  async updateDomainName(publishConfig: MetaWorker.Configs.PublishConfig) {
+
+  public getTargetOriginDomainByEntity(
+    entity: GitPublisherProviderEntity,
+  ): string {
+    return `${entity.userName}.github.io`;
+  }
+
+  public async updateDomainName(
+    publishConfig: MetaWorker.Configs.PublishConfig,
+  ) {
     this.scheduleUpdateDomainName(
       publishConfig,
       this.configService.get<number[]>(
@@ -34,6 +45,7 @@ export class GitHubPublisherProvider implements PublisherProvider {
       ),
     );
   }
+
   protected scheduleUpdateDomainName(
     publishConfig: MetaWorker.Configs.PublishConfig,
     timeouts: number[],

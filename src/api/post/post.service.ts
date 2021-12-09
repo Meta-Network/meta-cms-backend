@@ -8,7 +8,6 @@ import {
 } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
-import { createHash, createPrivateKey, createPublicKey, sign } from 'crypto';
 import han from 'han';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { IPaginationOptions, paginate } from 'nestjs-typeorm-paginate';
@@ -19,6 +18,9 @@ import { TaskEvent } from '../../constants';
 import { DraftEntity } from '../../entities/draft.entity';
 import { PostEntity } from '../../entities/post.entity';
 import { PostSiteConfigRelaEntity } from '../../entities/postSiteConfigRela.entity';
+import { GiteePublisherProviderEntity } from '../../entities/provider/publisher/gitee.entity';
+import { GitHubPublisherProviderEntity } from '../../entities/provider/publisher/github.entity';
+import { SiteConfigEntity } from '../../entities/siteConfig.entity';
 import {
   AccessDeniedException,
   InvalidStatusException,
@@ -34,13 +36,12 @@ import { iso8601ToDate } from '../../utils';
 import { isEachType } from '../../utils/typeGuard';
 import { MetaSignatureHelper } from '../meta-signature/meta-signature.helper';
 import { MetaSignatureService } from '../meta-signature/meta-signature.service';
+import { PublisherService } from '../provider/publisher/publisher.service';
 import { SiteConfigLogicService } from '../site/config/logicService';
 import { TasksService } from '../task/tasks.service';
 import { StoragePostDto } from './dto/post.dto';
 import { PublishStoragePostsDto } from './dto/publish-post.dto';
 import { PreProcessorService } from './preprocessor/preprocessor.service';
-import { EditorSourceService } from './sources/editor/editor-source.service';
-import { MatatakiSourceService } from './sources/matataki/matataki-source.service';
 
 export type PostEntityLike = Omit<PostEntity, 'id' | 'siteConfigRelas'>;
 
@@ -58,12 +59,11 @@ export class PostService {
     @InjectRepository(PostSiteConfigRelaEntity)
     private readonly postSiteConfigRepository: Repository<PostSiteConfigRelaEntity>,
     private readonly siteConfigLogicService: SiteConfigLogicService,
+    private readonly publisherService: PublisherService,
     private readonly preprocessorService: PreProcessorService,
-    private readonly matatakiSourceService: MatatakiSourceService,
     private readonly tasksService: TasksService,
     @InjectRepository(DraftEntity)
     private readonly draftRepository: Repository<DraftEntity>,
-    private readonly editorSourceService: EditorSourceService,
     private readonly metaSignatureService: MetaSignatureService,
     private readonly metaSignatureHelper: MetaSignatureHelper,
   ) {}
@@ -318,6 +318,26 @@ export class PostService {
         },
       );
     }
+  }
+
+  private async generatePublisherTargetRESTfulURL(
+    userId: number,
+    siteConfigId: number,
+  ): Promise<string> {
+    const config = await this.siteConfigLogicService.validateSiteConfigUserId(
+      siteConfigId,
+      userId,
+    );
+    const publisher = await this.publisherService.getPublisherConfig(
+      config.publisherType,
+      config.publisherProviderId,
+    );
+    const baseDomain = this.publisherService.getTargetOriginDomainByEntity(
+      config.publisherType,
+      publisher,
+    );
+    // TODO(500): Add cache for url
+    return `${baseDomain}/${publisher.repoName}/`;
   }
 
   public async publishPostsToStorage(
@@ -670,10 +690,6 @@ export class PostService {
     return post;
   }
 
-  async getPendingPostsByUserId(userId: number, options: IPaginationOptions) {
-    return await this.getPostsByUserId(userId, PostState.Pending, options);
-  }
-
   @OnEvent(TaskEvent.SITE_PUBLISHED)
   async handleSitePublished(event: {
     publishConfig: MetaWorker.Configs.PublishConfig;
@@ -705,6 +721,10 @@ export class PostService {
       { state },
     );
   }
+
+  // async getPendingPostsByUserId(userId: number, options: IPaginationOptions) {
+  //   return await this.getPostsByUserId(userId, PostState.Pending, options);
+  // }
 
   // async publishPendingPost(
   //   user: Partial<UCenterJWTPayload>,

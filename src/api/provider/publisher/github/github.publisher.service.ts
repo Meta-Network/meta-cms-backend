@@ -38,7 +38,7 @@ export class GitHubPublisherService implements SpecificPublisherService {
     );
   }
 
-  public async read(
+  private async read(
     publisherProviderId: number,
   ): Promise<GitHubPublisherProviderEntity> {
     const queryRunner = this.connection.createQueryRunner();
@@ -51,7 +51,7 @@ export class GitHubPublisherService implements SpecificPublisherService {
     return find;
   }
 
-  public async create(
+  private async create(
     publisherProvider: GitHubPublisherProviderEntity,
   ): Promise<GitHubPublisherProviderEntity> {
     const queryRunner = this.connection.createQueryRunner();
@@ -73,7 +73,7 @@ export class GitHubPublisherService implements SpecificPublisherService {
     }
   }
 
-  public async update(
+  private async update(
     oldPublisherProvider: GitHubPublisherProviderEntity,
     newPublisherProvider: GitHubPublisherProviderEntity,
   ): Promise<GitHubPublisherProviderEntity> {
@@ -97,7 +97,7 @@ export class GitHubPublisherService implements SpecificPublisherService {
     }
   }
 
-  public async delete(publisherProviderId: number): Promise<DeleteResult> {
+  private async delete(publisherProviderId: number): Promise<DeleteResult> {
     const queryRunner = this.connection.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -206,7 +206,7 @@ export class GitHubPublisherService implements SpecificPublisherService {
     return await this.delete(publisher.id);
   }
 
-  private async getPublisherConfigById(
+  public async getPublisherConfigById(
     sid: number,
   ): Promise<GitHubPublisherProviderEntity> {
     const res = await this.read(sid);

@@ -1,5 +1,6 @@
 import { MetaWorker } from '@metaio/worker-model';
 
+import { GitPublisherProviderEntity } from '../../../entities/provider/publisher/git.entity';
 import { ValidationException } from '../../../exceptions';
 
 const publisherProviderMap = {};
@@ -27,6 +28,7 @@ export interface PublisherProvider {
   getTargetOriginDomain(
     publishConfig: MetaWorker.Configs.PublishConfig,
   ): string;
+  getTargetOriginDomainByEntity(entity: GitPublisherProviderEntity): string;
   updateDomainName(
     publishConfig: MetaWorker.Configs.PublishConfig,
   ): void | Promise<void>;

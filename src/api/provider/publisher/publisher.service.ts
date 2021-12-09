@@ -1,6 +1,8 @@
 import { MetaWorker } from '@metaio/worker-model';
 import { Injectable } from '@nestjs/common';
 
+import { GiteePublisherProviderEntity } from '../../../entities/provider/publisher/gitee.entity';
+import { GitHubPublisherProviderEntity } from '../../../entities/provider/publisher/github.entity';
 import { ValidationException } from '../../../exceptions';
 import { GenerateMetaWorkerGitInfo } from '../../../types';
 import { getPublisherProvider } from './publisher.provider';
@@ -30,6 +32,9 @@ export interface SpecificPublisherService {
     userId: number,
     publisherProviderId: number,
   ): GenerateMetaWorkerGitInfo | Promise<GenerateMetaWorkerGitInfo>;
+  getPublisherConfigById(
+    sid: number,
+  ): Promise<GitHubPublisherProviderEntity | GiteePublisherProviderEntity>;
 }
 
 @Injectable()
@@ -41,6 +46,15 @@ export class PublisherService {
     const provider = getPublisherProvider(publisherType);
     return provider.getTargetOriginDomain(publishConfig);
   }
+
+  public getTargetOriginDomainByEntity(
+    publisherType: MetaWorker.Enums.PublisherType,
+    entity: GitHubPublisherProviderEntity | GiteePublisherProviderEntity,
+  ): string {
+    const provider = getPublisherProvider(publisherType);
+    return provider.getTargetOriginDomainByEntity(entity);
+  }
+
   async updateDomainName(
     publisherType: MetaWorker.Enums.PublisherType,
     publishConfig: MetaWorker.Configs.PublishConfig,
@@ -56,5 +70,13 @@ export class PublisherService {
   ): Promise<GenerateMetaWorkerGitInfo> {
     const service = getSpecificPublisherService(publisherType);
     return await service.generateMetaWorkerGitInfo(userId, publisherProviderId);
+  }
+
+  public async getPublisherConfig(
+    publisherType: MetaWorker.Enums.PublisherType,
+    publisherProviderId: number,
+  ): Promise<GitHubPublisherProviderEntity | GiteePublisherProviderEntity> {
+    const service = getSpecificPublisherService(publisherType);
+    return await service.getPublisherConfigById(publisherProviderId);
   }
 }
