@@ -7,7 +7,6 @@ import {
   Param,
   ParseBoolPipe,
   ParseIntPipe,
-  Patch,
   Post,
   Query,
   UsePipes,
@@ -47,12 +46,7 @@ import {
 } from '../../utils/responseClass';
 import { PostMethodValidation } from '../../utils/validation';
 import { AccessTokenService } from '../synchronizer/access-token.service';
-import { DraftPostCreationDto, DraftPostUpdateDto } from './dto/draft-post-dto';
-import {
-  PublishPostDto,
-  PublishPostsDto,
-  PublishStoragePostsDto,
-} from './dto/publish-post.dto';
+import { PublishStoragePostsDto } from './dto/publish-post.dto';
 import { PostService } from './post.service';
 
 class PostPagination extends PaginationResponse<PostEntity> {
@@ -200,7 +194,7 @@ export class PostController {
 
   @Post('sync/:postId(\\d+)/ignore')
   @ApiCreatedResponse({ type: PostEntityResponse })
-  async setPostIgnored(
+  public async setPostIgnored(
     @User('id', ParseIntPipe) uid: number,
     @Param('postId', ParseIntPipe) postId: number,
   ) {

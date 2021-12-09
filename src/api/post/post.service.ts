@@ -22,7 +22,6 @@ import { PostSiteConfigRelaEntity } from '../../entities/postSiteConfigRela.enti
 import {
   AccessDeniedException,
   InvalidStatusException,
-  PublishFailedException,
 } from '../../exceptions';
 import { UCenterJWTPayload } from '../../types';
 import {
@@ -37,13 +36,8 @@ import { MetaSignatureHelper } from '../meta-signature/meta-signature.helper';
 import { MetaSignatureService } from '../meta-signature/meta-signature.service';
 import { SiteConfigLogicService } from '../site/config/logicService';
 import { TasksService } from '../task/tasks.service';
-import { DraftPostCreationDto, DraftPostUpdateDto } from './dto/draft-post-dto';
 import { StoragePostDto } from './dto/post.dto';
-import {
-  PublishPostDto,
-  PublishPostsDto,
-  PublishStoragePostsDto,
-} from './dto/publish-post.dto';
+import { PublishStoragePostsDto } from './dto/publish-post.dto';
 import { PreProcessorService } from './preprocessor/preprocessor.service';
 import { EditorSourceService } from './sources/editor/editor-source.service';
 import { MatatakiSourceService } from './sources/matataki/matataki-source.service';
@@ -88,23 +82,28 @@ export class PostService {
         authorDigestRequestMetadataStorageType;
     }
     if (authorDigestSignatureMetadataStorageType) {
-      //服务端签名和作者签名的metadata用一样的storageType
+      // 服务端签名和作者签名的 metadata 用一样的 storageType
       post.serverVerificationMetadataStorageType =
         post.authorDigestSignatureMetadataStorageType =
           authorDigestSignatureMetadataStorageType;
     }
-    authorDigestRequestMetadataRefer &&
-      (post.authorDigestRequestMetadataRefer =
-        authorDigestRequestMetadataRefer);
-    authorDigestSignWithContentServerVerificationMetadataRefer &&
-      (post.serverVerificationMetadataRefer =
-        authorDigestSignWithContentServerVerificationMetadataRefer);
-    authorDigestSignatureMetadataRefer &&
-      (post.authorDigestSignatureMetadataRefer =
-        authorDigestSignatureMetadataRefer);
-    authorDigestSignatureMetadata &&
-      authorDigestSignatureMetadata.publicKey &&
-      (post.authorPublicKey = authorDigestSignatureMetadata.publicKey);
+    if (authorDigestRequestMetadataRefer) {
+      post.authorDigestRequestMetadataRefer = authorDigestRequestMetadataRefer;
+    }
+    if (authorDigestSignatureMetadataRefer) {
+      post.authorDigestSignatureMetadataRefer =
+        authorDigestSignatureMetadataRefer;
+    }
+    if (authorDigestSignWithContentServerVerificationMetadataRefer) {
+      post.serverVerificationMetadataRefer =
+        authorDigestSignWithContentServerVerificationMetadataRefer;
+    }
+    if (
+      authorDigestSignatureMetadata &&
+      authorDigestSignatureMetadata.publicKey
+    ) {
+      post.authorPublicKey = authorDigestSignatureMetadata.publicKey;
+    }
   }
 
   private async generatePostServerVerificationMetadata(
@@ -705,93 +704,6 @@ export class PostService {
       },
       { state },
     );
-  }
-
-  signPost(
-    post: PostEntity,
-    content: string,
-    hashAlgorithm: string,
-    authorPrivateKeyString: string,
-    serverPrivateKeyString: string,
-  ) {
-    hashAlgorithm = hashAlgorithm.toLowerCase();
-
-    const map = new Map<string, string>();
-    map.set('hashAlgorithm', hashAlgorithm);
-    map.set('signAlgorithm', 'ed25519');
-    map.set(
-      'contentHash',
-      createHash(hashAlgorithm).update(content).digest('hex'),
-    );
-    map.set(
-      'summaryHash',
-      createHash(hashAlgorithm).update(post.summary).digest('hex'),
-    );
-    map.set('title', post.title);
-    map.set('tags', (post.tags ?? []).join(','));
-    map.set('categories', (post.categories ?? []).join(','));
-    map.set('cover', post.cover);
-
-    const contentParts = [];
-
-    for (const key of Array.from(map.keys()).sort()) {
-      const value = map.get(key);
-
-      if (contentParts.length > 0) {
-        contentParts.push('&');
-      }
-
-      contentParts.push(key);
-      contentParts.push('=');
-      contentParts.push(encodeURIComponent(value));
-    }
-
-    const contentToSign = Buffer.from(contentParts.join());
-
-    const ed25519PrivateKeyPkcs8Header = Buffer.from(
-      '302e020100300506032b657004220420',
-      'hex',
-    );
-
-    const authorPrivateKey = createPrivateKey({
-      key: Buffer.concat([
-        ed25519PrivateKeyPkcs8Header,
-        Buffer.from(authorPrivateKeyString, 'hex'),
-      ]),
-      format: 'der',
-      type: 'pkcs8',
-    });
-    const authorPublicKey = createPublicKey(authorPrivateKey);
-
-    const serverPrivateKey = createPrivateKey({
-      key: Buffer.concat([
-        ed25519PrivateKeyPkcs8Header,
-        Buffer.from(serverPrivateKeyString, 'hex'),
-      ]),
-      format: 'der',
-      type: 'pkcs8',
-    });
-    const serverPublicKey = createPublicKey(serverPrivateKey);
-
-    const authorSignature = sign(null, contentToSign, authorPrivateKey);
-    const serverSignature = sign(null, authorSignature, serverPrivateKey);
-
-    return {
-      author: {
-        publicKey: authorPublicKey
-          .export({ format: 'der', type: 'spki' })
-          .slice(12)
-          .toString('hex'),
-        signature: authorSignature.toString('hex'),
-      },
-      server: {
-        publicKey: serverPublicKey
-          .export({ format: 'der', type: 'spki' })
-          .slice(12)
-          .toString('hex'),
-        signature: serverSignature.toString('hex'),
-      },
-    };
   }
 
   // async publishPendingPost(
