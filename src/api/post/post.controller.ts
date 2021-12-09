@@ -171,12 +171,12 @@ export class PostController {
     return await this.postService.movePostsInStorage(user, body, draft);
   }
 
-  @Get()
+  @Get('sync')
   @ApiOkResponse({ type: PostListResponse })
   @ApiQuery({ name: 'page', type: Number, example: 1 })
   @ApiQuery({ name: 'limit', type: Number, example: 10 })
   @ApiQuery({ name: 'state', enum: PostState, example: 'pending' })
-  async getPosts(
+  public async getPosts(
     @User('id', ParseIntPipe) uid: number,
     @Query('page', ParseIntPipe, new DefaultValuePipe(1))
     page: number,
@@ -192,49 +192,43 @@ export class PostController {
     return await this.postService.getPostsByUserId(uid, state, options);
   }
 
-  @Post(':postId(\\d+)/publish')
-  @ApiCreatedResponse({ type: PostEntityResponse })
-  async publishPost(
-    @User() user: UCenterJWTPayload,
-    @Param('postId', ParseIntPipe) postId: number,
-    @Body() body: PublishPostDto,
-  ) {
-    return await this.postService.publishPendingPost(user, postId, body);
+  @Get('sync/:postId(\\d+)')
+  @ApiOkResponse({ type: PostEntityResponse })
+  public async getPost(@Param('postId', ParseIntPipe) postId: number) {
+    return await this.postService.getPost(postId);
   }
 
-  @Post('publish')
-  @ApiCreatedResponse({ type: PostEntityResponse })
-  @ApiBadRequestResponse({
-    type: RequirdHttpHeadersNotFoundException,
-    description: 'When cookie with access token not provided',
-  })
-  async publishPosts(
-    @User() user: UCenterJWTPayload,
-    @Body() body: PublishPostsDto,
-  ) {
-    return await this.postService.publishPendingPosts(user, body);
-  }
-
-  @Post('delete')
-  @ApiCreatedResponse({ type: PostEntityResponse })
-  @ApiBadRequestResponse({
-    type: RequirdHttpHeadersNotFoundException,
-    description: 'When cookie with access token not provided',
-  })
-  async deletePosts(
-    @User() user: UCenterJWTPayload,
-    @Body() body: PublishPostsDto,
-  ) {
-    return await this.postService.deletePublishedPosts(user, body);
-  }
-
-  @Post(':postId(\\d+)/ignore')
+  @Post('sync/:postId(\\d+)/ignore')
   @ApiCreatedResponse({ type: PostEntityResponse })
   async setPostIgnored(
     @User('id', ParseIntPipe) uid: number,
     @Param('postId', ParseIntPipe) postId: number,
   ) {
     return await this.postService.setPostState(postId, PostState.Ignored);
+  }
+
+  @Get('sync/:platform/state')
+  @ApiOkResponse({
+    type: SyncStateResponse,
+  })
+  @ApiBadRequestResponse({
+    type: InvalidPlatformException,
+    description: 'When platform is invalid',
+  })
+  public async getSyncState(
+    @User('id', ParseIntPipe) uid: number,
+    @Param('platform', ParsePlatformPipe) platform: string,
+  ) {
+    const result =
+      (await this.redisClient.get(`cms:post:sync_state:${platform}:${uid}`)) ??
+      'idle';
+    const numberResult = parseInt(result, 10);
+    if (!Number.isNaN(numberResult)) {
+      await this.redisClient.del(`cms:post:sync_state:${platform}:${uid}`);
+      return numberResult;
+    }
+
+    return result;
   }
 
   @Post('sync/:platform')
@@ -250,7 +244,7 @@ export class PostController {
     type: InvalidPlatformException,
     description: 'When platform is invalid',
   })
-  async triggerPostSync(
+  public async triggerPostSync(
     @User('id', ParseIntPipe) uid: number,
     @Param('platform', ParsePlatformPipe) platform: string,
   ) {
@@ -276,57 +270,63 @@ export class PostController {
     this.microserviceClient.emit(`cms.post.sync.${platform}`, uid);
   }
 
-  @Get('sync/:platform/state')
-  @ApiOkResponse({
-    type: SyncStateResponse,
-  })
-  @ApiBadRequestResponse({
-    type: InvalidPlatformException,
-    description: 'When platform is invalid',
-  })
-  async getSyncState(
-    @User('id', ParseIntPipe) uid: number,
-    @Param('platform', ParsePlatformPipe) platform: string,
-  ) {
-    const result =
-      (await this.redisClient.get(`cms:post:sync_state:${platform}:${uid}`)) ??
-      'idle';
-    const numberResult = parseInt(result, 10);
-    if (!Number.isNaN(numberResult)) {
-      await this.redisClient.del(`cms:post:sync_state:${platform}:${uid}`);
-      return numberResult;
-    }
+  // @Post(':postId(\\d+)/publish')
+  // @ApiCreatedResponse({ type: PostEntityResponse })
+  // async publishPost(
+  //   @User() user: UCenterJWTPayload,
+  //   @Param('postId', ParseIntPipe) postId: number,
+  //   @Body() body: PublishPostDto,
+  // ) {
+  //   return await this.postService.publishPendingPost(user, postId, body);
+  // }
 
-    return result;
-  }
+  // @Post('publish')
+  // @ApiCreatedResponse({ type: PostEntityResponse })
+  // @ApiBadRequestResponse({
+  //   type: RequirdHttpHeadersNotFoundException,
+  //   description: 'When cookie with access token not provided',
+  // })
+  // async publishPosts(
+  //   @User() user: UCenterJWTPayload,
+  //   @Body() body: PublishPostsDto,
+  // ) {
+  //   return await this.postService.publishPendingPosts(user, body);
+  // }
 
-  @Post(':postId(\\d+)/draft')
-  @ApiCreatedResponse({ type: PostEntityResponse })
-  async getDraftOfPost(@Param('postId', ParseIntPipe) postId: number) {
-    return await this.postService.makeDraft(postId);
-  }
+  // @Post('delete')
+  // @ApiCreatedResponse({ type: PostEntityResponse })
+  // @ApiBadRequestResponse({
+  //   type: RequirdHttpHeadersNotFoundException,
+  //   description: 'When cookie with access token not provided',
+  // })
+  // async deletePosts(
+  //   @User() user: UCenterJWTPayload,
+  //   @Body() body: PublishPostsDto,
+  // ) {
+  //   return await this.postService.deletePublishedPosts(user, body);
+  // }
 
-  @Get(':postId(\\d+)')
-  @ApiOkResponse({ type: PostEntityResponse })
-  async getPost(@Param('postId', ParseIntPipe) postId: number) {
-    return await this.postService.getPost(postId);
-  }
+  // @Post(':postId(\\d+)/draft')
+  // @ApiCreatedResponse({ type: PostEntityResponse })
+  // async getDraftOfPost(@Param('postId', ParseIntPipe) postId: number) {
+  //   return await this.postService.makeDraft(postId);
+  // }
 
-  @Post()
-  @ApiCreatedResponse({ type: PostEntityResponse })
-  async createDraftPost(
-    @User('id', ParseIntPipe) uid: number,
-    @Body(new ValidationPipe({ whitelist: true })) dto: DraftPostCreationDto,
-  ) {
-    return await this.postService.createPost(uid, dto);
-  }
+  // @Post()
+  // @ApiCreatedResponse({ type: PostEntityResponse })
+  // async createDraftPost(
+  //   @User('id', ParseIntPipe) uid: number,
+  //   @Body(new ValidationPipe({ whitelist: true })) dto: DraftPostCreationDto,
+  // ) {
+  //   return await this.postService.createPost(uid, dto);
+  // }
 
-  @Patch(':postId(\\d+)')
-  @ApiOkResponse({ type: PostEntityResponse })
-  async updateDraftPost(
-    @Param('postId', ParseIntPipe) postId: number,
-    @Body(new ValidationPipe({ whitelist: true })) dto: DraftPostUpdateDto,
-  ) {
-    return await this.postService.updatePost(postId, dto);
-  }
+  // @Patch(':postId(\\d+)')
+  // @ApiOkResponse({ type: PostEntityResponse })
+  // async updateDraftPost(
+  //   @Param('postId', ParseIntPipe) postId: number,
+  //   @Body(new ValidationPipe({ whitelist: true })) dto: DraftPostUpdateDto,
+  // ) {
+  //   return await this.postService.updatePost(postId, dto);
+  // }
 }
