@@ -387,8 +387,15 @@ export class PostService {
       if (post.title.length === 0) {
         throw new BadRequestException('post title is empty');
       }
-      if (post.state !== PostState.Published) {
-        throw new InvalidStatusException('invalid post state');
+      if (isDraft && post.state !== PostState.Drafted) {
+        throw new InvalidStatusException(
+          'Invalid post state: post state must be drafted when update a draft post',
+        );
+      }
+      if (!isDraft && post.state !== PostState.Published) {
+        throw new InvalidStatusException(
+          'Invalid post state: post state must be published when update a post',
+        );
       }
     });
     // Generate post task worker info
@@ -459,8 +466,13 @@ export class PostService {
       if (post.title.length === 0) {
         throw new BadRequestException('post title is empty');
       }
-      if (post.state !== PostState.Published) {
-        throw new InvalidStatusException('invalid post state');
+      if (
+        post.state !== PostState.Published &&
+        post.state !== PostState.Drafted
+      ) {
+        throw new InvalidStatusException(
+          'Invalid post state: post state must be published or drafted when delete a post',
+        );
       }
     });
     // Generate post task worker info

@@ -21,6 +21,7 @@ import {
   ApiCreatedResponse,
   ApiForbiddenResponse,
   ApiOkResponse,
+  ApiOperation,
   ApiProperty,
   ApiQuery,
   ApiTags,
@@ -90,8 +91,17 @@ export class PostController {
   ) {}
 
   @Post('storage/publish')
+  @ApiOperation({
+    summary:
+      'Publish posts to user storage, state must be pending or pending_edit.',
+    description:
+      'If draft is true, post will publish as draft. For example: in Hexo platform, when draft is set true, will create a post file in _drafts folder.',
+  })
   @ApiQuery({ name: 'draft', type: Boolean, example: false })
   @ApiOkResponse({ type: PostEntityResponse })
+  @ApiConflictResponse({
+    description: 'When post state is not pending or pending_edit.',
+  })
   @UsePipes(new ValidationPipe(PostMethodValidation))
   public async publishPostsToStorage(
     @User() user: UCenterJWTPayload,
@@ -102,8 +112,16 @@ export class PostController {
   }
 
   @Post('storage/update')
+  @ApiOperation({
+    summary: 'Update posts in user storage, state must be published or drafted',
+    description:
+      'If draft is true, will update draft post. For example: in Hexo platform, when draft is set true, will update post file in _drafts folder.',
+  })
   @ApiQuery({ name: 'draft', type: Boolean, example: false })
   @ApiOkResponse({ type: PostEntityResponse })
+  @ApiConflictResponse({
+    description: 'When post state is not published or drafted.',
+  })
   @UsePipes(new ValidationPipe(PostMethodValidation))
   public async updatePostsToStorage(
     @User() user: UCenterJWTPayload,
@@ -114,8 +132,16 @@ export class PostController {
   }
 
   @Post('storage/delete')
+  @ApiOperation({
+    summary: 'Delete posts on user storage, state must be published or drafted',
+    description:
+      'If draft is true, will delete draft post. For example: in Hexo platform, when draft is set true, will delete post file in _drafts folder.',
+  })
   @ApiQuery({ name: 'draft', type: Boolean, example: false })
   @ApiOkResponse({ type: PostEntityResponse })
+  @ApiConflictResponse({
+    description: 'When post state is not published or drafted.',
+  })
   @UsePipes(new ValidationPipe(PostMethodValidation))
   public async deletePostOnStorage(
     @User() user: UCenterJWTPayload,
@@ -126,8 +152,16 @@ export class PostController {
   }
 
   @Post('storage/move')
+  @ApiOperation({
+    summary: 'Move posts in user storage, state must be published or drafted',
+    description:
+      'If draft is true, will move a file from post to draft folder, if draft is false, will move a file from draft to post. For example: in Hexo platform, when draft is set true, will move post file from _posts folder to _drafts folder, when draft is set false, will move post file from _drafts folder to _posts folder.',
+  })
   @ApiQuery({ name: 'draft', type: Boolean, example: false })
   @ApiOkResponse({ type: PostEntityResponse })
+  @ApiConflictResponse({
+    description: 'When post state is not published or drafted.',
+  })
   @UsePipes(new ValidationPipe(PostMethodValidation))
   public async movePostsInStorage(
     @User() user: UCenterJWTPayload,
