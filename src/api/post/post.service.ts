@@ -376,20 +376,15 @@ export class PostService {
         config.publisherType,
         publisher,
       );
-    const cache = await this.cache.get<string>(
-      `${CACHE_KEY_PUB_TARGET_URL}_${config.publisherProviderId}`,
-    );
+    const cacheKey = `${CACHE_KEY_PUB_TARGET_URL}_${config.publisherProviderId}`;
+    const cache = await this.cache.get<string>(cacheKey);
     if (cache) {
       return cache;
     } else {
-      const url = `${baseDomain}/${publisher.repoName}`;
-      await this.cache.set<string>(
-        `${CACHE_KEY_PUB_TARGET_URL}_${config.publisherProviderId}`,
-        url,
-        {
-          ttl: 60 * 60, // 1hr
-        },
-      );
+      const url = `https://${baseDomain}/${publisher.repoName}`;
+      await this.cache.set<string>(cacheKey, url, {
+        ttl: 60 * 60, // 1hr
+      });
       return url;
     }
   }

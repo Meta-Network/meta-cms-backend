@@ -1,3 +1,4 @@
+import { MetaWorker } from '@metaio/worker-model';
 import {
   Body,
   Controller,
@@ -60,7 +61,13 @@ class PostEntityResponse extends TransformResponse<PostEntity> {
   @ApiProperty({ type: PostEntity })
   readonly data: PostEntity;
 }
-
+class PostInfoPagination extends PaginationResponse<MetaWorker.Info.Post> {
+  readonly items: MetaWorker.Info.Post[];
+}
+class PostInfoListResponse extends TransformResponse<PostInfoPagination> {
+  @ApiProperty({ type: PostInfoPagination })
+  readonly data: PostInfoPagination;
+}
 class SyncStateResponse extends TransformResponse<'idle' | 'syncing' | number> {
   @ApiProperty({ type: String, example: 'idle | syncing | 1' })
   readonly data: 'idle' | 'syncing' | number;
@@ -82,6 +89,29 @@ export class PostController {
     @Inject('REDIS')
     private readonly redisClient: Redis,
   ) {}
+
+  @Get('storage/:siteConfigId(\\d+)')
+  @ApiOperation({
+    summary: 'Get posts from user storag.',
+    description:
+      'If draft is true, will get posts from drafts folder. For example: in Hexo platform, when draft is set true, will get post file list from _drafts folder.',
+  })
+  @ApiOkResponse({ type: PostInfoListResponse })
+  @ApiQuery({ name: 'page', type: Number, example: 1 })
+  @ApiQuery({ name: 'draft', type: Boolean, example: false })
+  public async getPostsFromStorage(
+    @User('id', ParseIntPipe) uid: number,
+    @Param('siteConfigId', ParseIntPipe) siteConfigId: number,
+    @Query('page', ParseIntPipe, new DefaultValuePipe(1)) page: number,
+    @Query('draft', ParseBoolPipe, new DefaultValuePipe(false)) draft: boolean,
+  ) {
+    return await this.postService.getPostsFromStorage(
+      uid,
+      siteConfigId,
+      page,
+      draft,
+    );
+  }
 
   @Post('storage/publish')
   @ApiOperation({
