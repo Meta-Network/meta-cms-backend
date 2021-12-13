@@ -5,13 +5,13 @@ export class AddStatusToSiteConfig1632308993958 implements MigrationInterface {
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(
-      `ALTER TABLE \`meta-cms-dev\`.\`site_config_entity\` ADD \`status\` varchar(255) NOT NULL COMMENT 'Site status' DEFAULT 'CONFIGURED'`,
+      `ALTER TABLE \`site_config_entity\` ADD \`status\` varchar(255) NOT NULL COMMENT 'Site status' DEFAULT 'CONFIGURED'`,
     );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(
-      `ALTER TABLE \`meta-cms-dev\`.\`site_config_entity\` DROP COLUMN \`status\``,
+      `ALTER TABLE \`site_config_entity\` DROP COLUMN \`status\``,
     );
   }
 }

@@ -7,13 +7,13 @@ export class AlterGitHubPublisherProviderTable1632821281521
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(
-      `ALTER TABLE \`meta-cms-dev\`.\`git_hub_publisher_provider_entity\` ADD \`publishDir\` varchar(255) NOT NULL COMMENT 'GitHub publish directory'`,
+      `ALTER TABLE \`git_hub_publisher_provider_entity\` ADD \`publishDir\` varchar(255) NOT NULL COMMENT 'GitHub publish directory'`,
     );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(
-      `ALTER TABLE \`meta-cms-dev\`.\`git_hub_publisher_provider_entity\` DROP COLUMN \`publishDir\``,
+      `ALTER TABLE \`git_hub_publisher_provider_entity\` DROP COLUMN \`publishDir\``,
     );
   }
 }
