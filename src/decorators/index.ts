@@ -5,13 +5,13 @@ import {
 } from '@nestjs/common';
 import { Request } from 'express';
 
-import { NestMetadataType } from '../constants';
 import {
   RemoveIndex,
   RequestWithUser,
   UCenterAccount,
   UCenterJWTPayload,
 } from '../types';
+import { NestMetadataType } from '../types/enum';
 
 type UserParamDecoratorReturnType =
   | UCenterJWTPayload

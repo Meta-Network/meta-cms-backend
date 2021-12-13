@@ -9,8 +9,8 @@ import { OnEvent } from '@nestjs/event-emitter';
 import { ClientProxy } from '@nestjs/microservices';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
-import { MetaMicroserviceClient, TaskEvent } from '../../../constants';
 import { UCenterJWTPayload } from '../../../types';
+import { MetaMicroserviceClient, TaskEvent } from '../../../types/enum';
 @Injectable()
 export class MetaNetworkService implements OnApplicationBootstrap {
   constructor(

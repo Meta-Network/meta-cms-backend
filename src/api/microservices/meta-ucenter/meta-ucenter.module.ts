@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { ClientsModule } from '@nestjs/microservices';
 
 import { UCenterMicroserviceConfigService } from '../../../configs/microservices/ucenter';
-import { MetaMicroserviceClient } from '../../../constants';
+import { MetaMicroserviceClient } from '../../../types/enum';
 import { MetaUCenterService } from './meta-ucenter.service';
 
 @Module({

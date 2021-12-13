@@ -4,8 +4,8 @@ import { Inject, Injectable, LoggerService } from '@nestjs/common';
 import { Queue } from 'bull';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
-import { TaskWorkerType } from '../../../../constants';
 import { QueueTaskConfig } from '../../../../types';
+import { TaskWorkerType } from '../../../../types/enum';
 import { TaskStepsJobProcessor } from '../../processors/task-steps.job-processor';
 import { TaskDispatchersService } from '../task-dispatchers.service';
 import { TaskWorkersService } from '../task-workers.service';

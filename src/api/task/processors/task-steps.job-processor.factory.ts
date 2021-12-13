@@ -1,7 +1,10 @@
 import { LoggerService } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
-import { TaskWorkerJobProcessorType, TaskWorkerType } from '../../../constants';
+import {
+  TaskWorkerJobProcessorType,
+  TaskWorkerType,
+} from '../../../types/enum';
 import { DockerProcessorsService } from './docker/docker-processors.service';
 import { TaskWorkerJobProcessorDockerImpl } from './docker/task-steps.job-processor.docker-impl';
 import { TaskStepsJobProcessorMockImpl } from './mock/task-steps.job-processor.mock-impl';

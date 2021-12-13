@@ -3,7 +3,7 @@ import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';
 import { Request } from 'express';
 
-import { NestMetadataType } from '../../constants';
+import { NestMetadataType } from '../../types/enum';
 import { UCenterAuthService } from './service';
 
 @Injectable()

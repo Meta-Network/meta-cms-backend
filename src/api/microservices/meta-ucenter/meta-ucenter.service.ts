@@ -4,8 +4,8 @@ import { ClientProxy } from '@nestjs/microservices';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { firstValueFrom } from 'rxjs';
 
-import { MetaMicroserviceClient } from '../../../constants';
 import { DataNotFoundException } from '../../../exceptions';
+import { MetaMicroserviceClient } from '../../../types/enum';
 
 export class MetaUCenterService implements OnApplicationBootstrap {
   constructor(

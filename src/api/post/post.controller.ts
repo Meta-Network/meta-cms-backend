@@ -28,7 +28,6 @@ import {
 import { Redis } from 'ioredis';
 import { IPaginationOptions } from 'nestjs-typeorm-paginate';
 
-import { MetaMicroserviceClient } from '../../constants';
 import { User } from '../../decorators';
 import { PostEntity } from '../../entities/post.entity';
 import {
@@ -39,7 +38,7 @@ import {
 } from '../../exceptions';
 import { ParsePlatformPipe } from '../../pipes/parse-platform.pipe';
 import { UCenterJWTPayload } from '../../types';
-import { PostState } from '../../types/enum';
+import { MetaMicroserviceClient, PostState } from '../../types/enum';
 import {
   PaginationResponse,
   TransformResponse,

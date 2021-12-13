@@ -4,8 +4,8 @@ import { ClientsModule } from '@nestjs/microservices';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { UCenterMicroserviceConfigService } from '../../configs/microservices/ucenter';
-import { MetaMicroserviceClient } from '../../constants';
 import { AccessTokenEntity } from '../../entities/accessToken.entity';
+import { MetaMicroserviceClient } from '../../types/enum';
 import { AccessTokenService } from './access-token.service';
 import { SynchronizerController } from './synchronizer.controller';
 

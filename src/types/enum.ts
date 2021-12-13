@@ -39,6 +39,26 @@ export enum TaskCommonState {
   FAIL = 'FAIL',
 }
 
+export enum MetadataStorageType {
+  IPFS = 'ipfs',
+  ARWEAVE = 'arweave',
+}
+
+export enum TaskWorkerType {
+  WORKER_GIT = 'WORKER_GIT',
+  WORKER_HEXO = 'WORKER_HEXO',
+}
+
+export enum TaskWorkerJobProcessorType {
+  MOCK = 'MOCK',
+  DOCKER = 'DOCKER',
+  SEPARATE_PROCESS = 'SEPARATE_PROCESS',
+}
+
+export enum TaskEvent {
+  SITE_PUBLISHED = 'site.published',
+}
+
 export enum PostState {
   Pending = 'pending',
   PendingEdit = 'pending_edit',
@@ -56,7 +76,12 @@ export enum PostAction {
   DELETE = 'DELETE',
 }
 
-export enum MetadataStorageType {
-  IPFS = 'ipfs',
-  ARWEAVE = 'arweave',
+export enum NestMetadataType {
+  SkipUCenterAuth = 'SKIP_U_CENTER_AUTH',
+}
+
+export enum MetaMicroserviceClient {
+  UCenter = 'UCENTER_MS_CLIENT',
+  Network = 'NETWORK_MS_CLIENT',
+  CMS = 'CMS_MS_CLIENT',
 }

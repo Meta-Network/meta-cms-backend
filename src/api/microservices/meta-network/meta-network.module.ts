@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { ClientsModule } from '@nestjs/microservices';
 
 import { NetworkMicroserviceConfigService } from '../../../configs/microservices/network';
-import { MetaMicroserviceClient } from '../../../constants';
+import { MetaMicroserviceClient } from '../../../types/enum';
 import { MetaNetworkService } from './meta-network.service';
 
 @Module({

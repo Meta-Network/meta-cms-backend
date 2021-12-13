@@ -10,10 +10,9 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { isNotEmpty } from 'class-validator';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
-import { TaskEvent } from '../../constants';
 import { DataNotFoundException, ValidationException } from '../../exceptions';
 import { UCenterJWTPayload } from '../../types';
-import { MetadataStorageType, SiteStatus } from '../../types/enum';
+import { MetadataStorageType, SiteStatus, TaskEvent } from '../../types/enum';
 import { MetaSignatureHelper } from '../meta-signature/meta-signature.helper';
 import { MetaSignatureService } from '../meta-signature/meta-signature.service';
 import { DnsService } from '../provider/dns/dns.service';
