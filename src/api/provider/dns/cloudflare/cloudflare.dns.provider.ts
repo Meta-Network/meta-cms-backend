@@ -41,13 +41,20 @@ export class CloudFlareDnsProvider implements DnsProvider {
           .send({
             name: dnsRecord.name,
           })
-          .set('Authorization', `Bearer ${dns.env.token}`);
+          .set('Authorization', `Bearer ${dns.env.token}`)
+          .catch((reason) =>
+            this.logger.error(
+              `Superagent PATCH ${reason}`,
+              reason,
+              this.constructor.name,
+            ),
+          );
         this.logger.verbose(
           `Patch dns record: ${JSON.stringify(patchRes.body)}`,
           this.constructor.name,
         );
 
-        if (!patchRes.body.success) {
+        if (!patchRes?.body?.success) {
           new Error(patchRes.body.messages.join(';'));
         }
       }
@@ -58,12 +65,19 @@ export class CloudFlareDnsProvider implements DnsProvider {
             `https://api.cloudflare.com/client/v4/zones/${dns.env.zoneId}/dns_records`,
           )
           .send({ ...dnsRecord, proxied: true })
-          .set('Authorization', `Bearer ${dns.env.token}`);
+          .set('Authorization', `Bearer ${dns.env.token}`)
+          .catch((reason) =>
+            this.logger.error(
+              `Superagent POST ${reason}`,
+              reason,
+              this.constructor.name,
+            ),
+          );
         this.logger.verbose(
           `Post dns record: ${JSON.stringify(postRes.body)}`,
           this.constructor.name,
         );
-        if (!postRes.body.success) {
+        if (!postRes?.body?.success) {
           new Error(postRes.body.messages.join(';'));
         }
       }
