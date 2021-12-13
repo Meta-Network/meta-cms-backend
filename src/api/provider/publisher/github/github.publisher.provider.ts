@@ -25,13 +25,15 @@ export class GitHubPublisherProvider implements PublisherProvider {
   public getTargetOriginDomain(
     publishConfig: MetaWorker.Configs.PublishConfig,
   ): string {
-    return `${publishConfig.git.publisher.username}.github.io`;
+    const domain = `${publishConfig.git.publisher.username}.github.io`;
+    return domain.toLowerCase();
   }
 
   public getTargetOriginDomainByPublisherConfig(
     config: GitPublisherProviderEntity,
   ): string {
-    return `${config.userName}.github.io`;
+    const domain = `${config.userName}.github.io`;
+    return domain.toLowerCase();
   }
 
   public async updateDomainName(

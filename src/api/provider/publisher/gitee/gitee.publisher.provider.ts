@@ -20,13 +20,15 @@ export class GiteePublisherProvider implements PublisherProvider {
   public getTargetOriginDomain(
     publishConfig: MetaWorker.Configs.PublishConfig,
   ): string {
-    return `${publishConfig.git.publisher.username}.gitee.io`;
+    const domain = `${publishConfig.git.publisher.username}.gitee.io`;
+    return domain.toLowerCase();
   }
 
   public getTargetOriginDomainByPublisherConfig(
     config: GitPublisherProviderEntity,
   ): string {
-    return `${config.userName}.gitee.io`;
+    const domain = `${config.userName}.gitee.io`;
+    return domain.toLowerCase();
   }
 
   public updateDomainName(publishConfig: MetaWorker.Configs.PublishConfig) {

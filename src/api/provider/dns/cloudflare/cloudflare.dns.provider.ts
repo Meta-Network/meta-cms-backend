@@ -53,7 +53,6 @@ export class CloudFlareDnsProvider implements DnsProvider {
           `Patch dns record: ${JSON.stringify(patchRes.body)}`,
           this.constructor.name,
         );
-
         if (!patchRes?.body?.success) {
           new Error(patchRes.body.messages.join(';'));
         }
