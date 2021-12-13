@@ -3,15 +3,10 @@ import { Column, Entity, Index, ManyToOne } from 'typeorm';
 
 import { PostAction, TaskCommonState } from '../types/enum';
 import { BaseEntity } from './base.entity';
-import { PostEntity } from './post.entity';
 import { SiteConfigEntity } from './siteConfig.entity';
 
 @Entity()
 export class PostSiteConfigRelaEntity extends BaseEntity {
-  @Index()
-  @ManyToOne(() => PostEntity, (post) => post.id)
-  post: PostEntity;
-
   @Index()
   @Column({ comment: 'Post title' })
   postTitle: string;

@@ -7,7 +7,6 @@ import {
   Injectable,
   LoggerService,
 } from '@nestjs/common';
-import { OnEvent } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
 import han from 'han';
 import omit from 'lodash.omit';
@@ -35,10 +34,8 @@ import {
   PostAction,
   PostState,
   TaskCommonState,
-  TaskEvent,
 } from '../../types/enum';
 import { iso8601ToDate } from '../../utils';
-import { isEachType } from '../../utils/typeGuard';
 import { AppCacheService } from '../cache/service';
 import { MetaSignatureHelper } from '../meta-signature/meta-signature.helper';
 import { MetaSignatureService } from '../meta-signature/meta-signature.service';
@@ -49,7 +46,7 @@ import { StoragePostDto } from './dto/post.dto';
 import { PublishStoragePostsDto } from './dto/publish-post.dto';
 import { PreProcessorService } from './preprocessor/preprocessor.service';
 
-export type PostEntityLike = Omit<PostEntity, 'id' | 'siteConfigRelas'>;
+export type PostEntityLike = Omit<PostEntity, 'id'>;
 
 type HexoPostsAPIPathObject = {
   name: string;
@@ -285,33 +282,19 @@ export class PostService {
 
   private async createPostSiteConfigRelas(
     publishPostDto: PublishStoragePostsDto,
-    postKey: number | string,
+    postKey: string,
     action: PostAction,
   ): Promise<PostSiteConfigRelaEntity[]> {
     const relas = publishPostDto.configIds.map((configId) => {
-      if (typeof postKey === 'number') {
-        const rela: PartialDeep<PostSiteConfigRelaEntity> = {
-          siteConfig: {
-            id: configId,
-          },
-          post: {
-            id: postKey,
-          },
-          state: TaskCommonState.DOING,
-          action,
-        };
-        return rela;
-      } else {
-        const rela: PartialDeep<PostSiteConfigRelaEntity> = {
-          siteConfig: {
-            id: configId,
-          },
-          postTitle: postKey,
-          state: TaskCommonState.DOING,
-          action,
-        };
-        return rela;
-      }
+      const rela: PartialDeep<PostSiteConfigRelaEntity> = {
+        siteConfig: {
+          id: configId,
+        },
+        postTitle: postKey,
+        state: TaskCommonState.DOING,
+        action,
+      };
+      return rela;
     });
     this.logger.verbose(
       `Saving post site config relations post key: ${postKey}`,
@@ -324,39 +307,21 @@ export class PostService {
   private async updatePostSiteConfigRelaStateAndActionBySiteConfigId(
     state: TaskCommonState,
     action: PostAction,
-    postKeys: number[] | string[],
+    postKeys: string[],
     siteConfigId: number,
   ): Promise<UpdateResult> {
-    if (isEachType(postKeys, 'number')) {
-      return await this.postSiteConfigRepository.update(
-        {
-          siteConfig: {
-            id: siteConfigId,
-          },
-          post: {
-            id: In(postKeys),
-          },
+    return await this.postSiteConfigRepository.update(
+      {
+        siteConfig: {
+          id: siteConfigId,
         },
-        {
-          state,
-          action,
-        },
-      );
-    }
-    if (isEachType(postKeys, 'string')) {
-      return await this.postSiteConfigRepository.update(
-        {
-          siteConfig: {
-            id: siteConfigId,
-          },
-          postTitle: In(postKeys),
-        },
-        {
-          state,
-          action,
-        },
-      );
-    }
+        postTitle: In(postKeys),
+      },
+      {
+        state,
+        action,
+      },
+    );
   }
 
   private async generatePublisherTargetRESTfulURL(
@@ -804,38 +769,6 @@ export class PostService {
     post.state = state;
     await this.postRepository.save(post);
     return post;
-  }
-
-  @OnEvent(TaskEvent.SITE_PUBLISHED)
-  async handleSitePublished(event: {
-    publishConfig: MetaWorker.Configs.PublishConfig;
-    user: Partial<UCenterJWTPayload>;
-  }) {
-    const { publishConfig } = event;
-    const siteConfigId = publishConfig.site.configId;
-    this.logger.verbose(
-      `Update post state to site_published siteConfigId ${siteConfigId}`,
-      this.constructor.name,
-    );
-    await this.updatePostStateBySiteConfigId(
-      PostState.SitePublished,
-      siteConfigId,
-    );
-  }
-
-  async updatePostStateBySiteConfigId(state: PostState, siteConfigId: number) {
-    await this.postRepository.update(
-      {
-        siteConfigRelas: [
-          {
-            siteConfig: {
-              id: siteConfigId,
-            },
-          },
-        ],
-      },
-      { state },
-    );
   }
 
   // async getPendingPostsByUserId(userId: number, options: IPaginationOptions) {
