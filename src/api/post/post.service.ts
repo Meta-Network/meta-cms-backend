@@ -1,5 +1,6 @@
 import { AuthorPostSignatureMetadata } from '@metaio/meta-signature-util';
 import { MetaWorker } from '@metaio/worker-model';
+import { HttpService } from '@nestjs/axios';
 import {
   BadRequestException,
   Inject,
@@ -9,18 +10,21 @@ import {
 import { OnEvent } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
 import han from 'han';
+import omit from 'lodash.omit';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
-import { IPaginationOptions, paginate } from 'nestjs-typeorm-paginate';
+import {
+  IPaginationOptions,
+  paginate,
+  Pagination,
+} from 'nestjs-typeorm-paginate';
+import { lastValueFrom } from 'rxjs';
 import { PartialDeep } from 'type-fest';
 import { In, Repository, UpdateResult } from 'typeorm';
 
-import { TaskEvent } from '../../constants';
+import { CACHE_KEY_PUB_TARGET_URL } from '../../constants';
 import { DraftEntity } from '../../entities/draft.entity';
 import { PostEntity } from '../../entities/post.entity';
 import { PostSiteConfigRelaEntity } from '../../entities/postSiteConfigRela.entity';
-import { GiteePublisherProviderEntity } from '../../entities/provider/publisher/gitee.entity';
-import { GitHubPublisherProviderEntity } from '../../entities/provider/publisher/github.entity';
-import { SiteConfigEntity } from '../../entities/siteConfig.entity';
 import {
   AccessDeniedException,
   InvalidStatusException,
@@ -31,9 +35,11 @@ import {
   PostAction,
   PostState,
   TaskCommonState,
+  TaskEvent,
 } from '../../types/enum';
 import { iso8601ToDate } from '../../utils';
 import { isEachType } from '../../utils/typeGuard';
+import { AppCacheService } from '../cache/service';
 import { MetaSignatureHelper } from '../meta-signature/meta-signature.helper';
 import { MetaSignatureService } from '../meta-signature/meta-signature.service';
 import { PublisherService } from '../provider/publisher/publisher.service';
@@ -44,6 +50,37 @@ import { PublishStoragePostsDto } from './dto/publish-post.dto';
 import { PreProcessorService } from './preprocessor/preprocessor.service';
 
 export type PostEntityLike = Omit<PostEntity, 'id' | 'siteConfigRelas'>;
+
+type HexoPostsAPIPathObject = {
+  name: string;
+  path: string;
+};
+type HexoPostsAPIData = {
+  [key: string]:
+    | string
+    | number
+    | boolean
+    | Array<string | number | HexoPostsAPIPathObject>;
+  title: string;
+  slug: string;
+  date: string;
+  updated: string;
+  comments: boolean;
+  path: string;
+  excerpt: string;
+  keywords: string[];
+  cover: string;
+  content: string;
+  raw: string;
+  categories: HexoPostsAPIPathObject[];
+  tags: HexoPostsAPIPathObject[];
+};
+export type HexoPostsAPIResponse = {
+  total: number;
+  pageSize: number;
+  pageCount: number;
+  data: Partial<HexoPostsAPIData>[];
+};
 
 export interface DraftPost extends PostEntity {
   content: string;
@@ -66,6 +103,8 @@ export class PostService {
     private readonly draftRepository: Repository<DraftEntity>,
     private readonly metaSignatureService: MetaSignatureService,
     private readonly metaSignatureHelper: MetaSignatureHelper,
+    private readonly cache: AppCacheService,
+    private readonly httpService: HttpService,
   ) {}
 
   private setPostMetadata(
@@ -332,12 +371,94 @@ export class PostService {
       config.publisherType,
       config.publisherProviderId,
     );
-    const baseDomain = this.publisherService.getTargetOriginDomainByEntity(
-      config.publisherType,
-      publisher,
+    const baseDomain =
+      this.publisherService.getTargetOriginDomainByPublisherConfig(
+        config.publisherType,
+        publisher,
+      );
+    const cache = await this.cache.get<string>(
+      `${CACHE_KEY_PUB_TARGET_URL}_${config.publisherProviderId}`,
     );
-    // TODO(500): Add cache for url
-    return `${baseDomain}/${publisher.repoName}/`;
+    if (cache) {
+      return cache;
+    } else {
+      const url = `${baseDomain}/${publisher.repoName}`;
+      await this.cache.set<string>(
+        `${CACHE_KEY_PUB_TARGET_URL}_${config.publisherProviderId}`,
+        url,
+        {
+          ttl: 60 * 60, // 1hr
+        },
+      );
+      return url;
+    }
+  }
+
+  private async generatePostInfoFromHexoPostsAPIData(
+    data: Partial<HexoPostsAPIData>[],
+  ): Promise<MetaWorker.Info.Post[]> {
+    if (Array.isArray(data)) {
+      return data.map((item) => {
+        const { title, categories, tags } = item;
+        const obj = omit(item, ['comments']);
+        return {
+          ...obj,
+          title,
+          source: item?.content,
+          summary: item?.excerpt,
+          categories: categories.map((i) => i.name),
+          tags: tags.map((i) => i.name),
+          createdAt: item?.date,
+          updatedAt: item?.updated,
+        };
+      });
+    } else {
+      return [];
+    }
+  }
+
+  private async getPublishedPostsFromStorage(
+    userId: number,
+    siteConfigId: number,
+    page: number,
+  ): Promise<Pagination<MetaWorker.Info.Post>> {
+    const baseUrl = await this.generatePublisherTargetRESTfulURL(
+      userId,
+      siteConfigId,
+    );
+    const requestUrl = `${baseUrl}/api/posts/${page}.json`;
+    const response =
+      this.httpService.get<Partial<HexoPostsAPIResponse>>(requestUrl);
+    const { data } = await lastValueFrom(response);
+    const { total, pageSize, pageCount } = data;
+    const items = await this.generatePostInfoFromHexoPostsAPIData(data.data);
+    return {
+      meta: {
+        itemCount: data?.data?.length || 0,
+        totalItems: total || 0,
+        itemsPerPage: pageSize || 0,
+        totalPages: pageCount || page,
+        currentPage: page,
+      },
+      items,
+    };
+  }
+
+  public async getPostsFromStorage(
+    userId: number,
+    siteConfigId: number,
+    page = 1,
+    isDraft = false,
+  ): Promise<Pagination<MetaWorker.Info.Post>> {
+    if (isDraft) {
+      throw new Error('Function not implemented.'); // TODO(550): Draft Support
+    } else {
+      return await this.getPublishedPostsFromStorage(
+        userId,
+        siteConfigId,
+        page,
+      );
+    }
   }
 
   public async publishPostsToStorage(

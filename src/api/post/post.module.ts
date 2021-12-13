@@ -1,3 +1,4 @@
+import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ClientsModule } from '@nestjs/microservices';
@@ -10,6 +11,7 @@ import { DraftEntity } from '../../entities/draft.entity';
 import { PostEntity } from '../../entities/post.entity';
 import { PostSiteConfigRelaEntity } from '../../entities/postSiteConfigRela.entity';
 import { MetaMicroserviceClient } from '../../types/enum';
+import { AppCacheModule } from '../cache/module';
 import { MetaSignatureModule } from '../meta-signature/meta-signature.module';
 import { MetadataStorageModule } from '../provider/metadata-storage/metadata-storage.module';
 import { PublisherModule } from '../provider/publisher/publisher.module';
@@ -45,6 +47,8 @@ import { MatatakiSourceModule } from './sources/matataki/matataki.module';
     MetadataStorageModule,
     MetaSignatureModule,
     PublisherModule,
+    AppCacheModule,
+    HttpModule,
   ],
   controllers: [PostController],
   providers: [
