@@ -1,8 +1,8 @@
 {
   "name": "cms-backend",
-  "version": "0.2.0",
+  "version": "0.5.0",
   "description": "CMS API testing branch",
-  "author": "",
+  "author": "Meta Network <noreply@metanetwork.online>",
   "private": true,
   "license": "UNLICENSED",
   "scripts": {

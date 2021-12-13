@@ -21,7 +21,7 @@ async function bootstrap() {
   if (enableSwagger) {
     const swaggerConfig = new DocumentBuilder()
       .setTitle(configService.get<string>('app.name'))
-      .setDescription('CMS API testing branch')
+      .setDescription('Meta CMS API')
       .setVersion(process.env.npm_package_version || '0.0.1')
       .addCookieAuth(cookieName)
       .build();
