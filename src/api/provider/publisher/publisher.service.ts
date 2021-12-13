@@ -39,7 +39,7 @@ export interface SpecificPublisherService {
 
 @Injectable()
 export class PublisherService {
-  getTargetOriginDomain(
+  public getTargetOriginDomain(
     publisherType: MetaWorker.Enums.PublisherType,
     publishConfig: MetaWorker.Configs.PublishConfig,
   ): string {
@@ -47,15 +47,15 @@ export class PublisherService {
     return provider.getTargetOriginDomain(publishConfig);
   }
 
-  public getTargetOriginDomainByEntity(
+  public getTargetOriginDomainByPublisherConfig(
     publisherType: MetaWorker.Enums.PublisherType,
-    entity: GitHubPublisherProviderEntity | GiteePublisherProviderEntity,
+    config: GitHubPublisherProviderEntity | GiteePublisherProviderEntity,
   ): string {
     const provider = getPublisherProvider(publisherType);
-    return provider.getTargetOriginDomainByEntity(entity);
+    return provider.getTargetOriginDomainByPublisherConfig(config);
   }
 
-  async updateDomainName(
+  public async updateDomainName(
     publisherType: MetaWorker.Enums.PublisherType,
     publishConfig: MetaWorker.Configs.PublishConfig,
   ) {
@@ -63,7 +63,7 @@ export class PublisherService {
     await provider.updateDomainName(publishConfig);
   }
 
-  async generateMetaWorkerGitInfo(
+  public async generateMetaWorkerGitInfo(
     publisherType: MetaWorker.Enums.PublisherType,
     userId: number,
     publisherProviderId: number,

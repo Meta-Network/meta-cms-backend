@@ -23,10 +23,10 @@ export class GiteePublisherProvider implements PublisherProvider {
     return `${publishConfig.git.publisher.username}.gitee.io`;
   }
 
-  public getTargetOriginDomainByEntity(
-    entity: GitPublisherProviderEntity,
+  public getTargetOriginDomainByPublisherConfig(
+    config: GitPublisherProviderEntity,
   ): string {
-    return `${entity.userName}.gitee.io`;
+    return `${config.userName}.gitee.io`;
   }
 
   public updateDomainName(publishConfig: MetaWorker.Configs.PublishConfig) {

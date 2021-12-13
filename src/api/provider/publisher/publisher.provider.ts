@@ -28,7 +28,9 @@ export interface PublisherProvider {
   getTargetOriginDomain(
     publishConfig: MetaWorker.Configs.PublishConfig,
   ): string;
-  getTargetOriginDomainByEntity(entity: GitPublisherProviderEntity): string;
+  getTargetOriginDomainByPublisherConfig(
+    config: GitPublisherProviderEntity,
+  ): string;
   updateDomainName(
     publishConfig: MetaWorker.Configs.PublishConfig,
   ): void | Promise<void>;

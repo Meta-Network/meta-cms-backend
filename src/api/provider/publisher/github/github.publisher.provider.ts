@@ -21,7 +21,6 @@ export class GitHubPublisherProvider implements PublisherProvider {
   ) {
     registerPublisherProvider(MetaWorker.Enums.PublisherType.GITHUB, this);
   }
-  private readonly octokit: Octokit;
 
   public getTargetOriginDomain(
     publishConfig: MetaWorker.Configs.PublishConfig,
@@ -29,10 +28,10 @@ export class GitHubPublisherProvider implements PublisherProvider {
     return `${publishConfig.git.publisher.username}.github.io`;
   }
 
-  public getTargetOriginDomainByEntity(
-    entity: GitPublisherProviderEntity,
+  public getTargetOriginDomainByPublisherConfig(
+    config: GitPublisherProviderEntity,
   ): string {
-    return `${entity.userName}.github.io`;
+    return `${config.userName}.github.io`;
   }
 
   public async updateDomainName(
