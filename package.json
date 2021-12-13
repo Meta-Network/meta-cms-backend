@@ -67,7 +67,7 @@
     "superagent": "^6.1.0",
     "swagger-ui-express": "^4.1.6",
     "type-fest": "^2.8.0",
-    "typeorm": "^0.2.34",
+    "typeorm": "^0.2.41",
     "uuid": "^8.3.2",
     "winston": "^3.3.3"
   },
