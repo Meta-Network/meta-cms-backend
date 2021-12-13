@@ -5,13 +5,13 @@ export class AddDefaultTimezone1634195544906 implements MigrationInterface {
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(
-      `ALTER TABLE \`meta-cms-dev\`.\`site_config_entity\` CHANGE \`timezone\` \`timezone\` varchar(255) NOT NULL COMMENT 'Site timezone' DEFAULT 'Asia/Shanghai'`,
+      `ALTER TABLE \`site_config_entity\` CHANGE \`timezone\` \`timezone\` varchar(255) NOT NULL COMMENT 'Site timezone' DEFAULT 'Asia/Shanghai'`,
     );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(
-      `ALTER TABLE \`meta-cms-dev\`.\`site_config_entity\` CHANGE \`timezone\` \`timezone\` varchar(255) NOT NULL COMMENT 'Site timezone' DEFAULT ''`,
+      `ALTER TABLE \`site_config_entity\` CHANGE \`timezone\` \`timezone\` varchar(255) NOT NULL COMMENT 'Site timezone' DEFAULT ''`,
     );
   }
 }

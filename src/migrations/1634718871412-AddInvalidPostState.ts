@@ -5,13 +5,13 @@ export class AddInvalidPostState1634718871412 implements MigrationInterface {
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(
-      `ALTER TABLE \`meta-cms-dev\`.\`post_entity\` CHANGE \`state\` \`state\` enum ('pending', 'published', 'ignored', 'drafted', 'invalid') NOT NULL COMMENT 'Post state' DEFAULT 'pending'`,
+      `ALTER TABLE \`post_entity\` CHANGE \`state\` \`state\` enum ('pending', 'published', 'ignored', 'drafted', 'invalid') NOT NULL COMMENT 'Post state' DEFAULT 'pending'`,
     );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(
-      `ALTER TABLE \`meta-cms-dev\`.\`post_entity\` CHANGE \`state\` \`state\` enum ('pending', 'published', 'ignored', 'drafted') NOT NULL COMMENT 'Post state' DEFAULT ''pending''`,
+      `ALTER TABLE \`post_entity\` CHANGE \`state\` \`state\` enum ('pending', 'published', 'ignored', 'drafted') NOT NULL COMMENT 'Post state' DEFAULT ''pending''`,
     );
   }
 }
