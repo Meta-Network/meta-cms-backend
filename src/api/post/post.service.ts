@@ -764,8 +764,11 @@ export class PostService {
     return post;
   }
 
-  public async setPostState(postId: number, state: PostState) {
+  public async setPostState(userId: number, postId: number, state: PostState) {
     const post = await this.postRepository.findOneOrFail(postId);
+    if (post.userId !== userId) {
+      throw new AccessDeniedException('access denied, user id inconsistent');
+    }
     post.state = state;
     await this.postRepository.save(post);
     return post;
