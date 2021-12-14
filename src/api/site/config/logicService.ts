@@ -44,11 +44,10 @@ export class SiteConfigLogicService {
 
   // If no domain use `metaSpacePrefix.metaSpaceBase`, for frontend display
   private generateMetaSpaceDomain(config: SiteConfigEntity): SiteConfigEntity {
-    if (!config.domain) {
+    if (!config?.domain) {
       return {
         ...config,
-        domain:
-          config.domain || `${config.metaSpacePrefix}.${this.metaSpaceBase}`,
+        domain: `${config.metaSpacePrefix}.${this.metaSpaceBase}`,
       };
     } else {
       return config;
