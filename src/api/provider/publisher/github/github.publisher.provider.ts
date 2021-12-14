@@ -3,9 +3,9 @@ import { Inject, Injectable, LoggerService } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { SchedulerRegistry } from '@nestjs/schedule';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
-import { Octokit } from 'octokit';
 
 import { GitPublisherProviderEntity } from '../../../../entities/provider/publisher/git.entity';
+import { OctokitService } from '../../octokitService';
 import {
   PublisherProvider,
   registerPublisherProvider,
@@ -18,6 +18,7 @@ export class GitHubPublisherProvider implements PublisherProvider {
     private readonly logger: LoggerService,
     private readonly configService: ConfigService,
     private readonly scheduleRegistry: SchedulerRegistry,
+    private readonly octokitService: OctokitService,
   ) {
     registerPublisherProvider(MetaWorker.Enums.PublisherType.GITHUB, this);
   }
@@ -60,23 +61,19 @@ export class GitHubPublisherProvider implements PublisherProvider {
       );
     }
   }
+
   async doUpdateDomainName(publishConfig: MetaWorker.Configs.PublishConfig) {
     const {
       git: { publisher },
       site,
     } = publishConfig;
-    const octokit = new Octokit({
-      auth: publisher.token,
-    });
 
     let siteInfo;
     let isDnsRecordValid = false;
     try {
       const dnsHealthResponse = await this.checkSiteDnsHealth(publishConfig);
-      isDnsRecordValid =
-        dnsHealthResponse.status &&
-        dnsHealthResponse.data.domain === site.domain;
-      siteInfo = (await this.getSiteInfo(publishConfig)).data;
+      isDnsRecordValid = dnsHealthResponse.domain === site.domain;
+      siteInfo = await this.getSiteInfo(publishConfig);
     } catch (err) {
       await this.createSite(publishConfig);
     }
@@ -105,43 +102,44 @@ export class GitHubPublisherProvider implements PublisherProvider {
         `update cname ${data.owner}.github.io/${data.repo} : ${data.cname}`,
         this.constructor.name,
       );
-      await octokit.request('PUT /repos/{owner}/{repo}/pages', data);
+      await this.octokitService.updateInfoAboutGitHubPagesSite(
+        publisher.token,
+        data,
+      );
     }
   }
-  async getSiteInfo(publishConfig: MetaWorker.Configs.PublishConfig) {
+
+  private async getSiteInfo(publishConfig: MetaWorker.Configs.PublishConfig) {
     const {
       git: { publisher },
     } = publishConfig;
-    const octokit = new Octokit({
-      auth: publisher.token,
-    });
-    return await octokit.request('GET /repos/{owner}/{repo}/pages', {
-      owner: publisher.username,
-      repo: publisher.reponame,
+    const { token, username, reponame } = publisher;
+    return await this.octokitService.getGitHubPagesSiteInfo(token, {
+      owner: username,
+      repo: reponame,
     });
   }
-  async checkSiteDnsHealth(publishConfig: MetaWorker.Configs.PublishConfig) {
+
+  private async checkSiteDnsHealth(
+    publishConfig: MetaWorker.Configs.PublishConfig,
+  ) {
     const {
       git: { publisher },
     } = publishConfig;
-    const octokit = new Octokit({
-      auth: publisher.token,
-    });
-    return await octokit.request('GET /repos/{owner}/{repo}/pages/health', {
-      owner: publisher.username,
-      repo: publisher.reponame,
+    const { token, username, reponame } = publisher;
+    return await this.octokitService.getGitHubPagesHealthCheck(token, {
+      owner: username,
+      repo: reponame,
     });
   }
-  async createSite(publishConfig: MetaWorker.Configs.PublishConfig) {
+
+  private async createSite(publishConfig: MetaWorker.Configs.PublishConfig) {
     this.logger.verbose(`Create site `, this.constructor.name);
     const {
       git: { publisher },
       publish,
     } = publishConfig;
-    const octokit = new Octokit({
-      auth: publisher.token,
-    });
-    return await octokit.request('POST /repos/{owner}/{repo}/pages', {
+    return await this.octokitService.createGitHubPagesSite(publisher.token, {
       owner: publisher.username,
       repo: publisher.reponame,
       source: {

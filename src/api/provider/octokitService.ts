@@ -2,6 +2,7 @@ import { Inject, Injectable, LoggerService } from '@nestjs/common';
 // import { PaginateInterface } from '@octokit/plugin-paginate-rest';
 // import { Api } from '@octokit/plugin-rest-endpoint-methods/dist-types/types';
 // import { RequestError } from '@octokit/request-error';
+import { Endpoints, RequestParameters } from '@octokit/types';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { Octokit } from 'octokit';
 
@@ -31,7 +32,7 @@ export class OctokitService extends AbstractGitService {
     super();
   }
 
-  async createGitRepo(
+  public async createGitRepo(
     token: string,
     userName: string,
     repoName: string,
@@ -133,5 +134,59 @@ export class OctokitService extends AbstractGitService {
       // throe other error
       throw error;
     }
+  }
+
+  public async getGitHubPagesSiteInfo(
+    token: string,
+    params: RequestParameters &
+      Omit<
+        Endpoints['GET /repos/{owner}/{repo}/pages']['parameters'],
+        'baseUrl' | 'headers' | 'mediaType'
+      >,
+  ) {
+    const octokit = new Octokit({ auth: token });
+    const { data } = await octokit.rest.repos.getPages(params);
+    return data;
+  }
+
+  public async getGitHubPagesHealthCheck(
+    token: string,
+    params: RequestParameters &
+      Omit<
+        Endpoints['GET /repos/{owner}/{repo}/pages/health']['parameters'],
+        'baseUrl' | 'headers' | 'mediaType'
+      >,
+  ) {
+    const octokit = new Octokit({ auth: token });
+    const { data } = await octokit.rest.repos.getPagesHealthCheck(params);
+    return data;
+  }
+
+  public async createGitHubPagesSite(
+    token: string,
+    params: RequestParameters &
+      Omit<
+        Endpoints['POST /repos/{owner}/{repo}/pages']['parameters'],
+        'baseUrl' | 'headers' | 'mediaType'
+      >,
+  ) {
+    const octokit = new Octokit({ auth: token });
+    const { data } = await octokit.rest.repos.createPagesSite(params);
+    return data;
+  }
+
+  public async updateInfoAboutGitHubPagesSite(
+    token: string,
+    params: RequestParameters &
+      Omit<
+        Endpoints['PUT /repos/{owner}/{repo}/pages']['parameters'],
+        'baseUrl' | 'headers' | 'mediaType'
+      >,
+  ) {
+    const octokit = new Octokit({ auth: token });
+    const { data } = await octokit.rest.repos.updateInformationAboutPagesSite(
+      params,
+    );
+    return data;
   }
 }
