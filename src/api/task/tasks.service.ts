@@ -67,15 +67,20 @@ export class TasksService {
     authorPublishMetaSpaceRequestMetadataRefer?: string,
   ) {
     await this.checkSiteConfigTaskWorkspace(siteConfigId);
-    const { authorPublishMetaSpaceServerVerificationMetadataRefer } =
-      await this.metaSignatureService.generateAndUploadPublishMetaSpaceServerVerificationMetadata(
-        this.metaSignatureHelper.createPublishMetaSpaceVerificationKey(
-          user.id,
-          siteConfigId,
-        ),
-        authorPublishMetaSpaceRequestMetadataStorageType,
-        authorPublishMetaSpaceRequestMetadataRefer,
-      );
+    let authorPublishMetaSpaceServerVerificationMetadataRefer = '';
+    if (authorPublishMetaSpaceRequestMetadataRefer) {
+      const { authorPublishMetaSpaceServerVerificationMetadataRefer: refer } =
+        await this.metaSignatureService.generateAndUploadPublishMetaSpaceServerVerificationMetadata(
+          this.metaSignatureHelper.createPublishMetaSpaceVerificationKey(
+            user.id,
+            siteConfigId,
+          ),
+          authorPublishMetaSpaceRequestMetadataStorageType,
+          authorPublishMetaSpaceRequestMetadataRefer,
+        );
+      authorPublishMetaSpaceServerVerificationMetadataRefer = refer;
+    }
+
     //TODO 写合约，记录生成 authorPublishMetaSpaceServerVerificationMetadata 的时间戳
     const deploySiteTaskStepResults = await this.doDeploySite(
       user,
@@ -251,13 +256,18 @@ export class TasksService {
     authorPublishMetaSpaceServerVerificationMetadataStorageType: MetadataStorageType,
     authorPublishMetaSpaceServerVerificationMetadataRefer: string,
   ) {
-    deployConfig.metadata = {
-      authorPublishMetaSpaceServerVerificationMetadata: {
-        storageType:
-          authorPublishMetaSpaceServerVerificationMetadataStorageType,
-        refer: authorPublishMetaSpaceServerVerificationMetadataRefer,
-      },
-    };
+    if (
+      authorPublishMetaSpaceServerVerificationMetadataStorageType &&
+      authorPublishMetaSpaceServerVerificationMetadataRefer
+    ) {
+      deployConfig.metadata = {
+        authorPublishMetaSpaceServerVerificationMetadata: {
+          storageType:
+            authorPublishMetaSpaceServerVerificationMetadataStorageType,
+          refer: authorPublishMetaSpaceServerVerificationMetadataRefer,
+        },
+      };
+    }
   }
 
   protected async doCheckoutCommitPush(
