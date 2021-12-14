@@ -43,7 +43,7 @@ export class MetaSignatureService {
       );
     if (!authorDigestRequestMetadataText) {
       throw new ValidationException(
-        'AuthorDigestSignatureMetadata must not be empty',
+        'AuthorDigestRequestMetadata must not be empty',
       );
     }
 
