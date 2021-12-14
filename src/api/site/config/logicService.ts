@@ -1,5 +1,6 @@
 import { MetaInternalResult, ServiceCode } from '@metaio/microservice-model';
 import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { IPaginationOptions, Pagination } from 'nestjs-typeorm-paginate';
 import { DeleteResult, Equal, FindOneOptions, In, IsNull, Not } from 'typeorm';
 
@@ -30,7 +31,29 @@ export class SiteConfigLogicService {
   constructor(
     private readonly siteConfigBaseService: SiteConfigBaseService,
     private readonly siteInfoLogicService: SiteInfoLogicService,
-  ) {}
+    private readonly config: ConfigService,
+  ) {
+    const metaSpaceBase = this.config.get<string>('metaSpace.baseDomain');
+    if (!metaSpaceBase) {
+      throw new Error('Config key metaSpace.baseDomain: no value');
+    }
+    this.metaSpaceBase = metaSpaceBase;
+  }
+
+  private readonly metaSpaceBase: string;
+
+  // If no domain use `metaSpacePrefix.metaSpaceBase`, for frontend display
+  private generateMetaSpaceDomain(config: SiteConfigEntity): SiteConfigEntity {
+    if (!config.domain) {
+      return {
+        ...config,
+        domain:
+          config.domain || `${config.metaSpacePrefix}.${this.metaSpaceBase}`,
+      };
+    } else {
+      return config;
+    }
+  }
 
   async getSiteConfig(
     uid: number,
@@ -46,8 +69,15 @@ export class SiteConfigLogicService {
       limit,
       route: '/site/config',
     };
-
-    return await this.siteConfigBaseService.read(options, sid);
+    const configs = await this.siteConfigBaseService.read(options, sid);
+    if (Array.isArray(configs.items) && configs.items.length) {
+      const items = configs.items.map((item) =>
+        this.generateMetaSpaceDomain(item),
+      );
+      return { ...configs, items };
+    } else {
+      return configs;
+    }
   }
 
   async createSiteConfig(
@@ -190,11 +220,11 @@ export class SiteConfigLogicService {
       relations: ['siteInfo'],
     });
     const rand = conf[(Math.random() * conf.length) >> 0];
-    return rand;
+    return this.generateMetaSpaceDomain(rand);
   }
 
   async getUserDefaultSiteConfig(userId: number): Promise<SiteConfigEntity> {
-    return await this.siteConfigBaseService.readOne({
+    const config = await this.siteConfigBaseService.readOne({
       where: {
         siteInfo: {
           userId,
@@ -205,5 +235,6 @@ export class SiteConfigLogicService {
       },
       relations: ['siteInfo'],
     });
+    return this.generateMetaSpaceDomain(config);
   }
 }
