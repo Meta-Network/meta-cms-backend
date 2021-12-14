@@ -44,7 +44,8 @@ export class SiteConfigLogicService {
 
   // If no domain use `metaSpacePrefix.metaSpaceBase`, for frontend display
   private generateMetaSpaceDomain(config: SiteConfigEntity): SiteConfigEntity {
-    if (!config?.domain) {
+    // somehow config can be undefined
+    if (config && !config.domain && config.metaSpacePrefix) {
       return {
         ...config,
         domain: `${config.metaSpacePrefix}.${this.metaSpaceBase}`,
