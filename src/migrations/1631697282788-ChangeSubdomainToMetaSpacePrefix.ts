@@ -15,9 +15,6 @@ export class ChangeSubdomainToMetaSpacePrefix1631697282788
     await queryRunner.query(
       `ALTER TABLE \`site_config_entity\` ADD \`metaSpacePrefix\` varchar(255) NULL COMMENT 'Meta space prefix'`,
     );
-    await queryRunner.query(
-      `ALTER TABLE \`site_config_entity\` ADD UNIQUE INDEX \`IDX_3bd90d352dcaaf053188ec24fb\` (\`metaSpacePrefix\`)`,
-    );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
@@ -29,9 +26,6 @@ export class ChangeSubdomainToMetaSpacePrefix1631697282788
     );
     await queryRunner.query(
       `ALTER TABLE \`site_config_entity\` ADD \`metaSpacePrefix\` varchar(255) NULL COMMENT 'Site subdomain'`,
-    );
-    await queryRunner.query(
-      `ALTER TABLE \`site_config_entity\` CHANGE \`metaSpacePrefix\` \`subdomain\` varchar(255) NULL COMMENT 'Site subdomain'`,
     );
   }
 }
