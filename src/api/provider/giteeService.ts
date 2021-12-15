@@ -4,7 +4,11 @@ import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import Req from 'superagent';
 
 import { AccessDeniedException } from '../../exceptions';
-import { CreateGitRepoResult, GetGitTreeResult } from '../../types';
+import {
+  CreateGitRepoResult,
+  GetGitTreeResult,
+  GitBlobInfo,
+} from '../../types';
 import { AbstractGitService } from './abstractGitService';
 
 export declare namespace Gitee {
@@ -276,6 +280,20 @@ export class GiteeService extends AbstractGitService {
     ).query({
       access_token: token,
       recursive: Number(recursive).toString(),
+    });
+    return res.body;
+  }
+
+  public async getGitBlob(
+    token: string,
+    userName: string,
+    repoName: string,
+    blobSHA: string,
+  ): Promise<GitBlobInfo> {
+    const res = await Req.get(
+      `${this.baseUrl}/repos/${userName}/${repoName}/git/blobs/${blobSHA}`,
+    ).query({
+      access_token: token,
     });
     return res.body;
   }

@@ -7,7 +7,11 @@ import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { Octokit } from 'octokit';
 
 import { AccessDeniedException } from '../../exceptions';
-import { CreateGitRepoResult, GetGitTreeResult } from '../../types';
+import {
+  CreateGitRepoResult,
+  GetGitTreeResult,
+  GitBlobInfo,
+} from '../../types';
 import { AbstractGitService } from './abstractGitService';
 
 // type OctokitInst = Octokit &
@@ -149,6 +153,21 @@ export class OctokitService extends AbstractGitService {
       repo: repoName,
       tree_sha: branchOrSHA,
       recursive: Number(recursive).toString(),
+    });
+    return data;
+  }
+
+  public async getGitBlob(
+    token: string,
+    userName: string,
+    repoName: string,
+    blobSHA: string,
+  ): Promise<GitBlobInfo> {
+    const octokit = new Octokit({ auth: token });
+    const { data } = await octokit.rest.git.getBlob({
+      owner: userName,
+      repo: repoName,
+      file_sha: blobSHA,
     });
     return data;
   }

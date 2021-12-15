@@ -1,4 +1,8 @@
-import { CreateGitRepoResult, GetGitTreeResult } from '../../types';
+import {
+  CreateGitRepoResult,
+  GetGitTreeResult,
+  GitBlobInfo,
+} from '../../types';
 
 export abstract class AbstractGitService {
   public abstract createGitRepo(
@@ -15,4 +19,11 @@ export abstract class AbstractGitService {
     branchOrSHA: string,
     recursive?: boolean,
   ): Promise<GetGitTreeResult>;
+
+  public abstract getGitBlob(
+    token: string,
+    userName: string,
+    repoName: string,
+    blobSHA: string,
+  ): Promise<GitBlobInfo>;
 }
