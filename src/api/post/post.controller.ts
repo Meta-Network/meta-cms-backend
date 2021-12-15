@@ -227,7 +227,7 @@ export class PostController {
     @User('id', ParseIntPipe) uid: number,
     @Param('postId', ParseIntPipe) postId: number,
   ) {
-    return await this.postService.setPostState(postId, PostState.Ignored);
+    return await this.postService.setPostState(uid, postId, PostState.Ignored);
   }
 
   @Get('sync/:platform/state')
@@ -292,64 +292,4 @@ export class PostController {
 
     this.microserviceClient.emit(`cms.post.sync.${platform}`, uid);
   }
-
-  // @Post(':postId(\\d+)/publish')
-  // @ApiCreatedResponse({ type: PostEntityResponse })
-  // async publishPost(
-  //   @User() user: UCenterJWTPayload,
-  //   @Param('postId', ParseIntPipe) postId: number,
-  //   @Body() body: PublishPostDto,
-  // ) {
-  //   return await this.postService.publishPendingPost(user, postId, body);
-  // }
-
-  // @Post('publish')
-  // @ApiCreatedResponse({ type: PostEntityResponse })
-  // @ApiBadRequestResponse({
-  //   type: RequirdHttpHeadersNotFoundException,
-  //   description: 'When cookie with access token not provided',
-  // })
-  // async publishPosts(
-  //   @User() user: UCenterJWTPayload,
-  //   @Body() body: PublishPostsDto,
-  // ) {
-  //   return await this.postService.publishPendingPosts(user, body);
-  // }
-
-  // @Post('delete')
-  // @ApiCreatedResponse({ type: PostEntityResponse })
-  // @ApiBadRequestResponse({
-  //   type: RequirdHttpHeadersNotFoundException,
-  //   description: 'When cookie with access token not provided',
-  // })
-  // async deletePosts(
-  //   @User() user: UCenterJWTPayload,
-  //   @Body() body: PublishPostsDto,
-  // ) {
-  //   return await this.postService.deletePublishedPosts(user, body);
-  // }
-
-  // @Post(':postId(\\d+)/draft')
-  // @ApiCreatedResponse({ type: PostEntityResponse })
-  // async getDraftOfPost(@Param('postId', ParseIntPipe) postId: number) {
-  //   return await this.postService.makeDraft(postId);
-  // }
-
-  // @Post()
-  // @ApiCreatedResponse({ type: PostEntityResponse })
-  // async createDraftPost(
-  //   @User('id', ParseIntPipe) uid: number,
-  //   @Body(new ValidationPipe({ whitelist: true })) dto: DraftPostCreationDto,
-  // ) {
-  //   return await this.postService.createPost(uid, dto);
-  // }
-
-  // @Patch(':postId(\\d+)')
-  // @ApiOkResponse({ type: PostEntityResponse })
-  // async updateDraftPost(
-  //   @Param('postId', ParseIntPipe) postId: number,
-  //   @Body(new ValidationPipe({ whitelist: true })) dto: DraftPostUpdateDto,
-  // ) {
-  //   return await this.postService.updatePost(postId, dto);
-  // }
 }
