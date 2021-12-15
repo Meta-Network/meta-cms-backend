@@ -333,46 +333,59 @@ export class TasksService {
       authorPublishMetaSpaceServerVerificationMetadataRefer?: string;
     },
   ) {
-    await this.siteConfigLogicService.updateSiteConfigStatus(
+    this.logger.verbose(`Call doDeploySite`, TasksService.name);
+    const config = await this.siteConfigLogicService.getSiteConfigById(
       siteConfigId,
-      SiteStatus.Deploying,
     );
-    const { deployConfig, repoEmpty } =
-      await this.generateDeployConfigAndRepoSize(user, siteConfigId);
-    const taskSteps: MetaWorker.Enums.TaskMethod[] = [];
-    this.setDeployConfigMetadata(
-      deployConfig,
-      options?.authorPublishMetaSpaceServerVerificationMetadataStorageType,
-      options?.authorPublishMetaSpaceServerVerificationMetadataRefer,
-    );
-    this.logger.verbose(`Adding storage worker to queue`, TasksService.name);
-    if (repoEmpty) {
-      taskSteps.push(MetaWorker.Enums.TaskMethod.GIT_INIT_PUSH);
-    } else {
-      taskSteps.push(MetaWorker.Enums.TaskMethod.GIT_CLONE_CHECKOUT);
-    }
-
-    const { templateType } = deployConfig.template;
-    taskSteps.push(...this.getDeployTaskMethodsByTemplateType(templateType));
-
-    taskSteps.push(MetaWorker.Enums.TaskMethod.GENERATE_METASPACE_CONFIG);
-    taskSteps.push(MetaWorker.Enums.TaskMethod.GIT_COMMIT_PUSH);
-    if (!options?.isLastTask) {
-      taskSteps.push(MetaWorker.Enums.TaskMethod.GIT_OVERWRITE_THEME);
-    }
-    this.logger.verbose(`Adding CICD worker to queue`, TasksService.name);
-
-    const deploySiteTaskStepResults =
-      await this.taskDispatchersService.dispatchTask(
-        taskSteps,
-        deployConfig,
-        options?.isLastTask,
+    const oldSiteStatus = config.status; // store for rollback
+    try {
+      await this.siteConfigLogicService.updateSiteConfigStatus(
+        siteConfigId,
+        SiteStatus.Deploying,
       );
-    await this.siteConfigLogicService.updateSiteConfigStatus(
-      siteConfigId,
-      SiteStatus.Deployed,
-    );
-    return deploySiteTaskStepResults;
+      const { deployConfig, repoEmpty } =
+        await this.generateDeployConfigAndRepoSize(user, siteConfigId);
+      const taskSteps: MetaWorker.Enums.TaskMethod[] = [];
+      this.setDeployConfigMetadata(
+        deployConfig,
+        options?.authorPublishMetaSpaceServerVerificationMetadataStorageType,
+        options?.authorPublishMetaSpaceServerVerificationMetadataRefer,
+      );
+      this.logger.verbose(`Adding storage worker to queue`, TasksService.name);
+      if (repoEmpty) {
+        taskSteps.push(MetaWorker.Enums.TaskMethod.GIT_INIT_PUSH);
+      } else {
+        taskSteps.push(MetaWorker.Enums.TaskMethod.GIT_CLONE_CHECKOUT);
+      }
+
+      const { templateType } = deployConfig.template;
+      taskSteps.push(...this.getDeployTaskMethodsByTemplateType(templateType));
+
+      taskSteps.push(MetaWorker.Enums.TaskMethod.GENERATE_METASPACE_CONFIG);
+      taskSteps.push(MetaWorker.Enums.TaskMethod.GIT_COMMIT_PUSH);
+      if (!options?.isLastTask) {
+        taskSteps.push(MetaWorker.Enums.TaskMethod.GIT_OVERWRITE_THEME);
+      }
+      this.logger.verbose(`Adding CICD worker to queue`, TasksService.name);
+
+      const deploySiteTaskStepResults =
+        await this.taskDispatchersService.dispatchTask(
+          taskSteps,
+          deployConfig,
+          options?.isLastTask,
+        );
+      await this.siteConfigLogicService.updateSiteConfigStatus(
+        siteConfigId,
+        SiteStatus.Deployed,
+      );
+      return deploySiteTaskStepResults;
+    } catch (error) {
+      this.logger.error(`Call doDeploySite failed`, error, TasksService.name);
+      await this.siteConfigLogicService.updateSiteConfigStatus(
+        siteConfigId,
+        oldSiteStatus,
+      );
+    }
   }
 
   protected async doPublishSite(
