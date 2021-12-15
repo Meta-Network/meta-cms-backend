@@ -449,7 +449,7 @@ export class PostService {
         post.state !== PostState.Pending &&
         post.state !== PostState.PendingEdit
       ) {
-        throw new InvalidStatusException('invalid post state');
+        throw new InvalidStatusException(`invalid post state ${post.state}`);
       }
     });
     // Generate post task worker info

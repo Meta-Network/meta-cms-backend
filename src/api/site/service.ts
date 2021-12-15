@@ -58,7 +58,9 @@ export class SiteService {
     );
     if (validSiteStatus) {
       if (!validSiteStatus.includes(config.status)) {
-        throw new InvalidStatusException();
+        throw new InvalidStatusException(
+          `invalid site status ${config.status}`,
+        );
       }
     }
     const { language, timezone, domain, templateId, metaSpacePrefix } = config;
