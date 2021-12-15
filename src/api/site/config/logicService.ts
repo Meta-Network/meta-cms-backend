@@ -7,6 +7,7 @@ import { DeleteResult, Equal, FindOneOptions, In, IsNull, Not } from 'typeorm';
 import { SiteConfigEntity } from '../../../entities/siteConfig.entity';
 import {
   AccessDeniedException,
+  DataAlreadyExistsException,
   DataNotFoundException,
   RelationNotFoundException,
   ResourceIsInUseException,
@@ -55,7 +56,36 @@ export class SiteConfigLogicService {
     }
   }
 
-  async getSiteConfig(
+  public async findRandomSiteConfig(): Promise<SiteConfigEntity> {
+    const conf = await this.siteConfigBaseService.read({
+      where: {
+        metaSpacePrefix: Not(IsNull()),
+        status: Equal(SiteStatus.Published),
+      },
+      relations: ['siteInfo'],
+    });
+    const rand = conf[(Math.random() * conf.length) >> 0];
+    return this.generateMetaSpaceDomain(rand);
+  }
+
+  public async getUserDefaultSiteConfig(
+    userId: number,
+  ): Promise<SiteConfigEntity> {
+    const config = await this.siteConfigBaseService.readOne({
+      where: {
+        siteInfo: {
+          userId,
+        },
+      },
+      order: {
+        id: 'DESC',
+      },
+      relations: ['siteInfo'],
+    });
+    return this.generateMetaSpaceDomain(config);
+  }
+
+  public async getSiteConfig(
     uid: number,
     sid: number,
     page: number,
@@ -80,7 +110,7 @@ export class SiteConfigLogicService {
     }
   }
 
-  async createSiteConfig(
+  public async createSiteConfig(
     uid: number,
     sid: number,
     config: SiteConfigEntity,
@@ -89,6 +119,12 @@ export class SiteConfigLogicService {
       sid,
       uid,
     );
+    const isExists = await this.checkPrefixIsExists(config.metaSpacePrefix);
+    if (isExists) {
+      throw new DataAlreadyExistsException(
+        `meta space prefix ${config.metaSpacePrefix} already exists.`,
+      );
+    }
 
     const tmpConfig = Object.assign(new SiteConfigEntity(), config);
 
@@ -99,15 +135,13 @@ export class SiteConfigLogicService {
     return result;
   }
 
-  async updateSiteConfig(
+  public async updateSiteConfig(
     uid: number,
     // sid: number,
     cid: number,
     config: SiteConfigEntity,
   ): Promise<SiteConfigEntity> {
     const oldConf = await this.validateSiteConfigUserId(cid, uid);
-    // if (oldConf.siteInfo.id !== sid)
-    //   throw new AccessDeniedException('access denied, site id inconsistent');
 
     const result = await this.siteConfigBaseService.update(oldConf, config);
 
@@ -115,14 +149,17 @@ export class SiteConfigLogicService {
     return result;
   }
 
-  async deleteSiteConfig(uid: number, cid: number): Promise<DeleteResult> {
+  public async deleteSiteConfig(
+    uid: number,
+    cid: number,
+  ): Promise<DeleteResult> {
     const config = await this.validateSiteConfigUserId(cid, uid);
     if (!checkConfigIsDeletable(config)) throw new ResourceIsInUseException();
 
     return await this.siteConfigBaseService.delete(cid);
   }
 
-  async validateSiteConfigUserId(
+  public async validateSiteConfigUserId(
     cid: number,
     uid: number,
     options: FindOneOptions<SiteConfigEntity> = { relations: ['siteInfo'] },
@@ -135,7 +172,7 @@ export class SiteConfigLogicService {
     return config;
   }
 
-  async validateSiteConfigsUserId(
+  public async validateSiteConfigsUserId(
     configIds: number[],
     uid: number,
     options: FindOneOptions<SiteConfigEntity> = { relations: ['siteInfo'] },
@@ -155,40 +192,7 @@ export class SiteConfigLogicService {
     return configs;
   }
 
-  /**
-   * For internal use only
-   */
-  async getSiteConfigById(cid: number): Promise<SiteConfigEntity> {
-    const config = await this.siteConfigBaseService.readOne(cid, {
-      relations: ['siteInfo'],
-    });
-    return config;
-  }
-
-  async setPublished(siteConfigId: number): Promise<SiteConfigEntity> {
-    const config = await this.siteConfigBaseService.readOne(siteConfigId);
-    const update = await this.siteConfigBaseService.update(config, {
-      ...config,
-      status: SiteStatus.Published,
-      lastPublishedAt: new Date(),
-    });
-    return update;
-  }
-
-  /** For internal use only */
-  async updateSiteConfigStatus(
-    cid: number,
-    status: SiteStatus,
-  ): Promise<SiteConfigEntity> {
-    const config = await this.siteConfigBaseService.readOne(cid);
-    const update = await this.siteConfigBaseService.update(config, {
-      ...config,
-      status,
-    });
-    return update;
-  }
-
-  async fetchSiteInfos(queries: {
+  public async fetchSiteInfos(queries: {
     modifiedAfter: Date;
   }): Promise<MetaInternalResult<FetchSiteInfosReturn[]>> {
     const siteConfigs = await this.siteConfigBaseService.readByModifedAfter(
@@ -211,30 +215,40 @@ export class SiteConfigLogicService {
     return result;
   }
 
-  async findRandomSiteConfig(): Promise<SiteConfigEntity> {
-    const conf = await this.siteConfigBaseService.read({
-      where: {
-        metaSpacePrefix: Not(IsNull()),
-        status: Equal(SiteStatus.Published),
-      },
-      relations: ['siteInfo'],
+  public async setPublished(siteConfigId: number): Promise<SiteConfigEntity> {
+    const config = await this.siteConfigBaseService.readOne(siteConfigId);
+    const update = await this.siteConfigBaseService.update(config, {
+      ...config,
+      status: SiteStatus.Published,
+      lastPublishedAt: new Date(),
     });
-    const rand = conf[(Math.random() * conf.length) >> 0];
-    return this.generateMetaSpaceDomain(rand);
+    return update;
   }
 
-  async getUserDefaultSiteConfig(userId: number): Promise<SiteConfigEntity> {
-    const config = await this.siteConfigBaseService.readOne({
-      where: {
-        siteInfo: {
-          userId,
-        },
-      },
-      order: {
-        id: 'DESC',
-      },
+  public async updateSiteConfigStatus(
+    cid: number,
+    status: SiteStatus,
+  ): Promise<SiteConfigEntity> {
+    const config = await this.siteConfigBaseService.readOne(cid);
+    const update = await this.siteConfigBaseService.update(config, {
+      ...config,
+      status,
+    });
+    return update;
+  }
+
+  public async getSiteConfigById(cid: number): Promise<SiteConfigEntity> {
+    const config = await this.siteConfigBaseService.readOne(cid, {
       relations: ['siteInfo'],
     });
-    return this.generateMetaSpaceDomain(config);
+    return config;
+  }
+
+  public async checkPrefixIsExists(value: string): Promise<boolean> {
+    const data = await this.siteConfigBaseService.count({
+      where: { metaSpacePrefix: value },
+    });
+    if (data > 0) return true;
+    return false;
   }
 }

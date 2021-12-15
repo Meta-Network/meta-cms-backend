@@ -1,24 +1,23 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 
-import { SiteConfigEntity } from '../../../entities/siteConfig.entity';
 import { DomainvalidateStatus } from '../../../types/enum';
+import { SiteConfigLogicService } from '../../site/config/logicService';
 import { DomainvalidateResult } from './dto';
 
 @Injectable()
 export class DomainValidateService {
   constructor(
-    @InjectRepository(SiteConfigEntity)
-    private readonly siteConfigRepository: Repository<SiteConfigEntity>,
+    private readonly siteConfigLogicService: SiteConfigLogicService,
     private readonly configService: ConfigService,
   ) {
     this.reserveList = this.configService.get<string[]>(
       'metaSpace.prefix.reserve',
+      [],
     );
     this.disableList = this.configService.get<string[]>(
       'metaSpace.prefix.disable',
+      [],
     );
   }
 
@@ -26,11 +25,7 @@ export class DomainValidateService {
   private readonly disableList: string[];
 
   private async checkPrefixIsExists(value: string): Promise<boolean> {
-    const data = await this.siteConfigRepository.count({
-      where: { metaSpacePrefix: value },
-    });
-    if (data > 0) return true;
-    return false;
+    return await this.siteConfigLogicService.checkPrefixIsExists(value);
   }
 
   private async checkPrefixIsReserve(value: string): Promise<boolean> {
