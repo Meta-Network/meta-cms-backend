@@ -11,6 +11,7 @@ import {
 import {
   CreateGitRepoResult,
   GenerateMetaWorkerGitInfo,
+  GitTreeInfo,
 } from '../../../../types';
 import { MetaUCenterService } from '../../../microservices/meta-ucenter/meta-ucenter.service';
 import { SiteConfigLogicService } from '../../../site/config/logicService';
@@ -196,10 +197,8 @@ export class GitHubStorageLogicService implements SpecificStorageService {
   ): Promise<GenerateMetaWorkerGitInfo> {
     this.logger.verbose(`Get meta worker Git info`, this.constructor.name);
     const token = await this.ucenterService.getGitHubAuthTokenByUserId(userId);
+    this.logger.verbose(`Get storage config`, this.constructor.name);
     const github = await this.getStorageConfigById(providerId);
-    if (!github) {
-      throw new DataNotFoundException('Storage provider not found');
-    }
     const { userName, repoName, branchName, lastCommitHash } = github;
     const gitInfo: MetaWorker.Info.Git = {
       token,
@@ -211,5 +210,20 @@ export class GitHubStorageLogicService implements SpecificStorageService {
     };
 
     return { gitInfo, repoEmpty: false };
+  }
+
+  public async getGitTreeList(
+    info: MetaWorker.Info.Git,
+  ): Promise<GitTreeInfo[]> {
+    const { token, username, reponame, branchName } = info;
+    const data = await this.octokitService.getGitTree(
+      token,
+      username,
+      reponame,
+      branchName,
+      true,
+    );
+    const treeList = data?.tree || [];
+    return treeList;
   }
 }
