@@ -4,7 +4,12 @@ import { Injectable } from '@nestjs/common';
 import { GiteePublisherProviderEntity } from '../../../entities/provider/publisher/gitee.entity';
 import { GitHubPublisherProviderEntity } from '../../../entities/provider/publisher/github.entity';
 import { ValidationException } from '../../../exceptions';
-import { GenerateMetaWorkerGitInfo, GitTreeInfo } from '../../../types';
+import {
+  GenerateMetaWorkerGitInfo,
+  GitBlobInfo,
+  GitTreeInfo,
+} from '../../../types';
+import { decodeData } from '../../../utils';
 import { getPublisherProvider } from './publisher.provider';
 
 const publisherServiceMap = {};
@@ -36,6 +41,10 @@ export interface SpecificPublisherService {
     sid: number,
   ): Promise<GitHubPublisherProviderEntity | GiteePublisherProviderEntity>;
   getGitTreeList(info: MetaWorker.Info.Git): Promise<GitTreeInfo[]>;
+  getGitBlobsByTreeList(
+    info: MetaWorker.Info.Git,
+    treeList: GitTreeInfo[],
+  ): Promise<GitBlobInfo[]>;
 }
 
 @Injectable()
@@ -105,5 +114,26 @@ export class PublisherService {
       const filterByType = treeList.filter((tree) => tree.type === type);
       return filterByType;
     }
+  }
+
+  public async getGitBlobsByTreeList(
+    publisherType: MetaWorker.Enums.PublisherType,
+    info: MetaWorker.Info.Git,
+    treeList: GitTreeInfo[],
+    decode = false,
+  ): Promise<GitBlobInfo[]> {
+    const service = getSpecificPublisherService(publisherType);
+    const blobList = await service.getGitBlobsByTreeList(info, treeList);
+    if (decode) {
+      const decodedList = blobList.map((blob) => {
+        const decoded = decodeData(blob.encoding, blob.content);
+        return {
+          ...blob,
+          ...decoded,
+        };
+      });
+      return decodedList;
+    }
+    return blobList;
   }
 }

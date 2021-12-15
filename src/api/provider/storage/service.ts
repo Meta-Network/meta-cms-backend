@@ -2,7 +2,12 @@ import { MetaWorker } from '@metaio/worker-model';
 import { Injectable } from '@nestjs/common';
 
 import { ValidationException } from '../../../exceptions';
-import { GenerateMetaWorkerGitInfo, GitTreeInfo } from '../../../types';
+import {
+  GenerateMetaWorkerGitInfo,
+  GitBlobInfo,
+  GitTreeInfo,
+} from '../../../types';
+import { decodeData } from '../../../utils';
 
 const storageServiceMap = {};
 export function registerSpecificStorageService(
@@ -36,6 +41,11 @@ export interface SpecificStorageService {
   ): GenerateMetaWorkerGitInfo | Promise<GenerateMetaWorkerGitInfo>;
 
   getGitTreeList(info: MetaWorker.Info.Git): Promise<GitTreeInfo[]>;
+
+  getGitBlobsByTreeList(
+    info: MetaWorker.Info.Git,
+    treeList: GitTreeInfo[],
+  ): Promise<GitBlobInfo[]>;
 }
 
 @Injectable()
@@ -82,5 +92,26 @@ export class StorageService {
       const filterByType = treeList.filter((tree) => tree.type === findType);
       return filterByType;
     }
+  }
+
+  public async getGitBlobsByTreeList(
+    type: MetaWorker.Enums.StorageType,
+    info: MetaWorker.Info.Git,
+    treeList: GitTreeInfo[],
+    decode = false,
+  ): Promise<GitBlobInfo[]> {
+    const service = getSpecificStorageService(type);
+    const blobList = await service.getGitBlobsByTreeList(info, treeList);
+    if (decode) {
+      const decodedList = blobList.map((blob) => {
+        const decoded = decodeData(blob.encoding, blob.content);
+        return {
+          ...blob,
+          ...decoded,
+        };
+      });
+      return decodedList;
+    }
+    return blobList;
   }
 }

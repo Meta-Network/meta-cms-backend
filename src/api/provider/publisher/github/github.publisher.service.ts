@@ -11,6 +11,7 @@ import {
 import {
   CreateGitRepoResult,
   GenerateMetaWorkerGitInfo,
+  GitBlobInfo,
   GitTreeInfo,
 } from '../../../../types';
 import { MetaUCenterService } from '../../../microservices/meta-ucenter/meta-ucenter.service';
@@ -289,5 +290,23 @@ export class GitHubPublisherService implements SpecificPublisherService {
     );
     const treeList = data?.tree || [];
     return treeList;
+  }
+
+  public async getGitBlobsByTreeList(
+    info: MetaWorker.Info.Git,
+    treeList: GitTreeInfo[],
+  ): Promise<GitBlobInfo[]> {
+    const { token, username, reponame } = info;
+    const getBlobs = treeList.map(
+      async (blob) =>
+        await this.octokitService.getGitBlob(
+          token,
+          username,
+          reponame,
+          blob.sha,
+        ),
+    );
+    const blobList = await Promise.all(getBlobs);
+    return blobList;
   }
 }
