@@ -5,7 +5,6 @@ import { SchedulerRegistry } from '@nestjs/schedule';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
 import { GitPublisherProviderEntity } from '../../../../entities/provider/publisher/git.entity';
-import { GitTreeInfo } from '../../../../types';
 import { OctokitService } from '../../octokitService';
 import {
   PublisherProvider,
@@ -150,20 +149,5 @@ export class GitHubPublisherProvider implements PublisherProvider {
         previews: ['switcheroo'],
       },
     });
-  }
-
-  public async getGitTreeList(
-    info: MetaWorker.Info.Git,
-  ): Promise<GitTreeInfo[]> {
-    const { token, username, reponame, branchName } = info;
-    const data = await this.octokitService.getGitTree(
-      token,
-      username,
-      reponame,
-      branchName,
-      true,
-    );
-    const treeList = data?.tree || [];
-    return treeList;
   }
 }

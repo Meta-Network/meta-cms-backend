@@ -2,7 +2,6 @@ import { MetaWorker } from '@metaio/worker-model';
 
 import { GitPublisherProviderEntity } from '../../../entities/provider/publisher/git.entity';
 import { ValidationException } from '../../../exceptions';
-import { GitTreeInfo } from '../../../types';
 
 const publisherProviderMap = {};
 export function registerPublisherProvider(
@@ -32,7 +31,6 @@ export interface PublisherProvider {
   getTargetOriginDomainByPublisherConfig(
     config: GitPublisherProviderEntity,
   ): string;
-  getGitTreeList(info: MetaWorker.Info.Git): Promise<GitTreeInfo[]>;
   updateDomainName(
     publishConfig: MetaWorker.Configs.PublishConfig,
   ): void | Promise<void>;

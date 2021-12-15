@@ -35,6 +35,7 @@ export interface SpecificPublisherService {
   getPublisherConfigById(
     sid: number,
   ): Promise<GitHubPublisherProviderEntity | GiteePublisherProviderEntity>;
+  getGitTreeList(info: MetaWorker.Info.Git): Promise<GitTreeInfo[]>;
 }
 
 @Injectable()
@@ -53,32 +54,6 @@ export class PublisherService {
   ): string {
     const provider = getPublisherProvider(publisherType);
     return provider.getTargetOriginDomainByPublisherConfig(config);
-  }
-
-  public async getGitTreeList(
-    publisherType: MetaWorker.Enums.PublisherType,
-    info: MetaWorker.Info.Git,
-    findPath?: string,
-    type?: 'tree' | 'blob',
-  ): Promise<GitTreeInfo[]> {
-    const provider = getPublisherProvider(publisherType);
-    const treeList = await provider.getGitTreeList(info);
-    if (findPath && type) {
-      const filterByBoth = treeList.filter(
-        (tree) => tree.path.includes(findPath) && tree.type === type,
-      );
-      return filterByBoth;
-    }
-    if (findPath && !type) {
-      const filterByPath = treeList.filter((tree) =>
-        tree.path.includes(findPath),
-      );
-      return filterByPath;
-    }
-    if (!findPath && type) {
-      const filterByType = treeList.filter((tree) => tree.type === type);
-      return filterByType;
-    }
   }
 
   public async updateDomainName(
@@ -104,5 +79,31 @@ export class PublisherService {
   ): Promise<GitHubPublisherProviderEntity | GiteePublisherProviderEntity> {
     const service = getSpecificPublisherService(publisherType);
     return await service.getPublisherConfigById(publisherProviderId);
+  }
+
+  public async getGitTreeList(
+    publisherType: MetaWorker.Enums.PublisherType,
+    info: MetaWorker.Info.Git,
+    findPath?: string,
+    type?: 'tree' | 'blob',
+  ): Promise<GitTreeInfo[]> {
+    const service = getSpecificPublisherService(publisherType);
+    const treeList = await service.getGitTreeList(info);
+    if (findPath && type) {
+      const filterByBoth = treeList.filter(
+        (tree) => tree.path.includes(findPath) && tree.type === type,
+      );
+      return filterByBoth;
+    }
+    if (findPath && !type) {
+      const filterByPath = treeList.filter((tree) =>
+        tree.path.includes(findPath),
+      );
+      return filterByPath;
+    }
+    if (!findPath && type) {
+      const filterByType = treeList.filter((tree) => tree.type === type);
+      return filterByType;
+    }
   }
 }

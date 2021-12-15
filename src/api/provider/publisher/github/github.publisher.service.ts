@@ -11,6 +11,7 @@ import {
 import {
   CreateGitRepoResult,
   GenerateMetaWorkerGitInfo,
+  GitTreeInfo,
 } from '../../../../types';
 import { MetaUCenterService } from '../../../microservices/meta-ucenter/meta-ucenter.service';
 import { SiteConfigLogicService } from '../../../site/config/logicService';
@@ -273,5 +274,20 @@ export class GitHubPublisherService implements SpecificPublisherService {
     };
 
     return { gitInfo, publishInfo, repoEmpty: empty };
+  }
+
+  public async getGitTreeList(
+    info: MetaWorker.Info.Git,
+  ): Promise<GitTreeInfo[]> {
+    const { token, username, reponame, branchName } = info;
+    const data = await this.octokitService.getGitTree(
+      token,
+      username,
+      reponame,
+      branchName,
+      true,
+    );
+    const treeList = data?.tree || [];
+    return treeList;
   }
 }
