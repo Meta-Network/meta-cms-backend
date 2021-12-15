@@ -8,34 +8,36 @@ services:
     image: nats:latest
     ports:
       - '4222:4222'
-  ucenter:
-    image: metaio/meta-ucenter:latest
-    ports:
-      - '3000:3000'
-    volumes:
-      - /var/docker/meta-ucenter/config:/app/config
-    depends_on:
-      - redis
-      - nats
-    restart: on-failure
-  network:
-    image: metaio/meta-network:latest
-    ports:
-      - '3001:3000'
-    volumes:
-      - /var/docker/meta-network/config:/app/config
-    depends_on:
-      - redis
-      - nats
-    restart: on-failure
-  cms-backend:
-    image: metaio/meta-cms-backend:latest
-    ports:
-      - '3002:3000'
-    volumes:
-      - /var/docker/meta-cms-backend/config:/opt/MetaNetwork/CMSBackend/config
-      - /var/tmp/docker-cms-be:/var/tmp/docker-cms-be
-    depends_on:
-      - redis
-      - nats
-    restart: on-failure
+  # ucenter:
+  #   image: metaio/meta-ucenter:latest
+  #   ports:
+  #     - '3000:3000'
+  #   volumes:
+  #     - /var/docker/meta-ucenter/config:/app/config
+  #   depends_on:
+  #     - redis
+  #     - nats
+  #   restart: on-failure
+  # network:
+  #   image: metaio/meta-network:latest
+  #   ports:
+  #     - '3001:3000'
+  #   volumes:
+  #     - /var/docker/meta-network/config:/app/config
+  #   depends_on:
+  #     - redis
+  #     - nats
+  #   restart: on-failure
+  # cms-backend:
+  #   image: metaio/meta-cms-backend:latest
+  #   ports:
+  #     - '3002:3000'
+  #   volumes:
+  #     - /home/garfield/Projects/Work/Meta/cms-be-configs:/opt/MetaNetwork/CMSBackend/config
+  #     - /var/tmp/docker-cms-be:/var/tmp/docker-cms-be
+  #   depends_on:
+  #     - redis
+  #     - nats
+  #   restart: on-failure
+  #   environment:
+  #     - NODE_ENV=development

@@ -7,7 +7,7 @@ import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { Octokit } from 'octokit';
 
 import { AccessDeniedException } from '../../exceptions';
-import { CreateGitRepoResult } from '../../types';
+import { CreateGitRepoResult, GetGitTreeResult } from '../../types';
 import { AbstractGitService } from './abstractGitService';
 
 // type OctokitInst = Octokit &
@@ -136,7 +136,24 @@ export class OctokitService extends AbstractGitService {
     }
   }
 
-  public async getGitHubPagesSiteInfo(
+  public async getGitTree(
+    token: string,
+    userName: string,
+    repoName: string,
+    branchOrSHA: string,
+    recursive = false,
+  ): Promise<GetGitTreeResult> {
+    const octokit = new Octokit({ auth: token });
+    const { data } = await octokit.rest.git.getTree({
+      owner: userName,
+      repo: repoName,
+      tree_sha: branchOrSHA,
+      recursive: Number(recursive).toString(),
+    });
+    return data;
+  }
+
+  public async getPagesSiteInfo(
     token: string,
     params: RequestParameters &
       Omit<
@@ -149,7 +166,7 @@ export class OctokitService extends AbstractGitService {
     return data;
   }
 
-  public async getGitHubPagesHealthCheck(
+  public async getPagesHealthCheck(
     token: string,
     params: RequestParameters &
       Omit<
@@ -162,7 +179,7 @@ export class OctokitService extends AbstractGitService {
     return data;
   }
 
-  public async createGitHubPagesSite(
+  public async createPagesSite(
     token: string,
     params: RequestParameters &
       Omit<
@@ -175,7 +192,7 @@ export class OctokitService extends AbstractGitService {
     return data;
   }
 
-  public async updateInfoAboutGitHubPagesSite(
+  public async updateInfoAboutPagesSite(
     token: string,
     params: RequestParameters &
       Omit<

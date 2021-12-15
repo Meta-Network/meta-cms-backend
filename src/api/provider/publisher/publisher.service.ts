@@ -4,7 +4,7 @@ import { Injectable } from '@nestjs/common';
 import { GiteePublisherProviderEntity } from '../../../entities/provider/publisher/gitee.entity';
 import { GitHubPublisherProviderEntity } from '../../../entities/provider/publisher/github.entity';
 import { ValidationException } from '../../../exceptions';
-import { GenerateMetaWorkerGitInfo } from '../../../types';
+import { GenerateMetaWorkerGitInfo, GitTreeInfo } from '../../../types';
 import { getPublisherProvider } from './publisher.provider';
 
 const publisherServiceMap = {};
@@ -53,6 +53,32 @@ export class PublisherService {
   ): string {
     const provider = getPublisherProvider(publisherType);
     return provider.getTargetOriginDomainByPublisherConfig(config);
+  }
+
+  public async getGitTreeList(
+    publisherType: MetaWorker.Enums.PublisherType,
+    info: MetaWorker.Info.Git,
+    findPath?: string,
+    type?: 'tree' | 'blob',
+  ): Promise<GitTreeInfo[]> {
+    const provider = getPublisherProvider(publisherType);
+    const treeList = await provider.getGitTreeList(info);
+    if (findPath && type) {
+      const filterByBoth = treeList.filter(
+        (tree) => tree.path.includes(findPath) && tree.type === type,
+      );
+      return filterByBoth;
+    }
+    if (findPath && !type) {
+      const filterByPath = treeList.filter((tree) =>
+        tree.path.includes(findPath),
+      );
+      return filterByPath;
+    }
+    if (!findPath && type) {
+      const filterByType = treeList.filter((tree) => tree.type === type);
+      return filterByType;
+    }
   }
 
   public async updateDomainName(
