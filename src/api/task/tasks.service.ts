@@ -385,6 +385,7 @@ export class TasksService {
         siteConfigId,
         oldSiteStatus,
       );
+      throw error;
     }
   }
 
