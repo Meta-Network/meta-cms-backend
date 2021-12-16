@@ -7,7 +7,9 @@ import {
   Injectable,
   LoggerService,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
+import * as crypto from 'crypto';
 import han from 'han';
 import { parse as yfmParse } from 'hexo-front-matter';
 import omit from 'lodash.omit';
@@ -121,6 +123,7 @@ export class PostService {
     private readonly metaSignatureHelper: MetaSignatureHelper,
     private readonly cache: AppCacheService,
     private readonly httpService: HttpService,
+    private readonly configService: ConfigService,
   ) {}
 
   private setPostMetadata(
@@ -931,5 +934,16 @@ export class PostService {
     post.state = state;
     await this.postRepository.save(post);
     return post;
+  }
+
+  public decryptMatatakiPost(iv: Buffer, encryptedData: Buffer) {
+    const decipher = crypto.createDecipheriv(
+      'aes-256-cbc',
+      Buffer.from(this.configService.get('post.matataki.key')),
+      iv,
+    );
+    let decrypted = decipher.update(encryptedData);
+    decrypted = Buffer.concat([decrypted, decipher.final()]);
+    return decrypted.toString();
   }
 }

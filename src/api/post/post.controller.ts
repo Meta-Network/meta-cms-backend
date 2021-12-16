@@ -51,6 +51,7 @@ import {
 } from '../../utils/responseClass';
 import { PostMethodValidation } from '../../utils/validation';
 import { AccessTokenService } from '../synchronizer/access-token.service';
+import { EncryptedDataDto } from './dto/encrypted-data-dto';
 import { PublishStoragePostsDto } from './dto/publish-post.dto';
 import { PostService } from './post.service';
 
@@ -76,6 +77,10 @@ class PostInfoListResponse extends TransformResponse<PostInfoPagination> {
 class SyncStateResponse extends TransformResponse<'idle' | 'syncing' | number> {
   @ApiProperty({ type: String, example: 'idle | syncing | 1' })
   readonly data: 'idle' | 'syncing' | number;
+}
+class MatatakiDecryptedPostResponse extends TransformResponse<string> {
+  @ApiProperty({ type: String })
+  readonly data: string;
 }
 
 @ApiTags('post')
@@ -310,5 +315,14 @@ export class PostController {
     );
 
     this.microserviceClient.emit(`cms.post.sync.${platform}`, uid);
+  }
+
+  @Post('decrypt/matataki')
+  @ApiOkResponse({ type: MatatakiDecryptedPostResponse })
+  public decryptMatatakiPost(@Body() dto: EncryptedDataDto) {
+    const iv = Buffer.from(dto.iv, 'hex');
+    const encryptedData = Buffer.from(dto.encryptedData, 'hex');
+
+    return this.postService.decryptMatatakiPost(iv, encryptedData);
   }
 }
