@@ -97,13 +97,17 @@ export class PostController {
 
   @Get('storage/:siteConfigId(\\d+)')
   @ApiOperation({
-    summary: 'Get posts from user storag.',
+    summary: 'Get posts from user storage.',
     description:
-      'If draft is true, will get posts from drafts folder. For example: in Hexo platform, when draft is set true, will get post file list from _drafts folder.',
+      'When state is drafted: private repo _drafts folder; when state is posted: private repo _posted folder; when state is published: public repo RESTful api.',
   })
   @ApiOkResponse({ type: PostInfoListResponse })
+  @ApiQuery({
+    name: 'state',
+    enum: GetPostsFromStorageState,
+    example: GetPostsFromStorageState.Published,
+  })
   @ApiQuery({ name: 'page', type: Number, example: 1 })
-  @ApiQuery({ name: 'draft', type: Boolean, example: false })
   public async getPostsFromStorage(
     @User('id', ParseIntPipe) uid: number,
     @Param('siteConfigId', ParseIntPipe) siteConfigId: number,
