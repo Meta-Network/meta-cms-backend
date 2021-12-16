@@ -138,7 +138,7 @@ export class PostController {
   @UsePipes(new ValidationPipe(PostMethodValidation))
   public async publishPostsToStorage(
     @User() user: UCenterJWTPayload,
-    @Query('draft', ParseBoolPipe, new DefaultValuePipe(false)) draft: boolean,
+    @Query('draft', new DefaultValuePipe(false), ParseBoolPipe) draft: boolean,
     @Body() body: PublishStoragePostsDto,
   ) {
     return await this.postService.publishPostsToStorage(user, body, draft);
@@ -158,7 +158,7 @@ export class PostController {
   @UsePipes(new ValidationPipe(PostMethodValidation))
   public async updatePostsToStorage(
     @User() user: UCenterJWTPayload,
-    @Query('draft', ParseBoolPipe, new DefaultValuePipe(false)) draft: boolean,
+    @Query('draft', new DefaultValuePipe(false), ParseBoolPipe) draft: boolean,
     @Body() body: PublishStoragePostsDto,
   ) {
     return await this.postService.updatePostsInStorage(user, body, draft);
@@ -178,7 +178,7 @@ export class PostController {
   @UsePipes(new ValidationPipe(PostMethodValidation))
   public async deletePostOnStorage(
     @User() user: UCenterJWTPayload,
-    @Query('draft', ParseBoolPipe, new DefaultValuePipe(false)) draft: boolean,
+    @Query('draft', new DefaultValuePipe(false), ParseBoolPipe) draft: boolean,
     @Body() body: PublishStoragePostsDto,
   ) {
     return await this.postService.deletePostsOnStorage(user, body, draft);
@@ -198,7 +198,7 @@ export class PostController {
   @UsePipes(new ValidationPipe(PostMethodValidation))
   public async movePostsInStorage(
     @User() user: UCenterJWTPayload,
-    @Query('draft', ParseBoolPipe, new DefaultValuePipe(false)) draft: boolean,
+    @Query('draft', new DefaultValuePipe(false), ParseBoolPipe) draft: boolean,
     @Body() body: PublishStoragePostsDto,
   ) {
     return await this.postService.movePostsInStorage(user, body, draft);
@@ -211,10 +211,15 @@ export class PostController {
   @ApiQuery({ name: 'state', enum: PostState, example: 'pending' })
   public async getPosts(
     @User('id', ParseIntPipe) uid: number,
-    @Query('page', ParseIntPipe, new DefaultValuePipe(1))
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe)
     page: number,
-    @Query('limit', ParseIntPipe, new DefaultValuePipe(10)) limit: number,
-    @Query('state', new DefaultValuePipe(PostState.Pending)) state: PostState,
+    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+    @Query(
+      'state',
+      new DefaultValuePipe(PostState.Pending),
+      new ParseEnumPipe(PostState),
+    )
+    state: PostState,
   ) {
     const options = {
       page,
