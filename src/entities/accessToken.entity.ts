@@ -26,4 +26,9 @@ export class AccessTokenEntity extends BaseEntity {
   @IsBoolean()
   @IsNotEmpty()
   active: boolean;
+
+  @Column({ comment: 'Platform username', default: '' })
+  @IsString()
+  @IsNotEmpty()
+  username: string;
 }

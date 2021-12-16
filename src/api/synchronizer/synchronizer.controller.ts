@@ -9,10 +9,16 @@ export class SynchronizerController {
 
   @MessagePattern('user.socialauth.bound')
   async newAccessToken(
-    @Payload() payload: { userId: number; platform: string; token: string },
+    @Payload()
+    payload: {
+      userId: number;
+      platform: string;
+      token: string;
+      username: string;
+    },
   ) {
-    const { userId, platform, token } = payload;
-    await this.accessTokenService.save(userId, platform, token);
+    const { userId, platform, token, username } = payload;
+    await this.accessTokenService.save(userId, platform, token, username);
   }
 
   @MessagePattern('user.socialauth.unbound')
