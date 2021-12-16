@@ -53,6 +53,7 @@
     "find-remove": "^3.1.0",
     "form-cors": "^1.0.2",
     "han": "^0.0.7",
+    "hexo-front-matter": "^2.0.0",
     "lodash.omit": "^4.5.0",
     "moment": "^2.29.1",
     "mysql2": "^2.2.5",

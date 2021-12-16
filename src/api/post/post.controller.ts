@@ -7,6 +7,7 @@ import {
   Inject,
   Param,
   ParseBoolPipe,
+  ParseEnumPipe,
   ParseIntPipe,
   Post,
   Query,
@@ -39,7 +40,11 @@ import {
 } from '../../exceptions';
 import { ParsePlatformPipe } from '../../pipes/parse-platform.pipe';
 import { UCenterJWTPayload } from '../../types';
-import { MetaMicroserviceClient, PostState } from '../../types/enum';
+import {
+  GetPostsFromStorageState,
+  MetaMicroserviceClient,
+  PostState,
+} from '../../types/enum';
 import {
   PaginationResponse,
   TransformResponse,
@@ -102,14 +107,19 @@ export class PostController {
   public async getPostsFromStorage(
     @User('id', ParseIntPipe) uid: number,
     @Param('siteConfigId', ParseIntPipe) siteConfigId: number,
-    @Query('page', ParseIntPipe, new DefaultValuePipe(1)) page: number,
-    @Query('draft', ParseBoolPipe, new DefaultValuePipe(false)) draft: boolean,
+    @Query(
+      'state',
+      new DefaultValuePipe(GetPostsFromStorageState.Published),
+      new ParseEnumPipe(GetPostsFromStorageState, {}),
+    )
+    state?: GetPostsFromStorageState,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page?: number,
   ) {
     return await this.postService.getPostsFromStorage(
       uid,
       siteConfigId,
+      state,
       page,
-      draft,
     );
   }
 

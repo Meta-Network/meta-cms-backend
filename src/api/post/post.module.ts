@@ -15,6 +15,7 @@ import { AppCacheModule } from '../cache/module';
 import { MetaSignatureModule } from '../meta-signature/meta-signature.module';
 import { MetadataStorageModule } from '../provider/metadata-storage/metadata-storage.module';
 import { PublisherModule } from '../provider/publisher/publisher.module';
+import { StorageModule } from '../provider/storage/module';
 import { SiteConfigModule } from '../site/config/module';
 import { AccessTokenService } from '../synchronizer/access-token.service';
 import { TasksModule } from '../task/tasks.module';
@@ -47,6 +48,7 @@ import { MatatakiSourceModule } from './sources/matataki/matataki.module';
     MetadataStorageModule,
     MetaSignatureModule,
     PublisherModule,
+    StorageModule,
     AppCacheModule,
     HttpModule,
   ],
