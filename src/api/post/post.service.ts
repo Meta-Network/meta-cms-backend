@@ -939,7 +939,7 @@ export class PostService {
   public decryptMatatakiPost(iv: Buffer, encryptedData: Buffer) {
     const decipher = crypto.createDecipheriv(
       'aes-256-cbc',
-      Buffer.from(this.configService.get('post.matataki.key')),
+      Buffer.from(this.configService.get<string>('post.matataki.key'), 'hex'),
       iv,
     );
     let decrypted = decipher.update(encryptedData);
