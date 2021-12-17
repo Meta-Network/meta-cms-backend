@@ -323,6 +323,6 @@ export class PostController {
     const iv = Buffer.from(dto.iv, 'hex');
     const encryptedData = Buffer.from(dto.encryptedData, 'hex');
 
-    return this.postService.decryptMatatakiPost(iv, encryptedData);
+    return JSON.parse(this.postService.decryptMatatakiPost(iv, encryptedData));
   }
 }
