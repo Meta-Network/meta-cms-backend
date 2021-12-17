@@ -31,24 +31,39 @@ export class IpfsMetadataStorageProvider implements MetadataStorageProvider {
       const res = await superagent.get(`${gateway}/ipfs/${refer}`);
       return JSON.stringify(res.body);
     } catch (err) {
-      console.log(`Error ${err}`);
+      this.logger.error(
+        `Get metadata from IPFS failed, ${err}`,
+        err,
+        this.constructor.name,
+      );
     }
   }
   async upload(contentKey: string, content: string): Promise<string> {
-    const folder = this.configService.get<string>(
-      'provider.metadataStorage.ipfs.fleek.folder',
-    );
-    const uploadedFile = await fleekStorage.upload({
-      apiKey: this.configService.get<string>(
-        'provider.metadataStorage.ipfs.fleek.apiKey',
-      ),
-      apiSecret: this.configService.get<string>(
-        'provider.metadataStorage.ipfs.fleek.apiSecret',
-      ),
-      key: `${folder}/${contentKey}`,
-      data: content,
-    });
-    this.logger.debug(uploadedFile, this.constructor.name);
-    return uploadedFile.hash;
+    try {
+      const folder = this.configService.get<string>(
+        'provider.metadataStorage.ipfs.fleek.folder',
+      );
+      const uploadedFile = await fleekStorage.upload({
+        apiKey: this.configService.get<string>(
+          'provider.metadataStorage.ipfs.fleek.apiKey',
+        ),
+        apiSecret: this.configService.get<string>(
+          'provider.metadataStorage.ipfs.fleek.apiSecret',
+        ),
+        key: `${folder}/${contentKey}`,
+        data: content,
+      });
+      this.logger.debug(
+        `Upload metadata to IPFS ${JSON.stringify(uploadedFile)}`,
+        this.constructor.name,
+      );
+      return uploadedFile.hash;
+    } catch (error) {
+      this.logger.error(
+        `Upload metadata to IPFS failed, ${error}`,
+        error,
+        this.constructor.name,
+      );
+    }
   }
 }
