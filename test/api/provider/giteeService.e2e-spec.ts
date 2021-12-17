@@ -2,10 +2,10 @@ import { LoggerService } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
-import { CreateGitRepoResult } from '../../types';
-import { GiteeService } from './giteeService';
+import { GiteeService } from '../../../src/api/provider/giteeService';
+import { CreateGitRepoResult } from '../../../src/types';
 
-describe('GiteeService', () => {
+describe('GiteeService （e2e)', () => {
   const giteeToken = process.env.GITEE_TOKEN;
   const giteeUsername = process.env.GITEE_USERNAME;
 

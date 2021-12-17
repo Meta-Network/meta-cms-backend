@@ -2,6 +2,7 @@ import { MetaWorker } from '@metaio/worker-model';
 import { Inject, Injectable, LoggerService } from '@nestjs/common';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import superagent from 'superagent';
+import { isString } from 'util';
 
 import { DnsProvider, registerDnsProvider } from '../dns.provider';
 
@@ -16,6 +17,13 @@ export class CloudFlareDnsProvider implements DnsProvider {
 
   async updateDnsRecord(dns: MetaWorker.Info.Dns) {
     const dnsRecord = dns.record;
+    if (
+      MetaWorker.Enums.DnsRecordType.CNAME === dns.record.type &&
+      dns.record.content &&
+      typeof dns.record.content === 'string'
+    ) {
+      dns.record.content = dns.record.content.toLowerCase();
+    }
     const res = await superagent
       .get(
         `https://api.cloudflare.com/client/v4/zones/${dns.env.zoneId}/dns_records`,

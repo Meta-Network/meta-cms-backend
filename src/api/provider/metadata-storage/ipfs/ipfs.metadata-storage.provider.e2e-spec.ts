@@ -6,7 +6,7 @@ import { configBuilder } from '../../../../configs';
 import { WinstonConfigService } from '../../../../configs/winston';
 import { IpfsMetadataStorageProvider } from './ipfs.metadata-storage.provider';
 
-describe('IpfsMetadataStorageProvider', () => {
+describe('IpfsMetadataStorageProvider (e2e)', () => {
   let configService: ConfigService;
   let ipfsMetadataStorageProvider: IpfsMetadataStorageProvider;
 

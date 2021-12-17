@@ -6,7 +6,7 @@ import { configBuilder } from '../../../../configs';
 import { WinstonConfigService } from '../../../../configs/winston';
 import { ArweaveMetadataStorageProvider } from './arweave.metadata-storage.provider';
 
-describe('ArweaveMetadataStorageProvider', () => {
+describe('ArweaveMetadataStorageProvider (e2e)', () => {
   let configService: ConfigService;
   let metadataStorageProvider: ArweaveMetadataStorageProvider;
 

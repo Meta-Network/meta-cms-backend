@@ -14,15 +14,15 @@ import han from 'han';
 import moment from 'moment';
 import { WinstonModule } from 'nest-winston';
 
-import { configBuilder } from '../../configs';
-import { WinstonConfigService } from '../../configs/winston';
-import { MetadataStorageType } from '../../types/enum';
-import { MetadataStorageModule } from '../provider/metadata-storage/metadata-storage.module';
-import { MetadataStorageService } from '../provider/metadata-storage/metadata-storage.service';
-import { MetaSignatureHelper } from './meta-signature.helper';
-import { MetaSignatureService } from './meta-signature.service';
+import { MetaSignatureHelper } from '../../../src/api/meta-signature/meta-signature.helper';
+import { MetaSignatureService } from '../../../src/api/meta-signature/meta-signature.service';
+import { MetadataStorageModule } from '../../../src/api/provider/metadata-storage/metadata-storage.module';
+import { MetadataStorageService } from '../../../src/api/provider/metadata-storage/metadata-storage.service';
+import { configBuilder } from '../../../src/configs';
+import { WinstonConfigService } from '../../../src/configs/winston';
+import { MetadataStorageType } from '../../../src/types/enum';
 
-describe('MetaSignatureService', () => {
+describe('MetaSignatureService (e2e)', () => {
   let configService: ConfigService;
   let metaSignatureHelper: MetaSignatureHelper;
   let metadataStorageService: MetadataStorageService;

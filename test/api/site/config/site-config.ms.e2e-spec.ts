@@ -4,7 +4,10 @@ import { ClientProxy, ClientsModule, Transport } from '@nestjs/microservices';
 import { Test, TestingModule } from '@nestjs/testing';
 import { firstValueFrom } from 'rxjs';
 
-import { SiteConfigLogicService } from '../../../../src/api/site/config/logicService';
+import {
+  FetchSiteInfosReturn,
+  SiteConfigLogicService,
+} from '../../../../src/api/site/config/logicService';
 import { SiteConfigMsController } from '../../../../src/api/site/config/ms.controller';
 
 describe('SiteConfigMsController (e2e)', () => {
@@ -12,7 +15,7 @@ describe('SiteConfigMsController (e2e)', () => {
   let appMsClient: ClientProxy;
   let siteConfigLogicService: SiteConfigLogicService;
   beforeEach(async () => {
-    siteConfigLogicService = new SiteConfigLogicService(null, null);
+    siteConfigLogicService = new SiteConfigLogicService(null, null, null);
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [
         ClientsModule.register([
@@ -61,12 +64,13 @@ describe('SiteConfigMsController (e2e)', () => {
   });
 
   it('syncSiteInfo', async () => {
-    const mockSiteInfos = [
+    const mockSiteInfos: FetchSiteInfosReturn[] = [
       {
         userId: 11,
         configId: 22,
         title: 'Test Site',
         subtitle: 'Test sub title',
+        description: 'Test description',
         domain: 'bob.metaspaces.life',
         metaSpacePrefix: 'bob',
       },
@@ -76,10 +80,11 @@ describe('SiteConfigMsController (e2e)', () => {
         title: 'Alice  wonder world',
         subtitle: 'Rabbit hole',
         domain: 'alice.metaspaces.life',
+        description: 'Alice description',
         metaSpacePrefix: 'alice',
       },
     ];
-    const metaInternalResult = new MetaInternalResult({
+    const metaInternalResult = new MetaInternalResult<FetchSiteInfosReturn[]>({
       serviceCode: ServiceCode.CMS,
       data: mockSiteInfos,
     });
@@ -87,7 +92,7 @@ describe('SiteConfigMsController (e2e)', () => {
       .spyOn(siteConfigLogicService, 'fetchSiteInfos')
       .mockImplementation(async (modifiedAfter) => metaInternalResult);
     const result = await firstValueFrom(
-      appMsClient.send<MetaInternalResult>('syncSiteInfo', new Date()),
+      appMsClient.send('syncSiteInfo', new Date()),
     );
     expect(result.statusCode).toBe(HttpStatus.OK);
     console.log(result.data);

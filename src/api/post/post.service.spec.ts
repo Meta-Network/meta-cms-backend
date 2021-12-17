@@ -1,7 +1,5 @@
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
-import han from 'han';
-import moment from 'moment';
 import { WinstonModule } from 'nest-winston';
 
 import { configBuilder } from '../../configs';
@@ -28,6 +26,9 @@ describe('PostService', () => {
 
     configService = module.get<ConfigService>(ConfigService);
     postService = new PostService(
+      null,
+      null,
+      null,
       null,
       null,
       null,
