@@ -70,6 +70,12 @@ export enum PostState {
   Invalid = 'invalid',
 }
 
+export enum GetPostsFromStorageState {
+  Drafted = 'drafted',
+  Posted = 'posted',
+  Published = 'published',
+}
+
 export enum PostAction {
   CREATE = 'CREATE',
   UPDATE = 'UPDATE',

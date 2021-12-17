@@ -7,8 +7,11 @@ import {
   Injectable,
   LoggerService,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
+import * as crypto from 'crypto';
 import han from 'han';
+import { parse as yfmParse } from 'hexo-front-matter';
 import omit from 'lodash.omit';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import {
@@ -30,6 +33,7 @@ import {
 } from '../../exceptions';
 import { UCenterJWTPayload } from '../../types';
 import {
+  GetPostsFromStorageState,
   MetadataStorageType,
   PostAction,
   PostState,
@@ -40,6 +44,7 @@ import { AppCacheService } from '../cache/service';
 import { MetaSignatureHelper } from '../meta-signature/meta-signature.helper';
 import { MetaSignatureService } from '../meta-signature/meta-signature.service';
 import { PublisherService } from '../provider/publisher/publisher.service';
+import { StorageService } from '../provider/storage/service';
 import { SiteConfigLogicService } from '../site/config/logicService';
 import { TasksService } from '../task/tasks.service';
 import { StoragePostDto } from './dto/post.dto';
@@ -79,6 +84,21 @@ export type HexoPostsAPIResponse = {
   data: Partial<HexoPostsAPIData>[];
 };
 
+export type HexoFrontMatterParseObject = {
+  [key: string]: string | number | Array<string | number>;
+  title: string;
+  tags: string[];
+  updated: string;
+  categories: string[];
+  excerpt: string;
+  cover: string;
+  license: string;
+  createdAt: string;
+  updatedAt: string;
+  date: string;
+  _content: string;
+};
+
 export interface DraftPost extends PostEntity {
   content: string;
 }
@@ -94,6 +114,7 @@ export class PostService {
     private readonly postSiteConfigRepository: Repository<PostSiteConfigRelaEntity>,
     private readonly siteConfigLogicService: SiteConfigLogicService,
     private readonly publisherService: PublisherService,
+    private readonly storageService: StorageService,
     private readonly preprocessorService: PreProcessorService,
     private readonly tasksService: TasksService,
     @InjectRepository(DraftEntity)
@@ -102,6 +123,7 @@ export class PostService {
     private readonly metaSignatureHelper: MetaSignatureHelper,
     private readonly cache: AppCacheService,
     private readonly httpService: HttpService,
+    private readonly configService: ConfigService,
   ) {}
 
   private setPostMetadata(
@@ -377,6 +399,120 @@ export class PostService {
     }
   }
 
+  private async getStorageGitInfoAndType(
+    userId: number,
+    siteConfigId: number,
+  ): Promise<{
+    info: MetaWorker.Info.Git;
+    type: MetaWorker.Enums.StorageType;
+  }> {
+    const config = await this.siteConfigLogicService.validateSiteConfigUserId(
+      siteConfigId,
+      userId,
+    );
+    const { storeProviderId, storeType } = config;
+    const { gitInfo } = await this.storageService.getMetaWorkerGitInfo(
+      storeType,
+      userId,
+      storeProviderId,
+    );
+    return { info: gitInfo, type: storeType };
+  }
+
+  private async generateHexoFrontMatterParseList(
+    userId: number,
+    siteConfigId: number,
+    findPath: string,
+  ): Promise<HexoFrontMatterParseObject[]> {
+    const { info, type } = await this.getStorageGitInfoAndType(
+      userId,
+      siteConfigId,
+    );
+    const treeList = await this.storageService.getGitTreeList(
+      type,
+      info,
+      findPath,
+      'blob',
+    );
+    const blobList = await this.storageService.getGitBlobsByTreeList(
+      type,
+      info,
+      treeList,
+      true,
+    );
+    const parsed = blobList.map((blob) => {
+      if (blob.content && blob.encoding === 'utf-8') {
+        return yfmParse(blob.content) as HexoFrontMatterParseObject;
+      }
+    });
+    return parsed;
+  }
+
+  private async generatePostInfoHexoFrontMatterParseList(
+    data: HexoFrontMatterParseObject[],
+  ): Promise<MetaWorker.Info.Post[]> {
+    if (Array.isArray(data)) {
+      return data.map((item) => {
+        const obj = {
+          ...item,
+          source: item?._content,
+          summary: item?.excerpt,
+          createdAt: item?.createdAt || item?.date,
+          updatedAt: item?.updatedAt || item?.updated,
+        };
+        obj._content = undefined;
+        obj.excerpt = undefined;
+        return obj;
+      });
+    } else {
+      return [];
+    }
+  }
+
+  private async getDraftedPostsFromStorage(
+    userId: number,
+    siteConfigId: number,
+  ): Promise<Pagination<MetaWorker.Info.Post>> {
+    const hexoList = await this.generateHexoFrontMatterParseList(
+      userId,
+      siteConfigId,
+      'source/_drafts',
+    );
+    const items = await this.generatePostInfoHexoFrontMatterParseList(hexoList);
+    return {
+      meta: {
+        itemCount: items.length || 0,
+        totalItems: items.length || 0,
+        itemsPerPage: items.length || 0,
+        totalPages: 1,
+        currentPage: 1,
+      },
+      items,
+    };
+  }
+
+  private async getPostedPostsFromStorage(
+    userId: number,
+    siteConfigId: number,
+  ): Promise<Pagination<MetaWorker.Info.Post>> {
+    const hexoList = await this.generateHexoFrontMatterParseList(
+      userId,
+      siteConfigId,
+      'source/_posts',
+    );
+    const items = await this.generatePostInfoHexoFrontMatterParseList(hexoList);
+    return {
+      meta: {
+        itemCount: items.length || 0,
+        totalItems: items.length || 0,
+        itemsPerPage: items.length || 0,
+        totalPages: 1,
+        currentPage: 1,
+      },
+      items,
+    };
+  }
+
   private async getPublishedPostsFromStorage(
     userId: number,
     siteConfigId: number,
@@ -386,7 +522,10 @@ export class PostService {
       userId,
       siteConfigId,
     );
-    const requestUrl = `${baseUrl}/api/posts/${page}.json`;
+    const requestUrl =
+      page === 1
+        ? `${baseUrl}/api/posts.json`
+        : `${baseUrl}/api/posts/${page}.json`;
     const response =
       this.httpService.get<Partial<HexoPostsAPIResponse>>(requestUrl);
     const { data } = await lastValueFrom(response);
@@ -407,17 +546,41 @@ export class PostService {
   public async getPostsFromStorage(
     userId: number,
     siteConfigId: number,
+    state: GetPostsFromStorageState = GetPostsFromStorageState.Published,
     page = 1,
-    isDraft = false,
   ): Promise<Pagination<MetaWorker.Info.Post>> {
-    if (isDraft) {
-      throw new Error('Function not implemented.'); // TODO(550): Draft Support
-    } else {
-      return await this.getPublishedPostsFromStorage(
-        userId,
-        siteConfigId,
-        page,
+    const wrongData: Pagination<MetaWorker.Info.Post> = {
+      meta: {
+        itemCount: 0,
+        totalItems: 0,
+        itemsPerPage: 0,
+        totalPages: 0,
+        currentPage: 0,
+      },
+      items: [],
+    };
+    try {
+      if (state === GetPostsFromStorageState.Drafted) {
+        return await this.getDraftedPostsFromStorage(userId, siteConfigId);
+      }
+      if (state === GetPostsFromStorageState.Posted) {
+        return await this.getPostedPostsFromStorage(userId, siteConfigId);
+      }
+      if (state === GetPostsFromStorageState.Published) {
+        return await this.getPublishedPostsFromStorage(
+          userId,
+          siteConfigId,
+          page,
+        );
+      }
+      return wrongData;
+    } catch (error) {
+      this.logger.error(
+        `Call getPostsFromStorage ${error}`,
+        error,
+        this.constructor.name,
       );
+      return wrongData;
     }
   }
 
@@ -449,7 +612,7 @@ export class PostService {
         post.state !== PostState.Pending &&
         post.state !== PostState.PendingEdit
       ) {
-        throw new InvalidStatusException('invalid post state');
+        throw new InvalidStatusException(`invalid post state ${post.state}`);
       }
     });
     // Generate post task worker info
@@ -771,5 +934,16 @@ export class PostService {
     post.state = state;
     await this.postRepository.save(post);
     return post;
+  }
+
+  public decryptMatatakiPost(iv: Buffer, encryptedData: Buffer) {
+    const decipher = crypto.createDecipheriv(
+      'aes-256-cbc',
+      Buffer.from(this.configService.get('post.matataki.key')),
+      iv,
+    );
+    let decrypted = decipher.update(encryptedData);
+    decrypted = Buffer.concat([decrypted, decipher.final()]);
+    return decrypted.toString();
   }
 }

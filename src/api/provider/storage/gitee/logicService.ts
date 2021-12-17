@@ -11,6 +11,8 @@ import {
 import {
   CreateGitRepoResult,
   GenerateMetaWorkerGitInfo,
+  GitBlobInfo,
+  GitTreeInfo,
 } from '../../../../types';
 import { MetaUCenterService } from '../../../microservices/meta-ucenter/meta-ucenter.service';
 import { SiteConfigLogicService } from '../../../site/config/logicService';
@@ -185,14 +187,10 @@ export class GiteeStorageLogicService implements SpecificStorageService {
     userId: number,
     providerId: number,
   ): Promise<GenerateMetaWorkerGitInfo> {
-    this.logger.verbose(`Generate meta worker Git info`, this.constructor.name);
+    this.logger.verbose(`Get meta worker Git info`, this.constructor.name);
     const token = await this.ucenterService.getGiteeAuthTokenByUserId(userId);
-
     this.logger.verbose(`Get storage config`, this.constructor.name);
     const gitee = await this.getStorageConfigById(providerId);
-    if (!gitee) {
-      throw new DataNotFoundException('Storage provider not found');
-    }
     const { userName, repoName, branchName, lastCommitHash } = gitee;
     const gitInfo: MetaWorker.Info.Git = {
       token,
@@ -204,5 +202,33 @@ export class GiteeStorageLogicService implements SpecificStorageService {
     };
 
     return { gitInfo, repoEmpty: false };
+  }
+
+  public async getGitTreeList(
+    info: MetaWorker.Info.Git,
+  ): Promise<GitTreeInfo[]> {
+    const { token, username, reponame, branchName } = info;
+    const data = await this.giteeService.getGitTree(
+      token,
+      username,
+      reponame,
+      branchName,
+      true,
+    );
+    const treeList = data?.tree || [];
+    return treeList;
+  }
+
+  public async getGitBlobsByTreeList(
+    info: MetaWorker.Info.Git,
+    treeList: GitTreeInfo[],
+  ): Promise<GitBlobInfo[]> {
+    const { token, username, reponame } = info;
+    const getBlobs = treeList.map(
+      async (blob) =>
+        await this.giteeService.getGitBlob(token, username, reponame, blob.sha),
+    );
+    const blobList = await Promise.all(getBlobs);
+    return blobList;
   }
 }

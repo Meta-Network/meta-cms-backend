@@ -1,11 +1,8 @@
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
-import { getRepositoryToken, TypeOrmModule } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 
-import { TypeORMConfigService } from '../../../configs/typeorm';
-import { SiteConfigEntity } from '../../../entities/siteConfig.entity';
 import { DomainvalidateStatus } from '../../../types/enum';
+import { SiteConfigModule } from '../../site/config/module';
 import { DomainvalidateResult } from './dto';
 import { DomainValidateService } from './service';
 
@@ -21,7 +18,6 @@ const mockConfig = () => ({
 describe('DomainValidateService', () => {
   let module: TestingModule;
   let service: DomainValidateService;
-  let siteConfigRepository: Repository<SiteConfigEntity>;
   let configService: ConfigService;
 
   beforeEach(async () => {
@@ -30,28 +26,17 @@ describe('DomainValidateService', () => {
         ConfigModule.forRoot({
           load: [mockConfig],
         }),
-        TypeOrmModule.forRootAsync({
-          useClass: TypeORMConfigService,
-        }),
-        TypeOrmModule.forFeature([SiteConfigEntity]),
+        SiteConfigModule,
       ],
       providers: [DomainValidateService],
     }).compile();
 
     service = module.get<DomainValidateService>(DomainValidateService);
-    siteConfigRepository = module.get<Repository<SiteConfigEntity>>(
-      getRepositoryToken(SiteConfigEntity),
-    );
     configService = module.get<ConfigService>(ConfigService);
-  });
-
-  afterAll(async () => {
-    module.close();
   });
 
   it('should be defined', () => {
     expect(service).toBeDefined();
-    expect(siteConfigRepository).toBeDefined();
     expect(configService).toBeDefined();
   });
 

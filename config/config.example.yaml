@@ -136,6 +136,8 @@ task:
 post:
   preprocessor:
     urlprefix:
+  matataki:
+    key:
 metaSpace:
   # camelCase. see MetaWorker.Info.Gateway
   gateway:

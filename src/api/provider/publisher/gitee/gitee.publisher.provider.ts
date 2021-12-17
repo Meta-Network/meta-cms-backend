@@ -1,6 +1,5 @@
 import { MetaWorker } from '@metaio/worker-model';
-import { Inject, Injectable, LoggerService } from '@nestjs/common';
-import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
+import { Injectable } from '@nestjs/common';
 
 import { GitPublisherProviderEntity } from '../../../../entities/provider/publisher/git.entity';
 import {
@@ -10,10 +9,7 @@ import {
 
 @Injectable()
 export class GiteePublisherProvider implements PublisherProvider {
-  constructor(
-    @Inject(WINSTON_MODULE_NEST_PROVIDER)
-    private readonly logger: LoggerService,
-  ) {
+  constructor() {
     registerPublisherProvider(MetaWorker.Enums.PublisherType.GITEE, this);
   }
 

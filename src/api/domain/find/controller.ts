@@ -5,13 +5,7 @@ import {
   ParseIntPipe,
   Query,
 } from '@nestjs/common';
-import {
-  ApiCookieAuth,
-  ApiOkResponse,
-  ApiProperty,
-  ApiQuery,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiOkResponse, ApiProperty, ApiQuery, ApiTags } from '@nestjs/swagger';
 
 import { SkipUCenterAuth } from '../../../decorators';
 import { SiteConfigEntity } from '../../../entities/siteConfig.entity';

@@ -7,6 +7,7 @@ import {
   Inject,
   Param,
   ParseBoolPipe,
+  ParseEnumPipe,
   ParseIntPipe,
   Post,
   Query,
@@ -39,13 +40,18 @@ import {
 } from '../../exceptions';
 import { ParsePlatformPipe } from '../../pipes/parse-platform.pipe';
 import { UCenterJWTPayload } from '../../types';
-import { MetaMicroserviceClient, PostState } from '../../types/enum';
+import {
+  GetPostsFromStorageState,
+  MetaMicroserviceClient,
+  PostState,
+} from '../../types/enum';
 import {
   PaginationResponse,
   TransformResponse,
 } from '../../utils/responseClass';
 import { PostMethodValidation } from '../../utils/validation';
 import { AccessTokenService } from '../synchronizer/access-token.service';
+import { EncryptedDataDto } from './dto/encrypted-data-dto';
 import { PublishStoragePostsDto } from './dto/publish-post.dto';
 import { PostService } from './post.service';
 
@@ -72,6 +78,10 @@ class SyncStateResponse extends TransformResponse<'idle' | 'syncing' | number> {
   @ApiProperty({ type: String, example: 'idle | syncing | 1' })
   readonly data: 'idle' | 'syncing' | number;
 }
+class MatatakiDecryptedPostResponse extends TransformResponse<string> {
+  @ApiProperty({ type: String })
+  readonly data: string;
+}
 
 @ApiTags('post')
 @ApiCookieAuth()
@@ -92,24 +102,33 @@ export class PostController {
 
   @Get('storage/:siteConfigId(\\d+)')
   @ApiOperation({
-    summary: 'Get posts from user storag.',
+    summary: 'Get posts from user storage.',
     description:
-      'If draft is true, will get posts from drafts folder. For example: in Hexo platform, when draft is set true, will get post file list from _drafts folder.',
+      'When state is drafted: private repo _drafts folder; when state is posted: private repo _posted folder; when state is published: public repo RESTful api.',
   })
   @ApiOkResponse({ type: PostInfoListResponse })
+  @ApiQuery({
+    name: 'state',
+    enum: GetPostsFromStorageState,
+    example: GetPostsFromStorageState.Published,
+  })
   @ApiQuery({ name: 'page', type: Number, example: 1 })
-  @ApiQuery({ name: 'draft', type: Boolean, example: false })
   public async getPostsFromStorage(
     @User('id', ParseIntPipe) uid: number,
     @Param('siteConfigId', ParseIntPipe) siteConfigId: number,
-    @Query('page', ParseIntPipe, new DefaultValuePipe(1)) page: number,
-    @Query('draft', ParseBoolPipe, new DefaultValuePipe(false)) draft: boolean,
+    @Query(
+      'state',
+      new DefaultValuePipe(GetPostsFromStorageState.Published),
+      new ParseEnumPipe(GetPostsFromStorageState, {}),
+    )
+    state?: GetPostsFromStorageState,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page?: number,
   ) {
     return await this.postService.getPostsFromStorage(
       uid,
       siteConfigId,
+      state,
       page,
-      draft,
     );
   }
 
@@ -128,7 +147,7 @@ export class PostController {
   @UsePipes(new ValidationPipe(PostMethodValidation))
   public async publishPostsToStorage(
     @User() user: UCenterJWTPayload,
-    @Query('draft', ParseBoolPipe, new DefaultValuePipe(false)) draft: boolean,
+    @Query('draft', new DefaultValuePipe(false), ParseBoolPipe) draft: boolean,
     @Body() body: PublishStoragePostsDto,
   ) {
     return await this.postService.publishPostsToStorage(user, body, draft);
@@ -148,7 +167,7 @@ export class PostController {
   @UsePipes(new ValidationPipe(PostMethodValidation))
   public async updatePostsToStorage(
     @User() user: UCenterJWTPayload,
-    @Query('draft', ParseBoolPipe, new DefaultValuePipe(false)) draft: boolean,
+    @Query('draft', new DefaultValuePipe(false), ParseBoolPipe) draft: boolean,
     @Body() body: PublishStoragePostsDto,
   ) {
     return await this.postService.updatePostsInStorage(user, body, draft);
@@ -168,7 +187,7 @@ export class PostController {
   @UsePipes(new ValidationPipe(PostMethodValidation))
   public async deletePostOnStorage(
     @User() user: UCenterJWTPayload,
-    @Query('draft', ParseBoolPipe, new DefaultValuePipe(false)) draft: boolean,
+    @Query('draft', new DefaultValuePipe(false), ParseBoolPipe) draft: boolean,
     @Body() body: PublishStoragePostsDto,
   ) {
     return await this.postService.deletePostsOnStorage(user, body, draft);
@@ -188,7 +207,7 @@ export class PostController {
   @UsePipes(new ValidationPipe(PostMethodValidation))
   public async movePostsInStorage(
     @User() user: UCenterJWTPayload,
-    @Query('draft', ParseBoolPipe, new DefaultValuePipe(false)) draft: boolean,
+    @Query('draft', new DefaultValuePipe(false), ParseBoolPipe) draft: boolean,
     @Body() body: PublishStoragePostsDto,
   ) {
     return await this.postService.movePostsInStorage(user, body, draft);
@@ -201,10 +220,15 @@ export class PostController {
   @ApiQuery({ name: 'state', enum: PostState, example: 'pending' })
   public async getPosts(
     @User('id', ParseIntPipe) uid: number,
-    @Query('page', ParseIntPipe, new DefaultValuePipe(1))
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe)
     page: number,
-    @Query('limit', ParseIntPipe, new DefaultValuePipe(10)) limit: number,
-    @Query('state', new DefaultValuePipe(PostState.Pending)) state: PostState,
+    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+    @Query(
+      'state',
+      new DefaultValuePipe(PostState.Pending),
+      new ParseEnumPipe(PostState),
+    )
+    state: PostState,
   ) {
     const options = {
       page,
@@ -291,5 +315,14 @@ export class PostController {
     );
 
     this.microserviceClient.emit(`cms.post.sync.${platform}`, uid);
+  }
+
+  @Post('decrypt/matataki')
+  @ApiOkResponse({ type: MatatakiDecryptedPostResponse })
+  public decryptMatatakiPost(@Body() dto: EncryptedDataDto) {
+    const iv = Buffer.from(dto.iv, 'hex');
+    const encryptedData = Buffer.from(dto.encryptedData, 'hex');
+
+    return this.postService.decryptMatatakiPost(iv, encryptedData);
   }
 }

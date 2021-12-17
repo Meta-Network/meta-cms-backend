@@ -48,7 +48,7 @@ export class GitHubPublisherProvider implements PublisherProvider {
     );
   }
 
-  protected scheduleUpdateDomainName(
+  private scheduleUpdateDomainName(
     publishConfig: MetaWorker.Configs.PublishConfig,
     timeouts: number[],
   ) {
@@ -62,7 +62,9 @@ export class GitHubPublisherProvider implements PublisherProvider {
     }
   }
 
-  async doUpdateDomainName(publishConfig: MetaWorker.Configs.PublishConfig) {
+  private async doUpdateDomainName(
+    publishConfig: MetaWorker.Configs.PublishConfig,
+  ) {
     const {
       git: { publisher },
       site,
@@ -102,10 +104,7 @@ export class GitHubPublisherProvider implements PublisherProvider {
         `update cname ${data.owner}.github.io/${data.repo} : ${data.cname}`,
         this.constructor.name,
       );
-      await this.octokitService.updateInfoAboutGitHubPagesSite(
-        publisher.token,
-        data,
-      );
+      await this.octokitService.updateInfoAboutPagesSite(publisher.token, data);
     }
   }
 
@@ -114,7 +113,7 @@ export class GitHubPublisherProvider implements PublisherProvider {
       git: { publisher },
     } = publishConfig;
     const { token, username, reponame } = publisher;
-    return await this.octokitService.getGitHubPagesSiteInfo(token, {
+    return await this.octokitService.getPagesSiteInfo(token, {
       owner: username,
       repo: reponame,
     });
@@ -127,7 +126,7 @@ export class GitHubPublisherProvider implements PublisherProvider {
       git: { publisher },
     } = publishConfig;
     const { token, username, reponame } = publisher;
-    return await this.octokitService.getGitHubPagesHealthCheck(token, {
+    return await this.octokitService.getPagesHealthCheck(token, {
       owner: username,
       repo: reponame,
     });
@@ -139,7 +138,7 @@ export class GitHubPublisherProvider implements PublisherProvider {
       git: { publisher },
       publish,
     } = publishConfig;
-    return await this.octokitService.createGitHubPagesSite(publisher.token, {
+    return await this.octokitService.createPagesSite(publisher.token, {
       owner: publisher.username,
       repo: publisher.reponame,
       source: {

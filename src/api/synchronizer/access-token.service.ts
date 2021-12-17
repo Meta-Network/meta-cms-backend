@@ -7,7 +7,12 @@ import { AccessTokenEntity } from '../../entities/accessToken.entity';
 export class AccessTokenService {
   constructor(private connection: Connection) {}
 
-  async save(userId: number, platform: string, accessToken: string) {
+  async save(
+    userId: number,
+    platform: string,
+    accessToken: string,
+    username: string,
+  ) {
     const queryRunner = this.connection.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -17,6 +22,7 @@ export class AccessTokenService {
         platform,
         accessToken,
         active: false,
+        username,
       });
       await queryRunner.manager.save(entity);
       await queryRunner.commitTransaction();

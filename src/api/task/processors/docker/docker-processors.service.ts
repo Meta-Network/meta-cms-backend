@@ -1,8 +1,6 @@
 import { Inject, Injectable, LoggerService } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Cron, Interval } from '@nestjs/schedule';
 import Docker, { Container, ContainerCreateOptions } from 'dockerode';
-import findRemoveSync from 'find-remove';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
 @Injectable()

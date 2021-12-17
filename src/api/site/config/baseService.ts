@@ -129,4 +129,8 @@ export class SiteConfigBaseService {
       await queryRunner.release();
     }
   }
+
+  async count(options?: FindManyOptions<SiteConfigEntity>): Promise<number> {
+    return await this.siteConfigRepository.count(options);
+  }
 }

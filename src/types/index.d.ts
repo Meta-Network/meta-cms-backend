@@ -65,3 +65,28 @@ export type CreateGitRepoResult = {
     pull: boolean;
   };
 };
+
+export type GitTreeInfo = {
+  path?: string;
+  mode?: string;
+  type?: string;
+  sha?: string;
+  size?: number;
+  url?: string;
+};
+
+export type GitBlobInfo = {
+  content?: string;
+  encoding?: string;
+  url?: string;
+  sha?: string;
+  size?: number;
+  node_id?: string;
+};
+
+export type GetGitTreeResult = {
+  sha: string;
+  url: string;
+  truncated: boolean;
+  tree: GitTreeInfo[];
+};

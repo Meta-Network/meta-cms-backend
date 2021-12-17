@@ -1,12 +1,11 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { SiteConfigEntity } from '../../../entities/siteConfig.entity';
+import { SiteConfigModule } from '../../site/config/module';
 import { DomainValidateController } from './controller';
 import { DomainValidateService } from './service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([SiteConfigEntity])],
+  imports: [SiteConfigModule],
   controllers: [DomainValidateController],
   providers: [DomainValidateService],
   exports: [DomainValidateService],
