@@ -4,6 +4,8 @@ import {
   Controller,
   DefaultValuePipe,
   Get,
+  HttpCode,
+  HttpStatus,
   Inject,
   Param,
   ParseBoolPipe,
@@ -318,11 +320,12 @@ export class PostController {
   }
 
   @Post('decrypt/matataki')
+  @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: MatatakiDecryptedPostResponse })
   public decryptMatatakiPost(@Body() dto: EncryptedDataDto) {
     const iv = Buffer.from(dto.iv, 'hex');
     const encryptedData = Buffer.from(dto.encryptedData, 'hex');
 
-    return this.postService.decryptMatatakiPost(iv, encryptedData);
+    return JSON.parse(this.postService.decryptMatatakiPost(iv, encryptedData));
   }
 }
