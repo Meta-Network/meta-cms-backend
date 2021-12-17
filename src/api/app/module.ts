@@ -47,7 +47,6 @@ import { TokenModule } from '../token/token.module';
       useClass: BullConfigService,
     }),
     ScheduleModule.forRoot(),
-    EventEmitterModule.forRoot(),
     UCenterAuthModule,
     AppCacheModule,
     ThemeTemplateModule,

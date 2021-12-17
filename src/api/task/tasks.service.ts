@@ -6,7 +6,6 @@ import {
   LoggerService,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { EventEmitter2 } from '@nestjs/event-emitter';
 import { isNotEmpty } from 'class-validator';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
@@ -15,6 +14,7 @@ import { UCenterJWTPayload } from '../../types';
 import { MetadataStorageType, SiteStatus, TaskEvent } from '../../types/enum';
 import { MetaSignatureHelper } from '../meta-signature/meta-signature.helper';
 import { MetaSignatureService } from '../meta-signature/meta-signature.service';
+import { MetaNetworkService } from '../microservices/meta-network/meta-network.service';
 import { DnsService } from '../provider/dns/dns.service';
 import { PublisherService } from '../provider/publisher/publisher.service';
 import { StorageService } from '../provider/storage/service';
@@ -36,7 +36,7 @@ export class TasksService {
     private readonly dnsService: DnsService,
     private readonly metaSignatureService: MetaSignatureService,
     private readonly metaSignatureHelper: MetaSignatureHelper,
-    private readonly eventEmitter: EventEmitter2,
+    private readonly metaNetworkService: MetaNetworkService,
   ) {}
 
   async isSiteConfigTaskWorkspaceLocked(userId: number, siteConfigId: number) {
@@ -441,11 +441,11 @@ export class TasksService {
     await this.publisherService.updateDomainName(publisherType, publishConfig);
     // 更新状态和最后一次发布时间
     await this.siteConfigLogicService.setPublished(publishConfig.site.configId);
-    // 有循环依赖，用事件来解决
-    this.eventEmitter.emit(TaskEvent.SITE_PUBLISHED, {
-      user,
-      publishConfig,
-    });
+    // 有循环依赖，用事件来解决。事件发生内存泄漏问题，先换回直接调用的方式
+    // this.eventEmitter.emit(TaskEvent.SITE_PUBLISHED, {
+    //   user,
+    //   publishConfig,
+    // });
     // await this.postService.updatePostStateBySiteConfigId(
     //   PostState.SitePublished,
     //   publishConfig.site.configId,
@@ -453,10 +453,10 @@ export class TasksService {
     // this.logger.verbose(`Adding CDN worker to queue`, TasksService.name);
 
     // notify Meta-Network-BE
-    // this.metaNetworkService.notifyMetaSpaceSiteCreated({
-    //   ...publishConfig.site,
-    //   userId: user.id,
-    // });
+    this.metaNetworkService.notifyMetaSpaceSiteCreated({
+      ...publishConfig.site,
+      userId: user.id,
+    });
     return publishSiteTaskStepResults;
   }
 

@@ -11,7 +11,7 @@ import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
 import { UCenterJWTPayload } from '../../../types';
 import { MetaMicroserviceClient, TaskEvent } from '../../../types/enum';
-@Injectable()
+
 export class MetaNetworkService implements OnApplicationBootstrap {
   constructor(
     @Inject(WINSTON_MODULE_NEST_PROVIDER)
@@ -20,7 +20,7 @@ export class MetaNetworkService implements OnApplicationBootstrap {
     private readonly networkClient: ClientProxy,
   ) {}
 
-  @OnEvent(TaskEvent.SITE_PUBLISHED)
+  // @OnEvent(TaskEvent.SITE_PUBLISHED)
   async handleSitePublished(event: {
     publishConfig: MetaWorker.Configs.PublishConfig;
     user: Partial<UCenterJWTPayload>;
