@@ -4,7 +4,6 @@ import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import fs from 'fs';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
-import pRetry from 'p-retry';
 
 import { MetadataStorageType } from '../../../../types/enum';
 import {
