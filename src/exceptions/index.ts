@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ConflictException,
   ForbiddenException,
+  GatewayTimeoutException,
   HttpStatus,
   InternalServerErrorException,
   NotAcceptableException,
@@ -246,7 +247,21 @@ export class InvalidPlatformException extends BadRequestException {
   readonly message: string;
 }
 
-export class IpfsGatewayTimeoutException extends Error {}
+export class IpfsGatewayTimeoutException extends GatewayTimeoutException {
+  constructor(msg = 'IPFS gateway timeout') {
+    super(
+      {
+        statusCode: HttpStatus.GATEWAY_TIMEOUT,
+        message: `Gateway Timeout: ${msg}`,
+      },
+      'Gateway Timeout',
+    );
+  }
+  @ApiProperty({ example: HttpStatus.CONFLICT })
+  readonly statusCode: string;
+  @ApiProperty({ example: 'Gateway Timeout: IPFS gateway timeout' })
+  readonly message: string;
+}
 
 export class PublishFailedException extends InternalServerErrorException {
   constructor() {
