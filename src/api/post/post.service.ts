@@ -19,6 +19,7 @@ import {
   paginate,
   Pagination,
 } from 'nestjs-typeorm-paginate';
+import pRetry from 'p-retry';
 import { lastValueFrom } from 'rxjs';
 import { PartialDeep } from 'type-fest';
 import { In, Repository, UpdateResult } from 'typeorm';
@@ -629,10 +630,28 @@ export class PostService {
     // Create post task
     for (const configId of publishPostDto.configIds) {
       try {
-        await this.tasksService.createPost(user, postInfos, configId, {
-          isDraft,
-          isLastTask: true,
-        });
+        await pRetry(
+          async () => {
+            await this.tasksService.createPost(user, postInfos, configId, {
+              isDraft,
+              isLastTask: true,
+            });
+          },
+          {
+            retries: 5,
+            onFailedAttempt: (err) => {
+              this.logger.error(
+                `Create posts failed`,
+                err,
+                this.constructor.name,
+              );
+              this.logger.debug(
+                `Attempt ${err.attemptNumber} failed, there are ${err.retriesLeft} retries left.`,
+                this.constructor.name,
+              );
+            },
+          },
+        );
         await this.updatePostSiteConfigRelaStateAndActionBySiteConfigId(
           TaskCommonState.SUCCESS,
           PostAction.CREATE,
@@ -640,7 +659,8 @@ export class PostService {
           configId,
         );
       } catch (err) {
-        this.logger.error(`Create posts fail`, err, this.constructor.name);
+        // Final error
+        this.logger.error(`Create posts failed`, err, this.constructor.name);
         await this.updatePostSiteConfigRelaStateAndActionBySiteConfigId(
           TaskCommonState.FAIL,
           PostAction.CREATE,
@@ -708,10 +728,28 @@ export class PostService {
     // Create post task
     for (const configId of publishPostDto.configIds) {
       try {
-        await this.tasksService.updatePost(user, postInfos, configId, {
-          isDraft,
-          isLastTask: true,
-        });
+        await pRetry(
+          async () => {
+            await this.tasksService.updatePost(user, postInfos, configId, {
+              isDraft,
+              isLastTask: true,
+            });
+          },
+          {
+            retries: 5,
+            onFailedAttempt: (err) => {
+              this.logger.error(
+                `Update posts failed`,
+                err,
+                this.constructor.name,
+              );
+              this.logger.debug(
+                `Attempt ${err.attemptNumber} failed, there are ${err.retriesLeft} retries left.`,
+                this.constructor.name,
+              );
+            },
+          },
+        );
         await this.updatePostSiteConfigRelaStateAndActionBySiteConfigId(
           TaskCommonState.SUCCESS,
           PostAction.UPDATE,
@@ -719,7 +757,8 @@ export class PostService {
           configId,
         );
       } catch (err) {
-        this.logger.error(`Create posts fail`, err, this.constructor.name);
+        // Final error
+        this.logger.error(`Update posts failed`, err, this.constructor.name);
         await this.updatePostSiteConfigRelaStateAndActionBySiteConfigId(
           TaskCommonState.FAIL,
           PostAction.UPDATE,
@@ -785,10 +824,28 @@ export class PostService {
     // Create post task
     for (const configId of publishPostDto.configIds) {
       try {
-        await this.tasksService.deletePost(user, postInfos, configId, {
-          isDraft,
-          isLastTask: true,
-        });
+        await pRetry(
+          async () => {
+            await this.tasksService.deletePost(user, postInfos, configId, {
+              isDraft,
+              isLastTask: true,
+            });
+          },
+          {
+            retries: 5,
+            onFailedAttempt: (err) => {
+              this.logger.error(
+                `Delete posts failed`,
+                err,
+                this.constructor.name,
+              );
+              this.logger.debug(
+                `Attempt ${err.attemptNumber} failed, there are ${err.retriesLeft} retries left.`,
+                this.constructor.name,
+              );
+            },
+          },
+        );
         await this.updatePostSiteConfigRelaStateAndActionBySiteConfigId(
           TaskCommonState.SUCCESS,
           PostAction.DELETE,
@@ -796,7 +853,8 @@ export class PostService {
           configId,
         );
       } catch (err) {
-        this.logger.error(`Delete posts fail`, err, this.constructor.name);
+        // Final error
+        this.logger.error(`Delete posts failed`, err, this.constructor.name);
         await this.updatePostSiteConfigRelaStateAndActionBySiteConfigId(
           TaskCommonState.FAIL,
           PostAction.DELETE,
@@ -864,15 +922,33 @@ export class PostService {
     // Create post task
     for (const configId of publishPostDto.configIds) {
       try {
-        if (toDraft) {
-          await this.tasksService.moveToDraft(user, postInfos, configId, {
-            isLastTask: true,
-          });
-        } else {
-          await this.tasksService.publishDraft(user, postInfos, configId, {
-            isLastTask: true,
-          });
-        }
+        await pRetry(
+          async () => {
+            if (toDraft) {
+              await this.tasksService.moveToDraft(user, postInfos, configId, {
+                isLastTask: true,
+              });
+            } else {
+              await this.tasksService.publishDraft(user, postInfos, configId, {
+                isLastTask: true,
+              });
+            }
+          },
+          {
+            retries: 5,
+            onFailedAttempt: (err) => {
+              this.logger.error(
+                `Move posts failed`,
+                err,
+                this.constructor.name,
+              );
+              this.logger.debug(
+                `Attempt ${err.attemptNumber} failed, there are ${err.retriesLeft} retries left.`,
+                this.constructor.name,
+              );
+            },
+          },
+        );
         await this.updatePostSiteConfigRelaStateAndActionBySiteConfigId(
           TaskCommonState.SUCCESS,
           PostAction.UPDATE, // maybe move is an UPDATE action
@@ -880,7 +956,8 @@ export class PostService {
           configId,
         );
       } catch (err) {
-        this.logger.error(`Create posts fail`, err, this.constructor.name);
+        // Final error
+        this.logger.error(`Move posts failed`, err, this.constructor.name);
         await this.updatePostSiteConfigRelaStateAndActionBySiteConfigId(
           TaskCommonState.FAIL,
           PostAction.UPDATE, // maybe move is an UPDATE action
