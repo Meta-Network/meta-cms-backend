@@ -811,12 +811,13 @@ export class TasksService {
     templateType: MetaWorker.Enums.TemplateType,
     draftFlag = false,
   ): MetaWorker.Enums.TaskMethod[] {
+    // 2021-12-20 by whyyouare: Use UPDATE for create task
     // HEXO
     if (MetaWorker.Enums.TemplateType.HEXO === templateType) {
       if (draftFlag) {
-        return [MetaWorker.Enums.TaskMethod.HEXO_CREATE_DRAFT];
+        return [MetaWorker.Enums.TaskMethod.HEXO_UPDATE_DRAFT];
       }
-      return [MetaWorker.Enums.TaskMethod.HEXO_CREATE_POST];
+      return [MetaWorker.Enums.TaskMethod.HEXO_UPDATE_POST];
     }
   }
   protected getUpdatePostTaskMethodsByTemplateType(
