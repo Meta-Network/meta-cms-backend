@@ -4,6 +4,7 @@ import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import fs from 'fs';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
+import pRetry from 'p-retry';
 
 import { MetadataStorageType } from '../../../../types/enum';
 import {
@@ -57,13 +58,17 @@ export class ArweaveMetadataStorageProvider implements MetadataStorageProvider {
   private readonly walletKey: JWKInterface;
 
   public async get(refer: string): Promise<string> {
-    this.logger.debug(`Get metadata from Arweave.`, this.constructor.name);
+    this.logger.debug(
+      `Get metadata from Arweave, refer ${refer}`,
+      this.constructor.name,
+    );
     const data = await this.arweave.transactions.getData(refer, {
       decode: true,
       string: true,
     });
     return data.toString();
   }
+
   public async upload(_: string, content: string): Promise<string> {
     const transaction = await this.arweave.createTransaction(
       { data: content },
@@ -79,7 +84,7 @@ export class ArweaveMetadataStorageProvider implements MetadataStorageProvider {
       await uploader.uploadChunk();
     }
     this.logger.debug(
-      `Arweave uploadedChunks: ${uploader.uploadedChunks}.`,
+      `Upload metadata to IPFS ${uploader.uploadedChunks}`,
       this.constructor.name,
     );
     // TODO(550): How to confirm tx is mined.

@@ -60,6 +60,7 @@
     "nest-winston": "^1.5.0",
     "nestjs-typeorm-paginate": "^2.6.0",
     "octokit": "^1.4.0",
+    "p-retry": "^4.6.1",
     "passport": "^0.4.1",
     "passport-jwt": "^4.0.0",
     "reflect-metadata": "^0.1.13",
