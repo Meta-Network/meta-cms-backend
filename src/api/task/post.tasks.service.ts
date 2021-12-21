@@ -1,15 +1,21 @@
 import { MetaWorker } from '@metaio/worker-model';
 import { Inject, Injectable, LoggerService } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
+import { In, Repository, UpdateResult } from 'typeorm';
 
+import { PostSiteConfigRelaEntity } from '../../entities/postSiteConfigRela.entity';
 import { UCenterJWTPayload } from '../../types';
-import { SiteStatus } from '../../types/enum';
+import { SiteStatus, TaskCommonState } from '../../types/enum';
+import { processTitleWithHan } from '../../utils';
 import { BaseTasksService } from './base.tasks.service';
 import { TaskDispatchersService } from './workers/task-dispatchers.service';
 
 @Injectable()
 export class PostTasksService {
   constructor(
+    @InjectRepository(PostSiteConfigRelaEntity)
+    private readonly postSiteConfigRepository: Repository<PostSiteConfigRelaEntity>,
     @Inject(WINSTON_MODULE_NEST_PROVIDER)
     private readonly logger: LoggerService,
     private readonly baseService: BaseTasksService,
@@ -18,7 +24,7 @@ export class PostTasksService {
 
   public async createPost(
     user: Partial<UCenterJWTPayload>,
-    post: MetaWorker.Info.Post | MetaWorker.Info.Post[],
+    posts: MetaWorker.Info.Post[],
     siteConfigId: number,
     options?: {
       isDraft: boolean;
@@ -29,11 +35,17 @@ export class PostTasksService {
       await this.taskDispatchersService.checkAndGetSiteConfigTaskWorkspace(
         siteConfigId,
       );
+    const postKeys = posts.map((p) => processTitleWithHan(p.title));
+    await this.updatePostSiteConfigRelaTaskWorkspaceBySiteConfigId(
+      siteConfigId,
+      postKeys,
+      taskWorkspace,
+    );
     // No longer waiting for Worker execution to complete
     this.doCheckoutCommitPush(
       user,
       siteConfigId,
-      async () => await this.doCreatePost(user, post, siteConfigId, options),
+      async () => await this.doCreatePost(user, posts, siteConfigId, options),
       options,
     );
     return taskWorkspace;
@@ -41,7 +53,7 @@ export class PostTasksService {
 
   public async updatePost(
     user: Partial<UCenterJWTPayload>,
-    post: MetaWorker.Info.Post | MetaWorker.Info.Post[],
+    posts: MetaWorker.Info.Post[],
     siteConfigId: number,
     options?: {
       isDraft: boolean;
@@ -52,11 +64,17 @@ export class PostTasksService {
       await this.taskDispatchersService.checkAndGetSiteConfigTaskWorkspace(
         siteConfigId,
       );
+    const postKeys = posts.map((p) => processTitleWithHan(p.title));
+    await this.updatePostSiteConfigRelaTaskWorkspaceBySiteConfigId(
+      siteConfigId,
+      postKeys,
+      taskWorkspace,
+    );
     // No longer waiting for Worker execution to complete
     this.doCheckoutCommitPush(
       user,
       siteConfigId,
-      async () => await this.doUpdatePost(user, post, siteConfigId, options),
+      async () => await this.doUpdatePost(user, posts, siteConfigId, options),
       options,
     );
     return taskWorkspace;
@@ -64,7 +82,7 @@ export class PostTasksService {
 
   public async deletePost(
     user: Partial<UCenterJWTPayload>,
-    post: MetaWorker.Info.Post | MetaWorker.Info.Post[],
+    posts: MetaWorker.Info.Post[],
     siteConfigId: number,
     options?: {
       isDraft: boolean;
@@ -75,11 +93,17 @@ export class PostTasksService {
       await this.taskDispatchersService.checkAndGetSiteConfigTaskWorkspace(
         siteConfigId,
       );
+    const postKeys = posts.map((p) => processTitleWithHan(p.title));
+    await this.updatePostSiteConfigRelaTaskWorkspaceBySiteConfigId(
+      siteConfigId,
+      postKeys,
+      taskWorkspace,
+    );
     // No longer waiting for Worker execution to complete
     this.doCheckoutCommitPush(
       user,
       siteConfigId,
-      async () => await this.doDeletePost(user, post, siteConfigId, options),
+      async () => await this.doDeletePost(user, posts, siteConfigId, options),
       options,
     );
     return taskWorkspace;
@@ -87,7 +111,7 @@ export class PostTasksService {
 
   public async publishDraft(
     user: Partial<UCenterJWTPayload>,
-    post: MetaWorker.Info.Post | MetaWorker.Info.Post[],
+    posts: MetaWorker.Info.Post[],
     siteConfigId: number,
     options?: {
       isLastTask: boolean;
@@ -97,11 +121,17 @@ export class PostTasksService {
       await this.taskDispatchersService.checkAndGetSiteConfigTaskWorkspace(
         siteConfigId,
       );
+    const postKeys = posts.map((p) => processTitleWithHan(p.title));
+    await this.updatePostSiteConfigRelaTaskWorkspaceBySiteConfigId(
+      siteConfigId,
+      postKeys,
+      taskWorkspace,
+    );
     // No longer waiting for Worker execution to complete
     this.doCheckoutCommitPush(
       user,
       siteConfigId,
-      async () => await this.doPublishDraft(user, post, siteConfigId),
+      async () => await this.doPublishDraft(user, posts, siteConfigId),
       options,
     );
     return taskWorkspace;
@@ -109,7 +139,7 @@ export class PostTasksService {
 
   public async moveToDraft(
     user: Partial<UCenterJWTPayload>,
-    post: MetaWorker.Info.Post | MetaWorker.Info.Post[],
+    posts: MetaWorker.Info.Post[],
     siteConfigId: number,
     options?: {
       isLastTask: boolean;
@@ -119,11 +149,17 @@ export class PostTasksService {
       await this.taskDispatchersService.checkAndGetSiteConfigTaskWorkspace(
         siteConfigId,
       );
+    const postKeys = posts.map((p) => processTitleWithHan(p.title));
+    await this.updatePostSiteConfigRelaTaskWorkspaceBySiteConfigId(
+      siteConfigId,
+      postKeys,
+      taskWorkspace,
+    );
     // No longer waiting for Worker execution to complete
     this.doCheckoutCommitPush(
       user,
       siteConfigId,
-      async () => await this.doMoveToDraft(user, post, siteConfigId),
+      async () => await this.doMoveToDraft(user, posts, siteConfigId),
       options,
     );
     return taskWorkspace;
@@ -137,47 +173,82 @@ export class PostTasksService {
       isLastTask: boolean;
     },
   ) {
-    const { deployConfig } =
-      await this.baseService.generateDeployConfigAndRepoSize(
-        user,
+    // Get task workspace
+    const taskWorkspace =
+      await this.taskDispatchersService.tryGetSiteConfigTaskWorkspaceLock(
         siteConfigId,
-        [SiteStatus.Deployed, SiteStatus.Publishing, SiteStatus.Published],
       );
-    const checkoutTaskSteps: MetaWorker.Enums.TaskMethod[] = [
-      MetaWorker.Enums.TaskMethod.GIT_CLONE_CHECKOUT,
-    ];
-    this.logger.verbose(
-      `Adding checkout worker to queue`,
-      this.constructor.name,
+    // Update task state: DOING
+    await this.updatePostSiteConfigRelaStateByTaskWorkspace(
+      siteConfigId,
+      taskWorkspace,
+      TaskCommonState.DOING,
     );
 
-    const checkoutTaskStepResults =
-      await this.taskDispatchersService.dispatchTask(
-        checkoutTaskSteps,
-        deployConfig,
-        //必定不是最后一个任务，这里不能退出
+    // Do the work
+    try {
+      const { deployConfig } =
+        await this.baseService.generateDeployConfigAndRepoSize(
+          user,
+          siteConfigId,
+          [SiteStatus.Deployed, SiteStatus.Publishing, SiteStatus.Published],
+        );
+      const checkoutTaskSteps: MetaWorker.Enums.TaskMethod[] = [
+        MetaWorker.Enums.TaskMethod.GIT_CLONE_CHECKOUT,
+      ];
+      this.logger.verbose(
+        `Adding checkout worker to queue`,
+        this.constructor.name,
       );
 
-    const commitPushTaskSteps: MetaWorker.Enums.TaskMethod[] = [
-      MetaWorker.Enums.TaskMethod.GIT_COMMIT_PUSH,
-    ];
-    const taskStepResults = await dispatchTaskFunc();
-    this.logger.verbose(
-      `Adding commit&push worker to queue`,
-      this.constructor.name,
-    );
+      const checkoutTaskStepResults =
+        await this.taskDispatchersService.dispatchTask(
+          checkoutTaskSteps,
+          deployConfig,
+          //必定不是最后一个任务，这里不能退出
+        );
 
-    const commitPushTaskStepResults =
-      await this.taskDispatchersService.dispatchTask(
-        commitPushTaskSteps,
-        deployConfig,
-        options?.isLastTask,
+      const commitPushTaskSteps: MetaWorker.Enums.TaskMethod[] = [
+        MetaWorker.Enums.TaskMethod.GIT_COMMIT_PUSH,
+      ];
+      const taskStepResults = await dispatchTaskFunc();
+      this.logger.verbose(
+        `Adding commit&push worker to queue`,
+        this.constructor.name,
       );
-    return Object.assign(
-      checkoutTaskStepResults,
-      taskStepResults,
-      commitPushTaskStepResults,
-    );
+
+      const commitPushTaskStepResults =
+        await this.taskDispatchersService.dispatchTask(
+          commitPushTaskSteps,
+          deployConfig,
+          options?.isLastTask,
+        );
+
+      // Update task state: SUCCESS
+      await this.updatePostSiteConfigRelaStateByTaskWorkspace(
+        siteConfigId,
+        taskWorkspace,
+        TaskCommonState.SUCCESS,
+      );
+
+      return Object.assign(
+        checkoutTaskStepResults,
+        taskStepResults,
+        commitPushTaskStepResults,
+      );
+    } catch (error) {
+      this.logger.error(
+        `Do checkout commit push failed`,
+        error,
+        this.constructor.name,
+      );
+      // Update task state: FAIL
+      await this.updatePostSiteConfigRelaStateByTaskWorkspace(
+        siteConfigId,
+        taskWorkspace,
+        TaskCommonState.FAIL,
+      );
+    }
   }
 
   private async doCreatePost(
@@ -394,4 +465,40 @@ export class PostTasksService {
     }
   }
   // #endregion TaskMethods
+
+  private async updatePostSiteConfigRelaTaskWorkspaceBySiteConfigId(
+    siteConfigId: number,
+    postKeys: string[],
+    taskWorkspace: string,
+  ): Promise<UpdateResult> {
+    return await this.postSiteConfigRepository.update(
+      {
+        siteConfig: {
+          id: siteConfigId,
+        },
+        postTitle: In(postKeys),
+      },
+      {
+        taskWorkspace,
+      },
+    );
+  }
+
+  private async updatePostSiteConfigRelaStateByTaskWorkspace(
+    siteConfigId: number,
+    taskWorkspace: string,
+    state: TaskCommonState,
+  ): Promise<UpdateResult> {
+    return await this.postSiteConfigRepository.update(
+      {
+        siteConfig: {
+          id: siteConfigId,
+        },
+        taskWorkspace,
+      },
+      {
+        state,
+      },
+    );
+  }
 }

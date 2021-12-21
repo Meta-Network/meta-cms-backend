@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
 
+import { PostSiteConfigRelaEntity } from '../../entities/postSiteConfigRela.entity';
 import { MetaSignatureModule } from '../meta-signature/meta-signature.module';
 import { MetaNetworkModule } from '../microservices/meta-network/meta-network.module';
 import { DnsModule } from '../provider/dns/dns.module';
@@ -19,6 +21,7 @@ import { TaskWorkersModule } from './workers/task-workers.module';
 
 @Module({
   imports: [
+    TypeOrmModule.forFeature([PostSiteConfigRelaEntity]),
     TaskWorkersModule,
     GitWorkersModule,
     HexoWorkersModule,
