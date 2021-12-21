@@ -826,6 +826,22 @@ export class PostService {
     };
   }
 
+  public async getStorageTaskState(
+    userId: number,
+    stateIds: number[],
+  ): Promise<PostSiteConfigRelaEntity[]> {
+    const states = await this.postSiteConfigRepository.findByIds(stateIds, {
+      relations: ['siteConfig'],
+    });
+    const siteConfigs = states.map((s) => s.siteConfig);
+    const siteCconfigIds = siteConfigs.map((s) => s.id);
+    await this.siteConfigLogicService.validateSiteConfigsUserId(
+      siteCconfigIds,
+      userId,
+    );
+    return states;
+  }
+
   public async getPostsByUserId(
     userId: number,
     state: PostState,

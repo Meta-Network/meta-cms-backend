@@ -8,6 +8,7 @@ import {
   HttpStatus,
   Inject,
   Param,
+  ParseArrayPipe,
   ParseBoolPipe,
   ParseEnumPipe,
   ParseIntPipe,
@@ -34,6 +35,7 @@ import { IPaginationOptions } from 'nestjs-typeorm-paginate';
 
 import { User } from '../../decorators';
 import { PostEntity } from '../../entities/post.entity';
+import { PostSiteConfigRelaEntity } from '../../entities/postSiteConfigRela.entity';
 import {
   EmptyAccessTokenException,
   InvalidPlatformException,
@@ -105,6 +107,12 @@ class PostEntitiesAndStateListResponse extends TransformResponse<PostEntitiesRes
   @ApiProperty({ type: PostEntitiesResponse })
   readonly data: PostEntitiesResponse;
 }
+class PostStorageTaskStateResponse extends TransformResponse<
+  PostSiteConfigRelaEntity[]
+> {
+  @ApiProperty({ type: PostSiteConfigRelaEntity, isArray: true })
+  readonly data: PostSiteConfigRelaEntity[];
+}
 class SyncStateResponse extends TransformResponse<'idle' | 'syncing' | number> {
   @ApiProperty({ type: String, example: 'idle | syncing | 1' })
   readonly data: 'idle' | 'syncing' | number;
@@ -130,6 +138,21 @@ export class PostController {
     @Inject('REDIS')
     private readonly redisClient: Redis,
   ) {}
+
+  @Get('storage/state')
+  @ApiOkResponse({ type: PostStorageTaskStateResponse })
+  @ApiQuery({
+    name: 'stateIds',
+    isArray: true,
+    example: [1, 2, 3],
+  })
+  public async getStorageTaskState(
+    @User('id', ParseIntPipe) uid: number,
+    @Query('stateIds', new ParseArrayPipe({ items: Number }))
+    stateIds: number[],
+  ) {
+    return await this.postService.getStorageTaskState(uid, stateIds);
+  }
 
   @Get('storage/:siteConfigId(\\d+)')
   @ApiOperation({
