@@ -1,4 +1,5 @@
 import { isISO8601 } from 'class-validator';
+import han from 'han';
 
 export function iso8601ToDate(date: string | Date): Date {
   if (date instanceof Date) {
@@ -23,4 +24,8 @@ export function decodeData(
     };
   }
   throw new Error(`Unknown encoding type ${encoding}`);
+}
+
+export function processTitleWithHan(title: string): string {
+  return han.letter(title, '-');
 }
