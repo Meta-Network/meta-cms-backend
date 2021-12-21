@@ -1,5 +1,6 @@
 import { MetaWorker } from '@metaio/worker-model';
 import {
+  ConflictException,
   Inject,
   Injectable,
   InternalServerErrorException,
@@ -37,7 +38,7 @@ export class TaskDispatchersService {
   ) {
     const taskConfig = await this.initQueueTaskConfig(taskSteps, cfg);
     this.logger.log(
-      `taskConfig ${JSON.stringify(taskConfig)}`,
+      `taskConfig ${JSON.stringify(taskConfig)}`, // TODO(550): remove user git token.
       this.constructor.name,
     );
     const promise = (this.taskPromises[taskConfig.task.taskId] = new Promise(
@@ -133,6 +134,7 @@ export class TaskDispatchersService {
 
     worker.addTask(taskMethod, cfg);
   }
+
   protected async initQueueTaskConfig(
     taskSteps: MetaWorker.Enums.TaskMethod[],
     cfg:
@@ -141,11 +143,13 @@ export class TaskDispatchersService {
       | MetaWorker.Configs.PostConfig
       | MetaWorker.Configs.DnsConfig,
   ) {
-    const taskId = uuid(); // taskId and taskWorkspace hash
-    const taskWorkspace = await this.getOrGenTaskWorkspace(
-      taskId,
+    const taskId = uuid();
+    const taskWorkspace = await this.tryGetSiteConfigTaskWorkspaceLock(
       cfg.site.configId,
     );
+    if (!taskWorkspace) {
+      throw new ConflictException('No available task workspace.');
+    }
     const taskStepIndex = 0;
     const taskMethod = taskSteps[taskStepIndex];
     const task: MetaWorker.Info.Task = {
@@ -167,25 +171,10 @@ export class TaskDispatchersService {
     return taskConfig;
   }
 
-  async getOrGenTaskWorkspace(
-    taskId: string,
+  protected async doGenerateTaskIdAndTaskWorkspace(
     siteConfigId: number,
   ): Promise<string> {
-    const taskWorkspace = await this.tryGetSiteConfigTaskWorkspaceLock(
-      siteConfigId,
-    );
-
-    if (taskWorkspace) {
-      return taskWorkspace;
-    }
-    return await this.doGenerateTaskWorkspace(taskId, siteConfigId);
-  }
-
-  protected async doGenerateTaskWorkspace(
-    taskId: string,
-    siteConfigId: number,
-  ): Promise<string> {
-    const taskIdHash = crypto.createHash('sha256').update(taskId).digest('hex');
+    const taskIdHash = crypto.createHash('sha256').update(uuid()).digest('hex');
     const taskWorkspace = taskIdHash.substring(taskIdHash.length - 16);
     const _cache = await this.renewSiteConfigTaskWorkspaceLock(
       siteConfigId,
@@ -198,7 +187,35 @@ export class TaskDispatchersService {
     return taskWorkspace;
   }
 
-  async tryGetSiteConfigTaskWorkspaceLock(
+  public async checkAndGetSiteConfigTaskWorkspace(
+    siteConfigId: number,
+    // taskWorkspaceInUse?: string,
+  ): Promise<string> {
+    // check task workspace is existed
+    const taskWorkspace = await this.getOrGenTaskWorkspace(siteConfigId);
+    // if (taskWorkspace && taskWorkspace !== taskWorkspaceInUse) {
+    //   throw new ConflictException(
+    //     `Task workspace is existed: site config ${siteConfigId}`,
+    //   );
+    // }
+    this.logger.debug(
+      `Check site config task workspace return ${taskWorkspace}`,
+      this.constructor.name,
+    );
+    return taskWorkspace;
+  }
+
+  public async getOrGenTaskWorkspace(siteConfigId: number): Promise<string> {
+    const taskWorkspace = await this.tryGetSiteConfigTaskWorkspaceLock(
+      siteConfigId,
+    );
+    if (taskWorkspace) {
+      return taskWorkspace;
+    }
+    return await this.doGenerateTaskIdAndTaskWorkspace(siteConfigId);
+  }
+
+  public async tryGetSiteConfigTaskWorkspaceLock(
     siteConfigId: number,
   ): Promise<string> {
     const confIdStr = siteConfigId.toString();
@@ -214,20 +231,17 @@ export class TaskDispatchersService {
     return taskWorkspace;
   }
 
-  async renewSiteConfigTaskWorkspaceLock(
+  public async renewSiteConfigTaskWorkspaceLock(
     siteConfigId: number,
     taskWorkspace: string,
   ) {
     const confIdStr = siteConfigId.toString();
     const siteConfigTaskWorkspaceKey = `SITE_CONFIG_${confIdStr}`;
-    return await this.cache.set(
-      siteConfigTaskWorkspaceKey,
-      taskWorkspace,
-      this.configService.get<number>('task.workspace.lock.ttl'),
-    );
+    const ttl = this.configService.get<number>('task.workspace.lock.ttl');
+    return await this.cache.set(siteConfigTaskWorkspaceKey, taskWorkspace, ttl);
   }
 
-  async removeSiteConfigTaskWorkspaceLock(
+  public async removeSiteConfigTaskWorkspaceLock(
     siteConfigId: number,
     taskWorkspace: string,
   ) {
