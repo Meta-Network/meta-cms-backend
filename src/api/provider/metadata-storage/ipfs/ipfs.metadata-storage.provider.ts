@@ -33,23 +33,28 @@ export class IpfsMetadataStorageProvider implements MetadataStorageProvider {
   }
 
   public async upload(contentKey: string, content: string): Promise<string> {
-    const folder = this.configService.get<string>(
-      'provider.metadataStorage.ipfs.fleek.folder',
-    );
-    const uploadedFile = await fleekStorage.upload({
-      apiKey: this.configService.get<string>(
-        'provider.metadataStorage.ipfs.fleek.apiKey',
-      ),
-      apiSecret: this.configService.get<string>(
-        'provider.metadataStorage.ipfs.fleek.apiSecret',
-      ),
-      key: `${folder}/${contentKey}`,
-      data: content,
-    });
-    this.logger.debug(
-      `Upload metadata to IPFS ${JSON.stringify(uploadedFile)}`,
-      this.constructor.name,
-    );
-    return uploadedFile.hash;
+    try {
+      const folder = this.configService.get<string>(
+        'provider.metadataStorage.ipfs.fleek.folder',
+      );
+      const uploadedFile = await fleekStorage.upload({
+        apiKey: this.configService.get<string>(
+          'provider.metadataStorage.ipfs.fleek.apiKey',
+        ),
+        apiSecret: this.configService.get<string>(
+          'provider.metadataStorage.ipfs.fleek.apiSecret',
+        ),
+        key: `${folder}/${contentKey}`,
+        data: content,
+      });
+      this.logger.debug(
+        `Upload metadata to IPFS ${JSON.stringify(uploadedFile)}`,
+        this.constructor.name,
+      );
+      return uploadedFile.hash;
+    } catch (error) {
+      // Try to catch socket hang up error.
+      throw error;
+    }
   }
 }
