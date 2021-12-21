@@ -11,6 +11,10 @@ export class PostSiteConfigRelaEntity extends BaseEntity {
   @Column({ comment: 'Post title' })
   postTitle: string;
 
+  @Index()
+  @Column({ comment: 'Task workspace for post task' })
+  taskWorkspace: string;
+
   @ManyToOne(() => SiteConfigEntity, (config) => config.id)
   siteConfig: SiteConfigEntity;
 
