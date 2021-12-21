@@ -31,7 +31,7 @@ import { UCenterJWTPayload } from '../../types';
 import { MetadataStorageType } from '../../types/enum';
 import { TransformResponse } from '../../utils/responseClass';
 import { PostMethodValidation } from '../../utils/validation';
-import { TasksService } from './tasks.service';
+import { SiteTasksService } from './site.tasks.service';
 
 class TaskWorkspaceLockedResponse extends TransformResponse<boolean> {
   @ApiProperty()
@@ -64,7 +64,7 @@ export class TasksController {
   constructor(
     @Inject(WINSTON_MODULE_NEST_PROVIDER)
     private readonly logger: LoggerService,
-    private readonly service: TasksService,
+    private readonly service: SiteTasksService,
   ) {}
 
   @ApiOkResponse({ type: TaskWorkspaceLockedResponse })
