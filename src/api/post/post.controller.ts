@@ -76,6 +76,35 @@ class PostInfoListResponse extends TransformResponse<PostInfoPagination> {
   @ApiProperty({ type: PostInfoPagination })
   readonly data: PostInfoPagination;
 }
+class PostEntitiesResponse {
+  posts: PostEntity[];
+  stateIds: number[];
+}
+/**
+ * {
+ *   "data": {
+ *     "posts": [
+ *       {
+ *         "createdAt": "2021-12-06T09:15:50.574Z",
+ *         "userId": 19,
+ *         "title": "POST API 测试 006",
+ *         "platform": "editor",
+ *         "source": "POST API 测试正文",
+ *         "state": "published"
+ *       }
+ *     ],
+ *     "stateIds": [
+ *       265
+ *     ]
+ *   },
+ *   "statusCode": 201,
+ *   "message": "Ok"
+ * }
+ */
+class PostEntitiesAndStateListResponse extends TransformResponse<PostEntitiesResponse> {
+  @ApiProperty({ type: PostEntitiesResponse })
+  readonly data: PostEntitiesResponse;
+}
 class SyncStateResponse extends TransformResponse<'idle' | 'syncing' | number> {
   @ApiProperty({ type: String, example: 'idle | syncing | 1' })
   readonly data: 'idle' | 'syncing' | number;
@@ -142,7 +171,7 @@ export class PostController {
       'If draft is true, post will publish as draft. For example: in Hexo platform, when draft is set true, will create a post file in _drafts folder.',
   })
   @ApiQuery({ name: 'draft', type: Boolean, example: false })
-  @ApiOkResponse({ type: PostEntityResponse })
+  @ApiCreatedResponse({ type: PostEntitiesAndStateListResponse })
   @ApiConflictResponse({
     description: 'When post state is not pending or pending_edit.',
   })
@@ -162,7 +191,7 @@ export class PostController {
       'If draft is true, will update draft post. For example: in Hexo platform, when draft is set true, will update post file in _drafts folder.',
   })
   @ApiQuery({ name: 'draft', type: Boolean, example: false })
-  @ApiOkResponse({ type: PostEntityResponse })
+  @ApiCreatedResponse({ type: PostEntitiesAndStateListResponse })
   @ApiConflictResponse({
     description: 'When post state is not published or drafted.',
   })
@@ -182,7 +211,7 @@ export class PostController {
       'If draft is true, will delete draft post. For example: in Hexo platform, when draft is set true, will delete post file in _drafts folder.',
   })
   @ApiQuery({ name: 'draft', type: Boolean, example: false })
-  @ApiOkResponse({ type: PostEntityResponse })
+  @ApiCreatedResponse({ type: PostEntitiesAndStateListResponse })
   @ApiConflictResponse({
     description: 'When post state is not published or drafted.',
   })
@@ -202,7 +231,7 @@ export class PostController {
       'If draft is true, will move a file from post to draft folder, if draft is false, will move a file from draft to post. For example: in Hexo platform, when draft is set true, will move post file from _posts folder to _drafts folder, when draft is set false, will move post file from _drafts folder to _posts folder.',
   })
   @ApiQuery({ name: 'draft', type: Boolean, example: false })
-  @ApiOkResponse({ type: PostEntityResponse })
+  @ApiCreatedResponse({ type: PostEntitiesAndStateListResponse })
   @ApiConflictResponse({
     description: 'When post state is not published or drafted.',
   })
