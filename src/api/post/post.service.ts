@@ -10,7 +10,6 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as crypto from 'crypto';
-import han from 'han';
 import { parse as yfmParse } from 'hexo-front-matter';
 import omit from 'lodash.omit';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
@@ -19,10 +18,9 @@ import {
   paginate,
   Pagination,
 } from 'nestjs-typeorm-paginate';
-import pRetry from 'p-retry';
 import { lastValueFrom } from 'rxjs';
 import { PartialDeep } from 'type-fest';
-import { In, Repository, UpdateResult } from 'typeorm';
+import { Repository } from 'typeorm';
 
 import { CACHE_KEY_PUB_TARGET_URL } from '../../constants';
 import { DraftEntity } from '../../entities/draft.entity';
@@ -40,14 +38,14 @@ import {
   PostState,
   TaskCommonState,
 } from '../../types/enum';
-import { iso8601ToDate } from '../../utils';
+import { iso8601ToDate, processTitleWithHan } from '../../utils';
 import { AppCacheService } from '../cache/service';
 import { MetaSignatureHelper } from '../meta-signature/meta-signature.helper';
 import { MetaSignatureService } from '../meta-signature/meta-signature.service';
 import { PublisherService } from '../provider/publisher/publisher.service';
 import { StorageService } from '../provider/storage/service';
 import { SiteConfigLogicService } from '../site/config/logicService';
-import { TasksService } from '../task/tasks.service';
+import { PostTasksService } from '../task/post.tasks.service';
 import { StoragePostDto } from './dto/post.dto';
 import { PublishStoragePostsDto } from './dto/publish-post.dto';
 import { PreProcessorService } from './preprocessor/preprocessor.service';
@@ -100,6 +98,11 @@ export type HexoFrontMatterParseObject = {
   _content: string;
 };
 
+export type PostsTaskResult = {
+  posts: PostEntityLike[];
+  stateIds: number[];
+};
+
 export interface DraftPost extends PostEntity {
   content: string;
 }
@@ -117,7 +120,7 @@ export class PostService {
     private readonly publisherService: PublisherService,
     private readonly storageService: StorageService,
     private readonly preprocessorService: PreProcessorService,
-    private readonly tasksService: TasksService,
+    private readonly tasksService: PostTasksService,
     @InjectRepository(DraftEntity)
     private readonly draftRepository: Repository<DraftEntity>,
     private readonly metaSignatureService: MetaSignatureService,
@@ -314,7 +317,7 @@ export class PostService {
           id: configId,
         },
         postTitle: postKey,
-        state: TaskCommonState.DOING,
+        state: TaskCommonState.TODO,
         action,
       };
       return rela;
@@ -323,28 +326,7 @@ export class PostService {
       `Saving post site config relations post key: ${postKey}`,
       this.constructor.name,
     );
-
     return await this.postSiteConfigRepository.save(relas);
-  }
-
-  private async updatePostSiteConfigRelaStateAndActionBySiteConfigId(
-    state: TaskCommonState,
-    action: PostAction,
-    postKeys: string[],
-    siteConfigId: number,
-  ): Promise<UpdateResult> {
-    return await this.postSiteConfigRepository.update(
-      {
-        siteConfig: {
-          id: siteConfigId,
-        },
-        postTitle: In(postKeys),
-      },
-      {
-        state,
-        action,
-      },
-    );
   }
 
   private async generatePublisherTargetRESTfulURL(
@@ -589,7 +571,7 @@ export class PostService {
     user: Partial<UCenterJWTPayload>,
     publishPostDto: PublishStoragePostsDto,
     isDraft = false,
-  ): Promise<PostEntityLike[]> {
+  ): Promise<PostsTaskResult> {
     this.logger.verbose(
       `Call publishPostsToStorage, isDraft: ${isDraft}`,
       this.constructor.name,
@@ -597,9 +579,6 @@ export class PostService {
     const postEntities = await this.commonStoragePostsProcess(
       user,
       publishPostDto,
-    );
-    const postKeys: string[] = postEntities.map((p) =>
-      han.letter(p.title, '-'),
     );
     // Check post entities
     postEntities.forEach((post) => {
@@ -617,58 +596,25 @@ export class PostService {
       }
     });
     // Generate post task worker info
-    const postInfos = [] as MetaWorker.Info.Post[];
+    const postInfos: MetaWorker.Info.Post[] = [];
+    const historys: PostSiteConfigRelaEntity[] = [];
     for (const post of postEntities) {
       const postInfo = await this.generatePostInfoFromStoragePostEntity(post);
       postInfos.push(postInfo);
-      await this.createPostSiteConfigRelas(
+      const hanTitle = processTitleWithHan(postInfo.title);
+      const relas = await this.createPostSiteConfigRelas(
         publishPostDto,
-        han.letter(post.title, '-'),
+        hanTitle,
         PostAction.CREATE,
       );
+      historys.push(...relas);
     }
     // Create post task
     for (const configId of publishPostDto.configIds) {
-      try {
-        await pRetry(
-          async () => {
-            await this.tasksService.createPost(user, postInfos, configId, {
-              isDraft,
-              isLastTask: true,
-            });
-          },
-          {
-            retries: 5,
-            onFailedAttempt: (err) => {
-              this.logger.error(
-                `Create posts failed`,
-                err,
-                this.constructor.name,
-              );
-              this.logger.debug(
-                `Attempt ${err.attemptNumber} failed, there are ${err.retriesLeft} retries left.`,
-                this.constructor.name,
-              );
-            },
-          },
-        );
-        await this.updatePostSiteConfigRelaStateAndActionBySiteConfigId(
-          TaskCommonState.SUCCESS,
-          PostAction.CREATE,
-          postKeys,
-          configId,
-        );
-      } catch (err) {
-        // Final error
-        this.logger.error(`Create posts failed`, err, this.constructor.name);
-        await this.updatePostSiteConfigRelaStateAndActionBySiteConfigId(
-          TaskCommonState.FAIL,
-          PostAction.CREATE,
-          postKeys,
-          configId,
-        );
-        throw err;
-      }
+      await this.tasksService.createPost(user, postInfos, configId, {
+        isDraft,
+        isLastTask: true,
+      });
     }
     // Set post state
     postEntities.forEach((post) =>
@@ -676,14 +622,17 @@ export class PostService {
         ? (post.state = PostState.Drafted)
         : (post.state = PostState.Published),
     );
-    return postEntities;
+    return {
+      posts: postEntities,
+      stateIds: historys.map((h) => h.id),
+    };
   }
 
   public async updatePostsInStorage(
     user: Partial<UCenterJWTPayload>,
     publishPostDto: PublishStoragePostsDto,
     isDraft = false,
-  ): Promise<PostEntityLike[]> {
+  ): Promise<PostsTaskResult> {
     this.logger.verbose(
       `Call updatePostsInStorage, isDraft: ${isDraft}`,
       this.constructor.name,
@@ -691,9 +640,6 @@ export class PostService {
     const postEntities = await this.commonStoragePostsProcess(
       user,
       publishPostDto,
-    );
-    const postKeys: string[] = postEntities.map((p) =>
-      han.letter(p.title, '-'),
     );
     // Check post entities
     postEntities.forEach((post) => {
@@ -715,58 +661,25 @@ export class PostService {
       }
     });
     // Generate post task worker info
-    const postInfos = [] as MetaWorker.Info.Post[];
+    const postInfos: MetaWorker.Info.Post[] = [];
+    const historys: PostSiteConfigRelaEntity[] = [];
     for (const post of postEntities) {
       const postInfo = await this.generatePostInfoFromStoragePostEntity(post);
       postInfos.push(postInfo);
-      await this.createPostSiteConfigRelas(
+      const hanTitle = processTitleWithHan(postInfo.title);
+      const relas = await this.createPostSiteConfigRelas(
         publishPostDto,
-        han.letter(post.title, '-'),
+        hanTitle,
         PostAction.UPDATE,
       );
+      historys.push(...relas);
     }
     // Create post task
     for (const configId of publishPostDto.configIds) {
-      try {
-        await pRetry(
-          async () => {
-            await this.tasksService.updatePost(user, postInfos, configId, {
-              isDraft,
-              isLastTask: true,
-            });
-          },
-          {
-            retries: 5,
-            onFailedAttempt: (err) => {
-              this.logger.error(
-                `Update posts failed`,
-                err,
-                this.constructor.name,
-              );
-              this.logger.debug(
-                `Attempt ${err.attemptNumber} failed, there are ${err.retriesLeft} retries left.`,
-                this.constructor.name,
-              );
-            },
-          },
-        );
-        await this.updatePostSiteConfigRelaStateAndActionBySiteConfigId(
-          TaskCommonState.SUCCESS,
-          PostAction.UPDATE,
-          postKeys,
-          configId,
-        );
-      } catch (err) {
-        // Final error
-        this.logger.error(`Update posts failed`, err, this.constructor.name);
-        await this.updatePostSiteConfigRelaStateAndActionBySiteConfigId(
-          TaskCommonState.FAIL,
-          PostAction.UPDATE,
-          postKeys,
-          configId,
-        );
-        throw err;
-      }
+      await this.tasksService.updatePost(user, postInfos, configId, {
+        isDraft,
+        isLastTask: true,
+      });
     }
     // Set post state
     postEntities.forEach((post) =>
@@ -774,14 +687,17 @@ export class PostService {
         ? (post.state = PostState.Drafted)
         : (post.state = PostState.Published),
     );
-    return postEntities;
+    return {
+      posts: postEntities,
+      stateIds: historys.map((h) => h.id),
+    };
   }
 
   public async deletePostsOnStorage(
     user: Partial<UCenterJWTPayload>,
     publishPostDto: PublishStoragePostsDto,
     isDraft = false,
-  ): Promise<PostEntityLike[]> {
+  ): Promise<PostsTaskResult> {
     this.logger.verbose(
       `Call deletePostsOnStorage, isDraft: ${isDraft}`,
       this.constructor.name,
@@ -789,9 +705,6 @@ export class PostService {
     const postEntities = await this.commonStoragePostsProcess(
       user,
       publishPostDto,
-    );
-    const postKeys: string[] = postEntities.map((p) =>
-      han.letter(p.title, '-'),
     );
     // Check post entities
     postEntities.forEach((post) => {
@@ -811,69 +724,39 @@ export class PostService {
       }
     });
     // Generate post task worker info
-    const postInfos = [] as MetaWorker.Info.Post[];
+    const postInfos: MetaWorker.Info.Post[] = [];
+    const historys: PostSiteConfigRelaEntity[] = [];
     for (const post of postEntities) {
       const postInfo = await this.generatePostInfoFromStoragePostEntity(post);
       postInfos.push(postInfo);
-      await this.createPostSiteConfigRelas(
+      const hanTitle = processTitleWithHan(postInfo.title);
+      const relas = await this.createPostSiteConfigRelas(
         publishPostDto,
-        han.letter(post.title, '-'),
+        hanTitle,
         PostAction.DELETE,
       );
+      historys.push(...relas);
     }
     // Create post task
     for (const configId of publishPostDto.configIds) {
-      try {
-        await pRetry(
-          async () => {
-            await this.tasksService.deletePost(user, postInfos, configId, {
-              isDraft,
-              isLastTask: true,
-            });
-          },
-          {
-            retries: 5,
-            onFailedAttempt: (err) => {
-              this.logger.error(
-                `Delete posts failed`,
-                err,
-                this.constructor.name,
-              );
-              this.logger.debug(
-                `Attempt ${err.attemptNumber} failed, there are ${err.retriesLeft} retries left.`,
-                this.constructor.name,
-              );
-            },
-          },
-        );
-        await this.updatePostSiteConfigRelaStateAndActionBySiteConfigId(
-          TaskCommonState.SUCCESS,
-          PostAction.DELETE,
-          postKeys,
-          configId,
-        );
-      } catch (err) {
-        // Final error
-        this.logger.error(`Delete posts failed`, err, this.constructor.name);
-        await this.updatePostSiteConfigRelaStateAndActionBySiteConfigId(
-          TaskCommonState.FAIL,
-          PostAction.DELETE,
-          postKeys,
-          configId,
-        );
-        throw err;
-      }
+      await this.tasksService.deletePost(user, postInfos, configId, {
+        isDraft,
+        isLastTask: true,
+      });
     }
     // Set post state is Deleted
     postEntities.forEach((post) => (post.state = PostState.Deleted));
-    return postEntities;
+    return {
+      posts: postEntities,
+      stateIds: historys.map((h) => h.id),
+    };
   }
 
   public async movePostsInStorage(
     user: Partial<UCenterJWTPayload>,
     publishPostDto: PublishStoragePostsDto,
     toDraft = false,
-  ): Promise<PostEntityLike[]> {
+  ): Promise<PostsTaskResult> {
     // If toDraft is true, call HEXO_MOVETO_DRAFT
     // else call HEXO_PUBLISH_DRAFT
     this.logger.verbose(
@@ -883,9 +766,6 @@ export class PostService {
     const postEntities = await this.commonStoragePostsProcess(
       user,
       publishPostDto,
-    );
-    const postKeys: string[] = postEntities.map((p) =>
-      han.letter(p.title, '-'),
     );
     // Check post entities
     postEntities.forEach((post) => {
@@ -909,62 +789,29 @@ export class PostService {
       }
     });
     // Generate post task worker info
-    const postInfos = [] as MetaWorker.Info.Post[];
+    const postInfos: MetaWorker.Info.Post[] = [];
+    const historys: PostSiteConfigRelaEntity[] = [];
     for (const post of postEntities) {
       const postInfo = await this.generatePostInfoFromStoragePostEntity(post);
       postInfos.push(postInfo);
-      await this.createPostSiteConfigRelas(
+      const hanTitle = processTitleWithHan(postInfo.title);
+      const relas = await this.createPostSiteConfigRelas(
         publishPostDto,
-        han.letter(post.title, '-'),
+        hanTitle,
         PostAction.UPDATE, // maybe move is an UPDATE action
       );
+      historys.push(...relas);
     }
     // Create post task
     for (const configId of publishPostDto.configIds) {
-      try {
-        await pRetry(
-          async () => {
-            if (toDraft) {
-              await this.tasksService.moveToDraft(user, postInfos, configId, {
-                isLastTask: true,
-              });
-            } else {
-              await this.tasksService.publishDraft(user, postInfos, configId, {
-                isLastTask: true,
-              });
-            }
-          },
-          {
-            retries: 5,
-            onFailedAttempt: (err) => {
-              this.logger.error(
-                `Move posts failed`,
-                err,
-                this.constructor.name,
-              );
-              this.logger.debug(
-                `Attempt ${err.attemptNumber} failed, there are ${err.retriesLeft} retries left.`,
-                this.constructor.name,
-              );
-            },
-          },
-        );
-        await this.updatePostSiteConfigRelaStateAndActionBySiteConfigId(
-          TaskCommonState.SUCCESS,
-          PostAction.UPDATE, // maybe move is an UPDATE action
-          postKeys,
-          configId,
-        );
-      } catch (err) {
-        // Final error
-        this.logger.error(`Move posts failed`, err, this.constructor.name);
-        await this.updatePostSiteConfigRelaStateAndActionBySiteConfigId(
-          TaskCommonState.FAIL,
-          PostAction.UPDATE, // maybe move is an UPDATE action
-          postKeys,
-          configId,
-        );
-        throw err;
+      if (toDraft) {
+        await this.tasksService.moveToDraft(user, postInfos, configId, {
+          isLastTask: true,
+        });
+      } else {
+        await this.tasksService.publishDraft(user, postInfos, configId, {
+          isLastTask: true,
+        });
       }
     }
     // Set post state
@@ -973,7 +820,10 @@ export class PostService {
         ? (post.state = PostState.Drafted)
         : (post.state = PostState.Published),
     );
-    return postEntities;
+    return {
+      posts: postEntities,
+      stateIds: historys.map((h) => h.id),
+    };
   }
 
   public async getPostsByUserId(
