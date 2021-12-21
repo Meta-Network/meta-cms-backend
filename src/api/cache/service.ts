@@ -36,11 +36,18 @@ export class AppCacheService {
     value: T,
     arg?: CachingConfig | number,
   ): Promise<T> {
-    this.logger.verbose(`Set cache key ${key}`, AppCacheService.name);
     try {
       if (typeof arg === 'number') {
+        this.logger.debug(
+          `Set cache key ${key} ttl ${arg}`,
+          AppCacheService.name,
+        );
         return await this.cacheManager.set(key, value, { ttl: arg });
       }
+      this.logger.debug(
+        `Set cache key ${key} with arg ${JSON.stringify(arg)}`,
+        AppCacheService.name,
+      );
       return await this.cacheManager.set(key, value, arg);
     } catch (err) {
       this.logger.error(
