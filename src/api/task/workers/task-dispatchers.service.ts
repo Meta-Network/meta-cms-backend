@@ -37,7 +37,7 @@ export class TaskDispatchersService {
     exitTaskWorkspace = false,
   ) {
     const taskConfig = await this.initQueueTaskConfig(taskSteps, cfg);
-    this.logger.log(
+    this.logger.debug(
       `taskConfig ${JSON.stringify(taskConfig)}`, // TODO(550): remove user git token.
       this.constructor.name,
     );
