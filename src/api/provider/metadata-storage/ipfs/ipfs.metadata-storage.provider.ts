@@ -56,20 +56,20 @@ export class IpfsMetadataStorageProvider implements MetadataStorageProvider {
         this.constructor.name,
       );
 
-      try {
-        const transaction = await this.mappingContract.mint(uploadedFile.hash);
+      // try {
+      //   const transaction = await this.mappingContract.mint(uploadedFile.hash);
 
-        this.logger.verbose(
-          `Transaction ${transaction.hash} submitted`,
-          this.constructor.name,
-        );
-      } catch (error) {
-        this.logger.error(
-          `Failed to call mapping contract`,
-          error,
-          this.constructor.name,
-        );
-      }
+      //   this.logger.verbose(
+      //     `Transaction ${transaction.hash} submitted`,
+      //     this.constructor.name,
+      //   );
+      // } catch (error) {
+      //   this.logger.error(
+      //     `Failed to call mapping contract`,
+      //     error,
+      //     this.constructor.name,
+      //   );
+      // }
 
       return uploadedFile.hash;
     } catch (error) {
