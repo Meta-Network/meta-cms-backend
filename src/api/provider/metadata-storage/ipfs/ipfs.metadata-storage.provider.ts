@@ -57,7 +57,7 @@ export class IpfsMetadataStorageProvider implements MetadataStorageProvider {
       );
 
       try {
-        const transaction = await this.mappingContract.mint(uploadedFile.hashV0);
+        const transaction = await this.mappingContract.mint(uploadedFile.hash);
 
         this.logger.verbose(
           `Transaction ${transaction.hash} submitted`,
