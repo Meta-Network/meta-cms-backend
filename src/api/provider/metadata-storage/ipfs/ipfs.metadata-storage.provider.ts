@@ -1,10 +1,12 @@
 import fleekStorage from '@fleekhq/fleek-storage-js';
 import { Inject, LoggerService } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Contract } from 'ethers';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import superagent from 'superagent';
 
 import { MetadataStorageType } from '../../../../types/enum';
+import * as InjectToken from '../inject-token';
 import {
   MetadataStorageProvider,
   registerMetadataStorageProvider,
@@ -15,6 +17,8 @@ export class IpfsMetadataStorageProvider implements MetadataStorageProvider {
     @Inject(WINSTON_MODULE_NEST_PROVIDER)
     private readonly logger: LoggerService,
     private readonly configService: ConfigService,
+    @Inject(InjectToken.Contract)
+    private readonly mappingContract: Contract,
   ) {
     registerMetadataStorageProvider(MetadataStorageType.IPFS, this);
   }
@@ -51,6 +55,22 @@ export class IpfsMetadataStorageProvider implements MetadataStorageProvider {
         `Upload metadata to IPFS ${JSON.stringify(uploadedFile)}`,
         this.constructor.name,
       );
+
+      try {
+        const transaction = await this.mappingContract.mint(uploadedFile.hash);
+
+        this.logger.verbose(
+          `Transaction ${transaction.hash} submitted`,
+          this.constructor.name,
+        );
+      } catch (error) {
+        this.logger.error(
+          `Failed to call mapping contract`,
+          error,
+          this.constructor.name,
+        );
+      }
+
       return uploadedFile.hash;
     } catch (error) {
       // Try to catch socket hang up error.

@@ -66,6 +66,11 @@ provider:
         - https://ipfs.fleek.co
         # - https://ipfs.infura.io
         # - https://ipfs.cf-ipfs.com
+      blockchain:
+        rpc:
+        chainId:
+        privateKey:
+        contractAddress:
     arweave:
       walletKeyPath:
       host: 'arweave.net'
