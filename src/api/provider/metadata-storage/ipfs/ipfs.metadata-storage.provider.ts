@@ -47,7 +47,7 @@ export class IpfsMetadataStorageProvider implements MetadataStorageProvider {
         key: `${folder}/${contentKey}`,
         data: content,
       });
-      this.logger.debug(
+      this.logger.verbose(
         `Upload metadata to IPFS ${JSON.stringify(uploadedFile)}`,
         this.constructor.name,
       );
