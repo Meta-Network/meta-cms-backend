@@ -35,6 +35,7 @@ export class WinstonConfigService implements WinstonModuleOptionsFactory {
     const logDir = `/var/log/${appName.toLowerCase()}`;
 
     return {
+      levels: winston.config.npm.levels,
       level,
       format: defaultLogFormat(appName),
       defaultMeta: {
