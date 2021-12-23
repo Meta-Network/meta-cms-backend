@@ -28,6 +28,11 @@ jwt:
 swagger:
   enable: true
 
+logger:
+  loki:
+    enable: true
+    url: host.docker.internal:3100
+
 microservice:
   server:
     transport:

@@ -71,7 +71,8 @@
     "type-fest": "^2.8.0",
     "typeorm": "^0.2.41",
     "uuid": "^8.3.2",
-    "winston": "^3.3.3"
+    "winston": "^3.3.3",
+    "winston-loki": "^6.0.3"
   },
   "devDependencies": {
     "@nestjs/cli": "^8.0.0",

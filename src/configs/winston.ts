@@ -4,17 +4,19 @@ import {
   WinstonModuleOptions,
   WinstonModuleOptionsFactory,
 } from 'nest-winston';
-import winston from 'winston';
+import { config, format, transports } from 'winston';
+import LokiTransport from 'winston-loki';
+import TransportStream from 'winston-transport';
 
 const defaultLogFormat = (appName: string) =>
-  winston.format.combine(
-    winston.format.label({ label: appName }),
-    winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
-    winston.format.ms(),
-    winston.format.errors({ stack: true }),
-    winston.format.splat(),
+  format.combine(
+    format.label({ label: appName }),
+    format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+    format.ms(),
+    format.errors({ stack: true }),
+    format.splat(),
   );
-const consoleLogFormat = winston.format.printf((info) => {
+const consoleLogFormat = format.printf((info) => {
   const { level, timestamp, label, message, metadata } = info;
   const ctx = metadata.context;
   const ms = metadata.ms;
@@ -33,9 +35,64 @@ export class WinstonConfigService implements WinstonModuleOptionsFactory {
     const appName = this.configService.get<string>('app.name');
     const level = process.env.NODE_ENV === 'production' ? 'info' : 'debug';
     const logDir = `/var/log/${appName.toLowerCase()}`;
+    const enableLoki = this.configService.get<boolean>(
+      'logger.loki.enable',
+      false,
+    );
+
+    const enabledTransports: TransportStream[] = [
+      new transports.Console({
+        format: format.combine(
+          format.colorize({ all: true }),
+          format.timestamp({ format: 'MM/DD/YYYY, hh:mm:ss A' }),
+          format.metadata({
+            fillExcept: ['label', 'timestamp', 'level', 'message'],
+          }),
+          consoleLogFormat,
+        ),
+        handleExceptions: true,
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        handleRejections: true,
+      }),
+      new transports.File({
+        filename: `${logDir}/${level}-${Date.now()}.log`,
+        format: format.combine(format.json()),
+      }),
+      new transports.File({
+        level: 'error',
+        filename: `${logDir}/error-${Date.now()}.log`,
+        format: format.combine(format.json()),
+        handleExceptions: true,
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        handleRejections: true,
+      }),
+    ];
+
+    if (enableLoki) {
+      const lokiUrl = this.configService.get<string>('logger.loki.url');
+      if (!lokiUrl) throw new Error('Config key logger.loki.url no value.');
+      const lokiTransport: TransportStream = new LokiTransport({
+        level: 'silly',
+        json: true,
+        labels: { job: appName },
+        format: format.combine(
+          format.timestamp({ format: 'isoDateTime' }),
+          format.json(),
+        ),
+        host: lokiUrl,
+        handleExceptions: true,
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        handleRejections: true,
+        replaceTimestamp: true,
+      });
+      enabledTransports.push(lokiTransport);
+    }
 
     return {
-      levels: winston.config.npm.levels,
+      levels: config.npm.levels,
       level,
       format: defaultLogFormat(appName),
       defaultMeta: {
@@ -45,35 +102,7 @@ export class WinstonConfigService implements WinstonModuleOptionsFactory {
           versions: process.versions,
         },
       },
-      transports: [
-        new winston.transports.Console({
-          format: winston.format.combine(
-            winston.format.colorize({ all: true }),
-            winston.format.timestamp({ format: 'MM/DD/YYYY, hh:mm:ss A' }),
-            winston.format.metadata({
-              fillExcept: ['label', 'timestamp', 'level', 'message'],
-            }),
-            consoleLogFormat,
-          ),
-          handleExceptions: true,
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-ignore
-          handleRejections: true,
-        }),
-        new winston.transports.File({
-          filename: `${logDir}/${level}-${Date.now()}.log`,
-          format: winston.format.combine(winston.format.json()),
-        }),
-        new winston.transports.File({
-          level: 'error',
-          filename: `${logDir}/error-${Date.now()}.log`,
-          format: winston.format.combine(winston.format.json()),
-          handleExceptions: true,
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-ignore
-          handleRejections: true,
-        }),
-      ],
+      transports: [...enabledTransports],
       exitOnError: false,
     };
   }
