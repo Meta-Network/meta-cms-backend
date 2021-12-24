@@ -50,10 +50,6 @@ export class SiteTasksService {
     user: Partial<UCenterJWTPayload>,
     siteConfigId: number,
   ): Promise<any> {
-    await this.taskDispatchersService.checkAndGetSiteConfigTaskWorkspace(
-      siteConfigId,
-    );
-
     return await this.doDeploySite(user, siteConfigId, { isLastTask: true });
   }
 
@@ -63,17 +59,12 @@ export class SiteTasksService {
     authorPublishMetaSpaceRequestMetadataStorageType?: MetadataStorageType,
     authorPublishMetaSpaceRequestMetadataRefer?: string,
   ) {
-    await this.taskDispatchersService.checkAndGetSiteConfigTaskWorkspace(
-      siteConfigId,
-    );
-
     const prepublisheSiteTaskStepResults = await this.doCheckoutForPublish(
       user,
       siteConfigId,
       authorPublishMetaSpaceRequestMetadataStorageType,
       authorPublishMetaSpaceRequestMetadataRefer,
     );
-
     const publishSiteTaskStepResults = await this.doPublishSite(
       user,
       siteConfigId,
@@ -93,9 +84,6 @@ export class SiteTasksService {
     authorPublishMetaSpaceRequestMetadataStorageType?: MetadataStorageType,
     authorPublishMetaSpaceRequestMetadataRefer?: string,
   ) {
-    await this.taskDispatchersService.checkAndGetSiteConfigTaskWorkspace(
-      siteConfigId,
-    );
     let authorPublishMetaSpaceServerVerificationMetadataRefer = '';
     if (authorPublishMetaSpaceRequestMetadataRefer) {
       const { authorPublishMetaSpaceServerVerificationMetadataRefer: refer } =
@@ -109,8 +97,8 @@ export class SiteTasksService {
         );
       authorPublishMetaSpaceServerVerificationMetadataRefer = refer;
     }
-
     //TODO 写合约，记录生成 authorPublishMetaSpaceServerVerificationMetadata 的时间戳
+
     const deploySiteTaskStepResults = await this.doDeploySite(
       user,
       siteConfigId,
@@ -137,6 +125,8 @@ export class SiteTasksService {
     authorPublishMetaSpaceServerVerificationMetadataStorageType?: MetadataStorageType,
     authorPublishMetaSpaceServerVerificationMetadataRefer?: string,
   ) {
+    this.logger.verbose(`Call doCheckoutForPublish`, this.constructor.name);
+    // Get deploy config and sign metadata
     const { deployConfig } =
       await this.baseService.generateDeployConfigAndRepoSize(
         user,
@@ -148,9 +138,8 @@ export class SiteTasksService {
       authorPublishMetaSpaceServerVerificationMetadataStorageType,
       authorPublishMetaSpaceServerVerificationMetadataRefer,
     );
-
+    // Build task steps
     const deployTaskSteps: MetaWorker.Enums.TaskMethod[] = [];
-    this.logger.verbose(`Adding CICD worker to queue`, this.constructor.name);
     deployTaskSteps.push(MetaWorker.Enums.TaskMethod.GIT_CLONE_CHECKOUT);
     if (
       authorPublishMetaSpaceServerVerificationMetadataStorageType &&
@@ -161,6 +150,11 @@ export class SiteTasksService {
       );
       deployTaskSteps.push(MetaWorker.Enums.TaskMethod.GIT_COMMIT_PUSH);
     }
+    // Run task
+    this.logger.verbose(`Adding CICD worker to queue`, this.constructor.name);
+    await this.taskDispatchersService.checkAndGetSiteConfigTaskWorkspace(
+      siteConfigId,
+    );
     return await this.taskDispatchersService.dispatchTask(
       deployTaskSteps,
       deployConfig,
@@ -180,49 +174,54 @@ export class SiteTasksService {
     const config = await this.siteConfigLogicService.getSiteConfigById(
       siteConfigId,
     );
-    const oldSiteStatus = config.status; // store for rollback
+    const originalState = config.status; // store original state for rollback
     try {
-      await this.siteConfigLogicService.updateSiteConfigStatus(
-        siteConfigId,
-        SiteStatus.Deploying,
-      );
+      // Get deploy config and sign metadata
       const { deployConfig, repoEmpty } =
         await this.baseService.generateDeployConfigAndRepoSize(
           user,
           siteConfigId,
         );
-      const taskSteps: MetaWorker.Enums.TaskMethod[] = [];
       this.setDeployConfigMetadata(
         deployConfig,
         options?.authorPublishMetaSpaceServerVerificationMetadataStorageType,
         options?.authorPublishMetaSpaceServerVerificationMetadataRefer,
       );
+      // Build task steps
       this.logger.verbose(
         `Adding storage worker to queue`,
         this.constructor.name,
       );
+      const taskSteps: MetaWorker.Enums.TaskMethod[] = [];
       if (repoEmpty) {
         taskSteps.push(MetaWorker.Enums.TaskMethod.GIT_INIT_PUSH);
       } else {
         taskSteps.push(MetaWorker.Enums.TaskMethod.GIT_CLONE_CHECKOUT);
       }
-
       const { templateType } = deployConfig.template;
       taskSteps.push(...this.getDeployTaskMethodsByTemplateType(templateType));
-
       taskSteps.push(MetaWorker.Enums.TaskMethod.GENERATE_METASPACE_CONFIG);
       taskSteps.push(MetaWorker.Enums.TaskMethod.GIT_COMMIT_PUSH);
       if (!options?.isLastTask) {
         taskSteps.push(MetaWorker.Enums.TaskMethod.GIT_OVERWRITE_THEME);
       }
+      // Change site state to Deploying
+      await this.siteConfigLogicService.updateSiteConfigStatus(
+        siteConfigId,
+        SiteStatus.Deploying,
+      );
+      // Run task
       this.logger.verbose(`Adding CICD worker to queue`, this.constructor.name);
-
+      await this.taskDispatchersService.checkAndGetSiteConfigTaskWorkspace(
+        siteConfigId,
+      );
       const deploySiteTaskStepResults =
         await this.taskDispatchersService.dispatchTask(
           taskSteps,
           deployConfig,
           options?.isLastTask,
         );
+      // Change site state to Deployed
       await this.siteConfigLogicService.updateSiteConfigStatus(
         siteConfigId,
         SiteStatus.Deployed,
@@ -236,7 +235,7 @@ export class SiteTasksService {
       );
       await this.siteConfigLogicService.updateSiteConfigStatus(
         siteConfigId,
-        oldSiteStatus,
+        originalState,
       );
       throw error;
     }
@@ -249,42 +248,32 @@ export class SiteTasksService {
       isLastTask?: boolean;
     },
   ) {
+    // Get publisher config
     const { publisherType, publishConfig, template } =
       await this.baseService.generatePublishConfigAndTemplate(
         user,
         siteConfigId,
       );
-    return await this.doPublish(
-      user,
-      template.templateType,
-      publisherType,
-      publishConfig,
-      options,
-    );
-  }
-
-  private async doPublish(
-    user: Partial<UCenterJWTPayload>,
-    templateType: MetaWorker.Enums.TemplateType,
-    publisherType: MetaWorker.Enums.PublisherType,
-    publishConfig: MetaWorker.Configs.PublishConfig,
-    options?: {
-      isLastTask?: boolean;
-    },
-  ) {
+    const { templateType } = template;
+    // Build task steps
     this.logger.verbose(
       `Adding publisher worker to queue`,
       this.constructor.name,
     );
     const publishTaskSteps = [];
-
     publishTaskSteps.push(
       ...this.getPublishTaskMethodsByTemplateType(templateType),
       ...this.getPublishTaskMethodsByPublisherType(publisherType),
     );
+    // Change site state to Publishing
     await this.siteConfigLogicService.updateSiteConfigStatus(
       publishConfig.site.configId,
       SiteStatus.Publishing,
+    );
+    // Run task
+    this.logger.verbose(`Adding CICD worker to queue`, this.constructor.name);
+    await this.taskDispatchersService.checkAndGetSiteConfigTaskWorkspace(
+      siteConfigId,
     );
     const publishSiteTaskStepResults =
       await this.taskDispatchersService.dispatchTask(
@@ -292,10 +281,10 @@ export class SiteTasksService {
         publishConfig,
         options?.isLastTask,
       );
-
+    // Update DNS record
     await this.doUpdateDns(publisherType, publishConfig);
     await this.publisherService.updateDomainName(publisherType, publishConfig);
-    // 更新状态和最后一次发布时间
+    // Change site state to Published
     await this.siteConfigLogicService.setPublished(publishConfig.site.configId);
     // 有循环依赖，用事件来解决。事件发生内存泄漏问题，先换回直接调用的方式
     // this.eventEmitter.emit(TaskEvent.SITE_PUBLISHED, {
