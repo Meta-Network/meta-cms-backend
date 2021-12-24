@@ -101,6 +101,7 @@ export class WinstonConfigService implements WinstonModuleOptionsFactory {
           platform: process.platform,
           versions: process.versions,
         },
+        version: process.env.npm_package_version,
       },
       transports: [...enabledTransports],
       exitOnError: false,
