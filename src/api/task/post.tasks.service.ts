@@ -31,11 +31,11 @@ export class PostTasksService {
       isLastTask: boolean;
     },
   ): Promise<string> {
+    const postKeys = posts.map((p) => processTitleWithHan(p.title));
     const taskWorkspace =
       await this.taskDispatchersService.checkAndGetSiteConfigTaskWorkspace(
         siteConfigId,
       );
-    const postKeys = posts.map((p) => processTitleWithHan(p.title));
     await this.updatePostSiteConfigRelaTaskWorkspaceBySiteConfigId(
       siteConfigId,
       postKeys,
@@ -60,11 +60,11 @@ export class PostTasksService {
       isLastTask: boolean;
     },
   ): Promise<string> {
+    const postKeys = posts.map((p) => processTitleWithHan(p.title));
     const taskWorkspace =
       await this.taskDispatchersService.checkAndGetSiteConfigTaskWorkspace(
         siteConfigId,
       );
-    const postKeys = posts.map((p) => processTitleWithHan(p.title));
     await this.updatePostSiteConfigRelaTaskWorkspaceBySiteConfigId(
       siteConfigId,
       postKeys,
@@ -89,11 +89,11 @@ export class PostTasksService {
       isLastTask: boolean;
     },
   ): Promise<string> {
+    const postKeys = posts.map((p) => processTitleWithHan(p.title));
     const taskWorkspace =
       await this.taskDispatchersService.checkAndGetSiteConfigTaskWorkspace(
         siteConfigId,
       );
-    const postKeys = posts.map((p) => processTitleWithHan(p.title));
     await this.updatePostSiteConfigRelaTaskWorkspaceBySiteConfigId(
       siteConfigId,
       postKeys,
@@ -117,11 +117,11 @@ export class PostTasksService {
       isLastTask: boolean;
     },
   ): Promise<string> {
+    const postKeys = posts.map((p) => processTitleWithHan(p.title));
     const taskWorkspace =
       await this.taskDispatchersService.checkAndGetSiteConfigTaskWorkspace(
         siteConfigId,
       );
-    const postKeys = posts.map((p) => processTitleWithHan(p.title));
     await this.updatePostSiteConfigRelaTaskWorkspaceBySiteConfigId(
       siteConfigId,
       postKeys,
@@ -145,11 +145,11 @@ export class PostTasksService {
       isLastTask: boolean;
     },
   ): Promise<string> {
+    const postKeys = posts.map((p) => processTitleWithHan(p.title));
     const taskWorkspace =
       await this.taskDispatchersService.checkAndGetSiteConfigTaskWorkspace(
         siteConfigId,
       );
-    const postKeys = posts.map((p) => processTitleWithHan(p.title));
     await this.updatePostSiteConfigRelaTaskWorkspaceBySiteConfigId(
       siteConfigId,
       postKeys,
