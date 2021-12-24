@@ -136,6 +136,6 @@
     "*.ts": "eslint --cache --fix"
   },
   "engines": {
-    "node": ">=14 <15"
+    "node": ">=14 <17"
   }
 }
