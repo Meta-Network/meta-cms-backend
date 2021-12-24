@@ -1,12 +1,12 @@
 import fleekStorage from '@fleekhq/fleek-storage-js';
 import { Inject, LoggerService } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Contract } from 'ethers';
+// import { Contract } from 'ethers';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import superagent from 'superagent';
 
 import { MetadataStorageType } from '../../../../types/enum';
-import * as InjectToken from '../inject-token';
+// import * as InjectToken from '../inject-token';
 import {
   MetadataStorageProvider,
   registerMetadataStorageProvider,
@@ -16,9 +16,7 @@ export class IpfsMetadataStorageProvider implements MetadataStorageProvider {
   constructor(
     @Inject(WINSTON_MODULE_NEST_PROVIDER)
     private readonly logger: LoggerService,
-    private readonly configService: ConfigService,
-    @Inject(InjectToken.Contract)
-    private readonly mappingContract: Contract,
+    private readonly configService: ConfigService, // @Inject(InjectToken.Contract) // private readonly mappingContract: Contract,
   ) {
     registerMetadataStorageProvider(MetadataStorageType.IPFS, this);
   }
