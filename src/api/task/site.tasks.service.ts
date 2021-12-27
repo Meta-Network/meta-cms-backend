@@ -284,24 +284,23 @@ export class SiteTasksService {
     // Update DNS record
     await this.doUpdateDns(publisherType, publishConfig);
     await this.publisherService.updateDomainName(publisherType, publishConfig);
+    // notify Meta-Network-BE
+    const config = await this.siteConfigLogicService.getSiteConfigById(
+      publishConfig.site.configId,
+    );
+    if (config.lastPublishedAt) {
+      this.metaNetworkService.notifyMetaSpaceSitePublished({
+        ...publishConfig.site,
+        userId: user.id,
+      });
+    } else {
+      this.metaNetworkService.notifyMetaSpaceSiteCreated({
+        ...publishConfig.site,
+        userId: user.id,
+      });
+    }
     // Change site state to Published
     await this.siteConfigLogicService.setPublished(publishConfig.site.configId);
-    // 有循环依赖，用事件来解决。事件发生内存泄漏问题，先换回直接调用的方式
-    // this.eventEmitter.emit(TaskEvent.SITE_PUBLISHED, {
-    //   user,
-    //   publishConfig,
-    // });
-    // await this.postService.updatePostStateBySiteConfigId(
-    //   PostState.SitePublished,
-    //   publishConfig.site.configId,
-    // );
-    // this.logger.verbose(`Adding CDN worker to queue`, this.constructor.name);
-
-    // notify Meta-Network-BE
-    this.metaNetworkService.notifyMetaSpaceSiteCreated({
-      ...publishConfig.site,
-      userId: user.id,
-    });
     return publishSiteTaskStepResults;
   }
 

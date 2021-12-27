@@ -10,7 +10,7 @@ import { ClientProxy } from '@nestjs/microservices';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
 import { UCenterJWTPayload } from '../../../types';
-import { MetaMicroserviceClient, TaskEvent } from '../../../types/enum';
+import { MetaMicroserviceClient } from '../../../types/enum';
 
 export class MetaNetworkService implements OnApplicationBootstrap {
   constructor(
@@ -41,6 +41,17 @@ export class MetaNetworkService implements OnApplicationBootstrap {
       this.constructor.name,
     );
     this.networkClient.emit('meta.space.site.created', site);
+  }
+
+  async notifyMetaSpaceSitePublished(
+    site: MetaWorker.Info.CmsSiteInfo &
+      MetaWorker.Info.CmsSiteConfig & { userId: number },
+  ) {
+    this.logger.verbose(
+      `Notify site published ${JSON.stringify(site)} `,
+      this.constructor.name,
+    );
+    this.networkClient.emit('meta.space.site.published', site);
   }
 
   async onApplicationBootstrap() {
