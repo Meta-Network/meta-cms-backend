@@ -266,14 +266,14 @@ export class SiteTasksService {
       ...this.getPublishTaskMethodsByPublisherType(publisherType),
     );
     // Change site state to Publishing
-    await this.siteConfigLogicService.updateSiteConfigStatus(
+    const config = await this.siteConfigLogicService.updateSiteConfigStatus(
       publishConfig.site.configId,
       SiteStatus.Publishing,
     );
     // Run task
     this.logger.verbose(`Adding CICD worker to queue`, this.constructor.name);
     await this.taskDispatchersService.checkAndGetSiteConfigTaskWorkspace(
-      siteConfigId,
+      config.id,
     );
     const publishSiteTaskStepResults =
       await this.taskDispatchersService.dispatchTask(
@@ -285,9 +285,6 @@ export class SiteTasksService {
     await this.doUpdateDns(publisherType, publishConfig);
     await this.publisherService.updateDomainName(publisherType, publishConfig);
     // notify Meta-Network-BE
-    const config = await this.siteConfigLogicService.getSiteConfigById(
-      publishConfig.site.configId,
-    );
     if (config.lastPublishedAt) {
       this.metaNetworkService.notifyMetaSpaceSitePublished({
         ...publishConfig.site,
@@ -300,7 +297,7 @@ export class SiteTasksService {
       });
     }
     // Change site state to Published
-    await this.siteConfigLogicService.setPublished(publishConfig.site.configId);
+    await this.siteConfigLogicService.setPublished(config.id);
     return publishSiteTaskStepResults;
   }
 
