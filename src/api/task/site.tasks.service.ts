@@ -285,13 +285,13 @@ export class SiteTasksService {
     await this.doUpdateDns(publisherType, publishConfig);
     await this.publisherService.updateDomainName(publisherType, publishConfig);
     // notify Meta-Network-BE
-    if (config.lastPublishedAt) {
-      this.metaNetworkService.notifyMetaSpaceSitePublished({
+    if (Number.isNaN(config.lastPublishedAt.getTime())) {
+      this.metaNetworkService.notifyMetaSpaceSiteCreated({
         ...publishConfig.site,
         userId: user.id,
       });
     } else {
-      this.metaNetworkService.notifyMetaSpaceSiteCreated({
+      this.metaNetworkService.notifyMetaSpaceSitePublished({
         ...publishConfig.site,
         userId: user.id,
       });
