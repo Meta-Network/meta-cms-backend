@@ -1,11 +1,5 @@
 import { MetaWorker } from '@metaio/worker-model';
-import {
-  Inject,
-  Injectable,
-  LoggerService,
-  OnApplicationBootstrap,
-} from '@nestjs/common';
-import { OnEvent } from '@nestjs/event-emitter';
+import { Inject, LoggerService, OnApplicationBootstrap } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
