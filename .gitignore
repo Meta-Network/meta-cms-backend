@@ -51,3 +51,6 @@ dns.service.spec.ts
 config/JWT_PUBLIC_KEY.pub
 test/api/provider/publisher/github/github.publisher.provider.e2e-spec.ts
 test/api/provider/publisher/publisher.service.e2e-spec.ts
+
+# Others
+/*.txt
