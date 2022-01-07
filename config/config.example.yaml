@@ -95,9 +95,6 @@ task:
         loki:
           # Loki server url
           url: host.docker.internal:3100
-        # For decompressing archived files
-        7zip:
-          binName: 7zz
       volumes:
         # Mounts the volume into the /tmp in the container. For example: /var/docker/meta-cms-workspaces
         tmp:

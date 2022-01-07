@@ -61,6 +61,19 @@ export class DockerProcessorsService {
     secret: string,
     options?: ContainerCreateOptions,
   ): Docker.ContainerCreateOptions {
+    const hostTmpDir = this.configService.get<string>(
+      'task.processor.docker.volumes.tmp',
+    );
+    const logLevel = this.configService.get<string>(
+      'task.processor.docker.env.logging.level',
+    );
+    const backendUrl = this.configService.get<string>(
+      'task.processor.docker.env.backend.url',
+    );
+    const lokiUrl = this.configService.get<string>(
+      'task.processor.docker.env.loki.url',
+    );
+
     return {
       ...options,
       Image: image,
@@ -68,30 +81,17 @@ export class DockerProcessorsService {
         '/tmp': {},
       },
       HostConfig: {
-        Binds: [
-          `${this.configService.get<string>(
-            'task.processor.docker.volumes.tmp',
-          )}:/tmp`,
-        ],
+        Binds: [`${hostTmpDir}:/tmp`],
       },
       name: secret,
       Env: [
         // `NODE_ENV=${process.env.NODE_ENV}`,
-        `DEBUG=${this.configService.get<string>(
-          'task.processor.docker.env.logging.level',
-        )}`,
+        `LOG_LEVEL=${logLevel}`,
         `NO_COLOR=true`,
         `WORKER_SECRET=${secret}`,
-        `WORKER_7ZIP_BIN_NAME=${this.configService.get<string>(
-          'task.processor.docker.env.7zip.binName',
-        )}`,
         `WORKER_APP_NAME=${appName}`,
-        `WORKER_BACKEND_URL=${this.configService.get<string>(
-          'task.processor.docker.env.backend.url',
-        )}`,
-        `WORKER_LOKI_URL=${this.configService.get<string>(
-          'task.processor.docker.env.loki.url',
-        )}`,
+        `WORKER_BACKEND_URL=${backendUrl}`,
+        `WORKER_LOKI_URL=${lokiUrl}`,
       ],
     };
   }
