@@ -215,6 +215,27 @@ export class SiteConfigLogicService {
     return result;
   }
 
+  public async fetchUserDefaultSiteInfo(queries: {
+    userId: number;
+  }): Promise<MetaInternalResult<FetchSiteInfosReturn>> {
+    const config = await this.getUserDefaultSiteConfig(queries.userId);
+    const result = new MetaInternalResult<FetchSiteInfosReturn>({
+      serviceCode: ServiceCode.CMS,
+    });
+
+    result.data = {
+      configId: config.id,
+      userId: config.siteInfo.userId,
+      title: config.siteInfo.title,
+      subtitle: config.siteInfo.subtitle,
+      description: config.siteInfo.description,
+      domain: config.domain,
+      metaSpacePrefix: config.metaSpacePrefix,
+    };
+
+    return result;
+  }
+
   public async setPublished(siteConfigId: number): Promise<SiteConfigEntity> {
     const config = await this.siteConfigBaseService.readOne(siteConfigId);
     const update = await this.siteConfigBaseService.update(config, {

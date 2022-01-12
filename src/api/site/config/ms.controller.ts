@@ -17,4 +17,14 @@ export class SiteConfigMsController {
   ): Promise<MetaInternalResult<FetchSiteInfosReturn[]>> {
     return this.service.fetchSiteInfos(queries);
   }
+
+  @MessagePattern('fetchUserDefaultSiteInfo')
+  async fetchUserDefaultSiteInfo(
+    @Payload()
+    queries: {
+      userId: number;
+    },
+  ): Promise<MetaInternalResult<FetchSiteInfosReturn>> {
+    return this.service.fetchUserDefaultSiteInfo(queries);
+  }
 }
