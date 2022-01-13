@@ -218,21 +218,23 @@ export class SiteConfigLogicService {
   public async fetchUserDefaultSiteInfo(queries: {
     userId: number;
   }): Promise<MetaInternalResult<FetchSiteInfosReturn>> {
+    console.log('Fetching user default site info');
     const config = await this.getUserDefaultSiteConfig(queries.userId);
     const result = new MetaInternalResult<FetchSiteInfosReturn>({
       serviceCode: ServiceCode.CMS,
     });
-
-    result.data = {
-      configId: config.id,
-      userId: config.siteInfo.userId,
-      title: config.siteInfo.title,
-      subtitle: config.siteInfo.subtitle,
-      description: config.siteInfo.description,
-      domain: config.domain,
-      metaSpacePrefix: config.metaSpacePrefix,
-    };
-
+    // 必须是已经发布的Meta Space 才给Meta-Network
+    if (SiteStatus.Published === config?.status) {
+      result.data = {
+        configId: config.id,
+        userId: config.siteInfo.userId,
+        title: config.siteInfo.title,
+        subtitle: config.siteInfo.subtitle,
+        description: config.siteInfo.description,
+        domain: config.domain,
+        metaSpacePrefix: config.metaSpacePrefix,
+      };
+    }
     return result;
   }
 

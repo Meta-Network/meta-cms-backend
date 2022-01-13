@@ -4,8 +4,8 @@ import { ConfigModule } from '@nestjs/config';
 import { ClientProxy, ClientsModule, Transport } from '@nestjs/microservices';
 import { Test, TestingModule } from '@nestjs/testing';
 import { firstValueFrom } from 'rxjs';
-import { SiteConfigBaseService } from '../../../../src/api/site/config/baseService';
 
+import { SiteConfigBaseService } from '../../../../src/api/site/config/baseService';
 import {
   FetchSiteInfosReturn,
   SiteConfigLogicService,
@@ -15,6 +15,7 @@ import { SiteInfoBaseService } from '../../../../src/api/site/info/baseService';
 import { SiteInfoLogicService } from '../../../../src/api/site/info/logicService';
 import { configBuilder } from '../../../../src/configs';
 import { SiteConfigEntity } from '../../../../src/entities/siteConfig.entity';
+import { SiteStatus } from '../../../../src/types/enum';
 const mockConfig = () => ({
   metaSpace: {
     prefix: {
@@ -120,62 +121,106 @@ describe('SiteConfigMsController (e2e)', () => {
     });
     jest
       .spyOn(siteConfigLogicService, 'fetchSiteInfos')
-      .mockImplementation(async (queries) => metaInternalResult);
+      .mockImplementationOnce(async (queries) => metaInternalResult);
     const result = await firstValueFrom(
       appMsClient.send('syncSiteInfo', { modifiedAfiter: new Date() }),
     );
     expect(result.statusCode).toBe(HttpStatus.OK);
-    console.log(result.data);
     expect(result.data).toEqual(mockSiteInfos);
   });
 
-  it('fetchUserDefaultSiteInfo', async () => {
-    const mockSiteInfo: SiteConfigEntity = {
-      siteInfo: {
-        id: 20,
+  describe('fetchUserDefaultSiteInfo', () => {
+    it('result data should be site info if site is published', async () => {
+      const mockSiteInfo: SiteConfigEntity = {
+        siteInfo: {
+          id: 20,
+          userId: 11,
+          title: 'Test Site',
+          subtitle: 'Test sub title',
+          description: 'Test description',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+
+        id: 22,
+
+        domain: 'bob.metaspaces.life',
+        metaSpacePrefix: 'bob',
+        templateId: 1,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        lastPublishedAt: null,
+        status: SiteStatus.Published,
+      };
+
+      jest
+        .spyOn(siteConfigLogicService, 'getUserDefaultSiteConfig')
+        .mockImplementationOnce(async (userId) => {
+          return mockSiteInfo;
+        });
+      const result = await firstValueFrom(
+        appMsClient.send('fetchUserDefaultSiteInfo', { userId: 14 }),
+      );
+      expect(result.statusCode).toBe(HttpStatus.OK);
+      expect(result.data).toEqual({
+        configId: 22,
+
+        domain: 'bob.metaspaces.life',
+        metaSpacePrefix: 'bob',
+
         userId: 11,
         title: 'Test Site',
         subtitle: 'Test sub title',
         description: 'Test description',
+      });
+    });
+
+    it('result data should be null if site is not published', async () => {
+      const mockSiteInfo: SiteConfigEntity = {
+        siteInfo: {
+          id: 20,
+          userId: 11,
+          title: 'Test Site',
+          subtitle: 'Test sub title',
+          description: 'Test description',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+
+        id: 22,
+
+        domain: 'bob.metaspaces.life',
+        metaSpacePrefix: 'bob',
+        templateId: 1,
         createdAt: new Date(),
         updatedAt: new Date(),
-      },
+        lastPublishedAt: null,
+        status: SiteStatus.Configured,
+      };
 
-      id: 22,
+      jest
+        .spyOn(siteConfigLogicService, 'getUserDefaultSiteConfig')
+        .mockImplementationOnce(async (userId) => {
+          return mockSiteInfo;
+        });
+      const result = await firstValueFrom(
+        appMsClient.send('fetchUserDefaultSiteInfo', { userId: 14 }),
+      );
+      expect(result.statusCode).toBe(HttpStatus.OK);
+      expect(result.data).toBeNull();
+    });
 
-      domain: 'bob.metaspaces.life',
-      metaSpacePrefix: 'bob',
-      templateId: 1,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      lastPublishedAt: null,
-    };
-
-    // const metaInternalResult = new MetaInternalResult<FetchSiteInfosReturn>({
-    //   serviceCode: ServiceCode.CMS,
-    //   data: mockSiteInfo,
-    // });
-    jest
-      .spyOn(siteConfigLogicService, 'getUserDefaultSiteConfig')
-      .mockImplementation(async (userId) => {
-        console.log('client user id', userId);
-        return mockSiteInfo;
-      });
-    const result = await firstValueFrom(
-      appMsClient.send('fetchUserDefaultSiteInfo', { userId: 14 }),
-    );
-    expect(result.statusCode).toBe(HttpStatus.OK);
-    console.log(result.data);
-    expect(result.data).toEqual({
-      configId: 22,
-
-      domain: 'bob.metaspaces.life',
-      metaSpacePrefix: 'bob',
-
-      userId: 11,
-      title: 'Test Site',
-      subtitle: 'Test sub title',
-      description: 'Test description',
+    it('result data should be null if site is not existed', async () => {
+      jest
+        .spyOn(siteConfigLogicService, 'getUserDefaultSiteConfig')
+        .mockImplementationOnce(async (userId) => {
+          return null;
+        });
+      const result = await firstValueFrom(
+        appMsClient.send('fetchUserDefaultSiteInfo', { userId: 14 }),
+      );
+      expect(result.statusCode).toBe(HttpStatus.OK);
+      expect(result.data).toBeNull();
     });
   });
 });
