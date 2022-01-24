@@ -3,6 +3,13 @@ import { ConnectionOptions } from 'typeorm';
 import { AccessTokenEntity } from '../entities/accessToken.entity';
 import { DraftEntity } from '../entities/draft.entity';
 import { MatatakiSyncEntity } from '../entities/matatakiSync.entity';
+import { DeploySiteOrderEntity } from '../entities/pipeline/deploy-site-order.entity';
+import { DeploySiteTaskEntity } from '../entities/pipeline/deploy-site-task.entity';
+import { PostMetadataEntity } from '../entities/pipeline/post-metadata.entity';
+import { PostOrderEntity } from '../entities/pipeline/post-order.entity';
+import { PostTaskEntity } from '../entities/pipeline/post-task.entity';
+import { PublishSiteOrderEntity } from '../entities/pipeline/publish-site-order.entity';
+import { PublishSiteTaskEntity } from '../entities/pipeline/publish-site-task.entity';
 import { PostEntity } from '../entities/post.entity';
 import { PostSiteConfigRelaEntity } from '../entities/postSiteConfigRela.entity';
 import { GiteePublisherProviderEntity } from '../entities/provider/publisher/gitee.entity';
@@ -53,6 +60,13 @@ const options: ConnectionOptions = {
     SynchronizerEntity,
     MatatakiSyncEntity,
     DraftEntity,
+    PostOrderEntity,
+    PostMetadataEntity,
+    PostTaskEntity,
+    DeploySiteOrderEntity,
+    DeploySiteTaskEntity,
+    PublishSiteOrderEntity,
+    PublishSiteTaskEntity,
   ],
   synchronize: false,
   logging: process.env.NODE_ENV !== 'production',

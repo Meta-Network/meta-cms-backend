@@ -39,6 +39,14 @@ export enum TaskCommonState {
   FAIL = 'FAIL',
 }
 
+export enum PipelineOrderTaskCommonState {
+  NONE = '',
+  PENDING = 'pending',
+  DOING = 'doing',
+  FINISHED = 'finished',
+  FAILED = 'failed',
+}
+
 export enum MetadataStorageType {
   IPFS = 'ipfs',
   ARWEAVE = 'arweave',

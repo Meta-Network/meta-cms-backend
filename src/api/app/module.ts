@@ -17,6 +17,11 @@ import { TransformResponseInterceptor } from '../../interceptors/transform';
 import { AppCacheModule } from '../cache/module';
 import { DomainModule } from '../domain/module';
 import { ImageModule } from '../image/image.module';
+import { PostOrdersModule } from '../pipelines/post-orders/post-orders.module';
+import { PostTasksModule } from '../pipelines/post-tasks/post-tasks.module';
+import { SiteOrdersModule } from '../pipelines/site-orders/site-orders.module';
+import { SiteTasksModule } from '../pipelines/site-tasks/site-tasks.module';
+import { WorkerTasksModule } from '../pipelines/worker-tasks/worker-tasks.module';
 import { PostModule } from '../post/post.module';
 import { MetadataStorageModule } from '../provider/metadata-storage/metadata-storage.module';
 import { PublisherModule } from '../provider/publisher/publisher.module';
@@ -59,6 +64,11 @@ import { TokenModule } from '../token/token.module';
     DomainModule,
     ImageModule,
     MetadataStorageModule,
+    PostOrdersModule,
+    PostTasksModule,
+    SiteOrdersModule,
+    SiteTasksModule,
+    WorkerTasksModule,
   ],
   providers: [
     {
