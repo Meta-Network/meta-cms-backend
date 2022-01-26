@@ -106,7 +106,7 @@ describe('PostOrdersBaseService', () => {
         authorPostDigest: digest,
         authorPostSign: sign,
       } as PostOrderRequestDto;
-      console.log('postOrderRequestDto', JSON.stringify(postOrderRequestDto));
+      // console.log('postOrderRequestDto', JSON.stringify(postOrderRequestDto));
       const userId = 1;
       jest
         .spyOn(postOrdersBaseService, 'create')
@@ -169,6 +169,107 @@ describe('PostOrdersBaseService', () => {
         rel: 'request',
         body: sign,
       });
+    });
+
+    it('should throw bad request excpetion if author post digest is empty', async () => {
+      const digest = authorPostDigest.generate({
+        title: `测试标题`,
+        content: `测试内容`,
+        summary: `测试内容`,
+        cover: 'https://example.com/test-cover.png',
+        categories: '测试分类',
+        tags: '测试标签1,测试标签2',
+        license: 'CC 4.0',
+      });
+      digest.digest = '';
+      const sign = authorPostDigestSign.generate(
+        authorKeys,
+        'meta-cms.mttk.net',
+        digest.digest,
+      );
+      expect(
+        async () =>
+          await service.savePostOrder(1, {
+            authorPostDigest: digest,
+            authorPostSign: sign,
+          }),
+      ).rejects.toThrow('Invalid author post digest');
+    });
+
+    it('should throw bad request excpetion if author post digest is invalid', async () => {
+      const digest = authorPostDigest.generate({
+        title: `测试标题`,
+        content: `测试内容`,
+        summary: `测试内容`,
+        cover: 'https://example.com/test-cover.png',
+        categories: '测试分类',
+        tags: '测试标签1,测试标签2',
+        license: 'CC 4.0',
+      });
+      digest.digest = 'a';
+      const sign = authorPostDigestSign.generate(
+        authorKeys,
+        'meta-cms.mttk.net',
+        digest.digest,
+      );
+      expect(
+        async () =>
+          await service.savePostOrder(1, {
+            authorPostDigest: digest,
+            authorPostSign: sign,
+          }),
+      ).rejects.toThrow('Invalid author post digest');
+    });
+
+    it('should throw bad request excpetion if author post sign is invalid', async () => {
+      const digest = authorPostDigest.generate({
+        title: `测试标题`,
+        content: `测试内容`,
+        summary: `测试内容`,
+        cover: 'https://example.com/test-cover.png',
+        categories: '测试分类',
+        tags: '测试标签1,测试标签2',
+        license: 'CC 4.0',
+      });
+      const sign = authorPostDigestSign.generate(
+        authorKeys,
+        'meta-cms.mttk.net',
+        digest.digest,
+      );
+      sign.signature =
+        '0xfcb51bedbc073bb5ca6505c5fe9a81e5b4798d8e21b7356a7a96abc23dee8e7dcbb579ac25f339db21a0ea9a5861604cc8a62b8b3c8fa3790770264f2ed5328b';
+      expect(
+        async () =>
+          await service.savePostOrder(1, {
+            authorPostDigest: digest,
+            authorPostSign: sign,
+          }),
+      ).rejects.toThrow('Invalid author post sign');
+    });
+
+    it('should throw bad request excpetion if author post sign length is wrong', async () => {
+      const digest = authorPostDigest.generate({
+        title: `测试标题`,
+        content: `测试内容`,
+        summary: `测试内容`,
+        cover: 'https://example.com/test-cover.png',
+        categories: '测试分类',
+        tags: '测试标签1,测试标签2',
+        license: 'CC 4.0',
+      });
+      const sign = authorPostDigestSign.generate(
+        authorKeys,
+        'meta-cms.mttk.net',
+        digest.digest,
+      );
+      sign.signature = '0xa';
+      expect(
+        async () =>
+          await service.savePostOrder(1, {
+            authorPostDigest: digest,
+            authorPostSign: sign,
+          }),
+      ).rejects.toThrow('wrong signature length');
     });
   });
 });
