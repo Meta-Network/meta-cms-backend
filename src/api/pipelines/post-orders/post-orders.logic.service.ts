@@ -17,7 +17,13 @@ import { IPaginationMeta, IPaginationOptions } from 'nestjs-typeorm-paginate';
 import { In } from 'typeorm';
 
 import { PostMetadataEntity } from '../../../entities/pipeline/post-metadata.entity';
-import { PipelineOrderTaskCommonState } from '../../../types/enum';
+import {
+  InternalRealTimeEvent,
+  PipelineOrderTaskCommonState,
+  RealTimeEventState,
+  RealTimeNotificationEvent,
+} from '../../../types/enum';
+import { InternalRealTimeMessage } from '../../real-time-event/real-time-event.datatype';
 import {
   PostOrderRequestDto,
   PostOrderResponseDto,
@@ -111,9 +117,7 @@ export class PostOrdersLogicService {
       id: sign.signature,
       ...digest,
       authorPublicKey: sign.publicKey,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    } as PostMetadataEntity;
+    };
     const createdPostOrder = this.postOrdersBaseService.create({
       id: sign.signature,
       userId,
@@ -121,6 +125,19 @@ export class PostOrdersLogicService {
       serverVerificationId: serverVerification.signature,
     });
     const postOrder = await this.postOrdersBaseService.save(createdPostOrder);
+    this.eventEmitter.emit(
+      InternalRealTimeEvent.POST_STATE_UPDATED,
+      new InternalRealTimeMessage({
+        userId,
+        message: InternalRealTimeEvent.POST_STATE_UPDATED,
+        data: [
+          {
+            id: sign.signature,
+            submit: RealTimeEventState.pending,
+          },
+        ],
+      }),
+    );
     return {
       postOrder,
       serverVerification,
