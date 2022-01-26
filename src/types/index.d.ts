@@ -1,6 +1,9 @@
 import { MetaWorker } from '@metaio/worker-model';
 import { Request } from 'express';
 import { JwtPayload } from 'jsonwebtoken';
+import { Socket } from 'socket.io';
+
+import { RealTimeEventState } from './enum';
 
 export interface UCenterUser {
   bio: string;
@@ -90,3 +93,39 @@ export type GetGitTreeResult = {
   truncated: boolean;
   tree: GitTreeInfo[];
 };
+
+export interface PostPublishingStateNotification {
+  stateChanged: boolean;
+}
+
+export interface PostPublishNotification {
+  allPostCount?: number;
+  publishingCount?: number;
+  publishedCount?: number;
+  publishingAlertFlag?: boolean;
+}
+
+export interface InvitationStateUpdatedNotification {
+  availableInvitationCodeCount: number;
+}
+
+export type StateNotification =
+  | PostPublishNotification
+  | PostPublishingStateNotification
+  | InvitationStateUpdatedNotification;
+
+export interface StateData {
+  id: number;
+  submit?: RealTimeEventState;
+  publish?: RealTimeEventState;
+  certificate?: {
+    sign?: string;
+    state: RealTimeEventState;
+  };
+}
+
+export type InvitationCountData = number;
+
+export interface VerifiedSocket extends Socket {
+  userId: number;
+}
