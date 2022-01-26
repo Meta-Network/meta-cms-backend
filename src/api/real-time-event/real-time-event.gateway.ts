@@ -5,6 +5,7 @@ import { WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 import { parse as cookieParse } from 'cookie';
 
 import { UCenterAuthService } from '../../auth/ucenter/service';
+import { configBuilder } from '../../configs';
 import type {
   InvitationCountData,
   PostPublishNotification,
@@ -25,14 +26,18 @@ import {
 @WebSocketGateway({
   cookie: true,
   cors: {
-    origin: '*',
+    credentials: true,
+    // can't use '*' here because of the cors limit,
+    // also no ConfigService instance is available in this scope,
+    // thus use configBuilder here
+    origin: configBuilder().cors.origins,
   },
 })
 export class RealTimeEventGateway {
-  private logger = new Logger(RealTimeEventGateway.name);
   @WebSocketServer()
-  server: Server;
-  clients = new Map<number, VerifiedSocket[]>();
+  private server: Server;
+  private logger = new Logger(RealTimeEventGateway.name);
+  private clients = new Map<number, VerifiedSocket[]>();
 
   constructor(private readonly ucenterAuthService: UCenterAuthService) {}
 
@@ -53,7 +58,7 @@ export class RealTimeEventGateway {
 
   async handleConnection(client: VerifiedSocket) {
     let userId: number;
-    const req = { cookies: cookieParse(client.handshake.headers.cookie) };
+    const req = { cookies: cookieParse(client.handshake.headers.cookie ?? '') };
 
     try {
       userId = parseInt(
@@ -62,7 +67,7 @@ export class RealTimeEventGateway {
     } catch (error) {
       client.disconnect(true);
       this.logger.log(
-        `User connection failed, with socket ${client.id}. Error: ${error}`,
+        `User connection failed, with socket id ${client.id}. Error: ${error}`,
       );
       return;
     }
@@ -72,7 +77,11 @@ export class RealTimeEventGateway {
     userClients.push(client);
 
     this.clients.set(userId, userClients);
-    this.logger.log(`User(id: ${userId}) connected with socket ${client.id}`);
+    this.logger.log(
+      `User(id: ${userId}) connected with socket id ${client.id}`,
+    );
+
+    setTimeout(() => client.emit('hello', { a: 'somedata here' }), 3000);
   }
 
   /**
