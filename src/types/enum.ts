@@ -91,3 +91,23 @@ export enum MetaMicroserviceClient {
   Network = 'NETWORK_MS_CLIENT',
   CMS = 'CMS_MS_CLIENT',
 }
+
+export enum RealTimeNotificationEvent {
+  POST_COUNT_UPDATED = 'post.count.updated',
+  SPACE_COUNT_UPDATED = 'space.count.updated',
+  INVITATION_COUNT_UPDATED = 'invitation.count.updated',
+  POST_PUBLISHING_STATE_UPDATED = 'post.publishing.state.updated',
+}
+
+export enum InternalRealTimeEvent {
+  POST_STATE_UPDATED = 'post.state.updated',
+  SPACE_STATE_UPDATED = 'space.state.updated',
+  INVITATION_COUNT_UPDATED = 'invitation.count.updated',
+}
+
+export enum RealTimeEventState {
+  pending = 'pending',
+  doing = 'doing',
+  finished = 'finished',
+  failed = 'failed',
+}

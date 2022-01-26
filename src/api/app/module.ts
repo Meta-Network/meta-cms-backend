@@ -21,6 +21,7 @@ import { PostModule } from '../post/post.module';
 import { MetadataStorageModule } from '../provider/metadata-storage/metadata-storage.module';
 import { PublisherModule } from '../provider/publisher/publisher.module';
 import { StorageModule } from '../provider/storage/module';
+import { RealTimeEventModule } from '../real-time-event/real-time-event.module';
 import { SiteModule } from '../site/module';
 import { SynchronizerModule } from '../synchronizer/synchronizer.module';
 import { TasksModule } from '../task/tasks.module';
@@ -59,6 +60,7 @@ import { TokenModule } from '../token/token.module';
     DomainModule,
     ImageModule,
     MetadataStorageModule,
+    RealTimeEventModule,
   ],
   providers: [
     {
