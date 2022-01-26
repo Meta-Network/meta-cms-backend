@@ -87,7 +87,7 @@ describe('PostOrdersBaseService', () => {
   it('should be defined', () => {
     expect(service).toBeDefined();
   });
-  describe('pagiPostOrders', () => {
+  describe('paginate', () => {
     it('should return a page with empty items array if no post order exists', async () => {
       const options = {
         page: 2,

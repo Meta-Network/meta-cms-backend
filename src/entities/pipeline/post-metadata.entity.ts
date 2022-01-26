@@ -42,11 +42,13 @@ export class PostMetadataEntity {
   @IsOptional()
   summary: string;
 
-  @Column({ comment: 'Post categories', type: 'simple-array', nullable: true })
+  @Column({ comment: 'Post categories', nullable: true })
+  @IsString()
   @IsOptional()
-  categories?: string;
+  categories: string;
 
   @Column({ nullable: true, comment: 'Post tags' })
+  @IsString()
   @IsOptional()
   tags: string;
 
@@ -68,4 +70,14 @@ export class PostMetadataEntity {
   @IsHexadecimal()
   @IsOptional()
   authorPublicKey: string;
+
+  @Index()
+  @Column({
+    comment: 'Post digest',
+    nullable: false,
+    default: '',
+  })
+  @IsHexadecimal()
+  @IsOptional()
+  digest: string;
 }

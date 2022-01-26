@@ -937,10 +937,10 @@
     dotenv "^10.0.0"
     jsonwebtoken "^8.5.1"
 
-"@metaio/meta-signature-util-v2@^2.0.0":
-  version "2.1.0"
-  resolved "https://registry.yarnpkg.com/@metaio/meta-signature-util-v2/-/meta-signature-util-v2-2.1.0.tgz#74d09519066f7bbc0df4a8267df1248ab460ce56"
-  integrity sha512-bbM/zPRqfFQZyFx+QFVNxCPLCAlLS1Bb5QZOiv3u5fDvCVfB8Uj9WCACfqJkXSN3KMYM+zRZpjWiZSWAOqc5oQ==
+"@metaio/meta-signature-util-v2@^2.3.0":
+  version "2.3.0"
+  resolved "https://registry.yarnpkg.com/@metaio/meta-signature-util-v2/-/meta-signature-util-v2-2.3.0.tgz#114e792bffd32a281b9d5e98dfde4294ca7e6f2a"
+  integrity sha512-EcZcZFIEWclMDzEgGGcAtcMdUrXLn+BNnwIhrLSdqy4Wa1s0PhCWl++axKEo4W56ZZLigaeghOzYi0vndWtPkA==
   dependencies:
     curve25519-js "^0.0.4"
     niceware "^2.0.2"
