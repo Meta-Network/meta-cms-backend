@@ -8,6 +8,7 @@ import {
   IsArray,
   IsHexadecimal,
   IsNotEmpty,
+  IsNotEmptyObject,
   IsNumber,
   IsString,
   IsUrl,
@@ -287,11 +288,15 @@ export class AuthorPostSignServerVerificationDto
 }
 
 export class PostOrderRequestDto {
+  @IsNotEmptyObject()
   authorPostDigest: AuthorPostDigestDto;
+  @IsNotEmptyObject()
   authorPostSign: AuthorPostSignDto;
 }
 export class PostOrderResponseDto {
+  @IsNotEmptyObject()
   postOrder: PostOrderEntity;
+  @IsNotEmptyObject()
   serverVerification: AuthorPostSignServerVerificationDto;
 }
 

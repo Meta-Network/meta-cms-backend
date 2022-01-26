@@ -92,7 +92,7 @@ export class PostOrdersLogicService {
     const digest = postOrderRequestDto.authorPostDigest;
     const sign = postOrderRequestDto.authorPostSign;
     if (!authorPostDigestSign.verify(sign)) {
-      throw new BadRequestException('Invalid author post digest signature');
+      throw new BadRequestException('Invalid author post sign');
     }
     if (!authorPostDigest.verify(digest)) {
       throw new BadRequestException('Invalid author post digest');
