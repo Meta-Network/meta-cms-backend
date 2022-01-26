@@ -12,7 +12,12 @@ import { WINSTON_MODULE_NEST_PROVIDER, WinstonModule } from 'nest-winston';
 
 import { WinstonConfigService } from '../../../configs/winston';
 import { PostOrderEntity } from '../../../entities/pipeline/post-order.entity';
-import { PipelineOrderTaskCommonState } from '../../../types/enum';
+import {
+  InternalRealTimeEvent,
+  PipelineOrderTaskCommonState,
+  RealTimeEventState,
+} from '../../../types/enum';
+import { InternalRealTimeMessage } from '../../real-time-event/real-time-event.datatype';
 import { PostOrderRequestDto } from '../dto/post-order.dto';
 import { PostOrdersBaseService } from './post-orders.base.service';
 import { PostOrdersLogicService } from './post-orders.logic.service';
@@ -88,6 +93,11 @@ describe('PostOrdersBaseService', () => {
 
   describe('savePostOrder', () => {
     it('should return postOrderResponseDto & emit realTimeEvent if request is valid', async () => {
+      let eventData;
+      eventEmitter.on(
+        InternalRealTimeEvent.POST_STATE_UPDATED,
+        (data) => (eventData = data),
+      );
       const digest = authorPostDigest.generate({
         title: `测试标题`,
         content: `测试内容`,
@@ -115,38 +125,31 @@ describe('PostOrdersBaseService', () => {
             ...postOrder,
             submitState: PipelineOrderTaskCommonState.PENDING,
             publishState: PipelineOrderTaskCommonState.PENDING,
-            createdAt: new Date(),
-            updatedAt: new Date(),
           };
         });
       jest
         .spyOn(postOrdersBaseService, 'save')
         .mockImplementationOnce(async (postOrder: PostOrderEntity) => {
-          return {
-            ...postOrder,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          };
+          return postOrder;
         });
       const result = await service.savePostOrder(userId, postOrderRequestDto);
       const resultJson = JSON.stringify(result);
       const codecResult = JSON.parse(resultJson);
 
-      codecResult.postOrder.createdAt = new Date(
-        codecResult.postOrder.createdAt,
-      );
-      codecResult.postOrder.updatedAt = new Date(
-        codecResult.postOrder.updatedAt,
-      );
-
-      codecResult.postOrder.postMetadata.createdAt = new Date(
-        codecResult.postOrder.postMetadata.createdAt,
-      );
-      codecResult.postOrder.postMetadata.updatedAt = new Date(
-        codecResult.postOrder.postMetadata.updatedAt,
-      );
-
       expect(result).toBeDefined();
+      expect(eventData).toBeDefined();
+      expect(eventData).toEqual(
+        new InternalRealTimeMessage({
+          userId,
+          message: InternalRealTimeEvent.POST_STATE_UPDATED,
+          data: [
+            {
+              id: sign.signature,
+              submit: RealTimeEventState.pending,
+            },
+          ],
+        }),
+      );
       expect(result.postOrder.id).toBe(sign.signature);
       expect(result.serverVerification.publicKey).toBe(serverKeys.public);
       expect(result.postOrder.serverVerificationId).toBe(
