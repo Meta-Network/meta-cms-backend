@@ -63,10 +63,8 @@ export class PostOrdersLogicService {
       where: {
         userId,
         publishState: In([
-          PipelineOrderTaskCommonState.NONE,
           PipelineOrderTaskCommonState.PENDING,
           PipelineOrderTaskCommonState.DOING,
-          PipelineOrderTaskCommonState.FAILED,
         ]),
       },
       order: {
@@ -134,6 +132,7 @@ export class PostOrdersLogicService {
           {
             id: sign.signature,
             submit: RealTimeEventState.pending,
+            publish: RealTimeEventState.pending,
           },
         ],
       }),
