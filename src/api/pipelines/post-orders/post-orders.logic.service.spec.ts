@@ -146,6 +146,7 @@ describe('PostOrdersBaseService', () => {
             {
               id: sign.signature,
               submit: RealTimeEventState.pending,
+              publish: RealTimeEventState.pending,
             },
           ],
         }),
