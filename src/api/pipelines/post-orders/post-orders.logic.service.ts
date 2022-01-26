@@ -55,6 +55,17 @@ export class PostOrdersLogicService {
     });
   }
 
+  async countUserPublishingPostOrders(
+    userId: number,
+  ): Promise<Record<PipelineOrderTaskCommonState, number>> {
+    const rows = await this.postOrdersBaseService.count(userId);
+    const result = {};
+    rows.forEach((row) => {
+      result[row.state] = parseInt(row.count);
+    });
+    return result as Record<PipelineOrderTaskCommonState, number>;
+  }
+
   async pagiUserPublishingPostOrders(
     userId: number,
     options: IPaginationOptions<IPaginationMeta>,
