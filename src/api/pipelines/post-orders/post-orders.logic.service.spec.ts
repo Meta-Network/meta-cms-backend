@@ -68,7 +68,11 @@ describe('PostOrdersBaseService', () => {
     }).compile();
     configService = module.get<ConfigService>(ConfigService);
     logger = module.get(WINSTON_MODULE_NEST_PROVIDER);
-    postOrdersBaseService = new PostOrdersBaseService(logger, undefined);
+    postOrdersBaseService = new PostOrdersBaseService(
+      logger,
+      undefined,
+      undefined,
+    );
     eventEmitter = module.get<EventEmitter2>(EventEmitter2);
     service = new PostOrdersLogicService(
       logger,
@@ -102,6 +106,7 @@ describe('PostOrdersBaseService', () => {
         authorPostDigest: digest,
         authorPostSign: sign,
       } as PostOrderRequestDto;
+      console.log('postOrderRequestDto', JSON.stringify(postOrderRequestDto));
       const userId = 1;
       jest
         .spyOn(postOrdersBaseService, 'create')

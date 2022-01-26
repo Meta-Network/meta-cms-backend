@@ -18,6 +18,7 @@ import {
 import { WinstonConfigService } from '../../../configs/winston';
 import { PostMetadataEntity } from '../../../entities/pipeline/post-metadata.entity';
 import { PostOrderEntity } from '../../../entities/pipeline/post-order.entity';
+import { PipelineOrderTaskCommonState } from '../../../types/enum';
 import { PostOrdersBaseService } from './post-orders.base.service';
 
 describe('PostOrdersBaseService', () => {
@@ -33,6 +34,12 @@ describe('PostOrdersBaseService', () => {
     public:
       '0x54f329c1651d2281eb6dca96a0bdb70e2cc3821905bcb853db935f0180aa8a4e',
   } as KeyPair;
+  const serverKeys = {
+    private:
+      '0x20db0762690fa66a1534de672822c65c71b9be027b2962e3560cb0238d89a073',
+    public:
+      '0x7660c1fc42a2d9aa3f0a4551db9e63f169ecfd56571add56622a6e4824162f1f',
+  };
   beforeEach(async () => {
     const connection = await createConnection({
       type: 'sqlite',
@@ -45,6 +52,7 @@ describe('PostOrdersBaseService', () => {
     });
     repo = getRepository(PostOrderEntity, testConnectionName);
     postMetadataRepo = getRepository(PostMetadataEntity, testConnectionName);
+
     const module: TestingModule = await Test.createTestingModule({
       imports: [
         ConfigModule.forRoot({
@@ -70,6 +78,10 @@ describe('PostOrdersBaseService', () => {
         {
           provide: getRepositoryToken(PostOrderEntity),
           useFactory: () => repo,
+        },
+        {
+          provide: getRepositoryToken(PostMetadataEntity),
+          useFactory: () => postMetadataRepo,
         },
         PostOrdersBaseService,
       ],
@@ -184,6 +196,54 @@ describe('PostOrdersBaseService', () => {
         }`,
         last: `${options.route}?page=5&limit=${options.limit}`,
       });
+    });
+  });
+
+  describe('save', () => {
+    it('should store postOrderEntity & postMetadataEntity', async () => {
+      const digest = authorPostDigest.generate({
+        title: `测试标题`,
+        content: `测试内容`,
+        summary: `测试内容`,
+        cover: 'https://example.com/test-cover.png',
+        categories: '测试分类',
+        tags: '测试标签1,测试标签2',
+        license: 'CC 4.0',
+      });
+      const sign = authorPostDigestSign.generate(
+        authorKeys,
+        'meta-cms.mttk.net',
+        digest.digest,
+      );
+      const postMetadata = {
+        id: sign.signature,
+        ...digest,
+        authorPublicKey: authorKeys.public,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      const postOrder = {
+        id: sign.signature,
+        userId: 1,
+        postMetadata,
+        submitState: PipelineOrderTaskCommonState.PENDING,
+        publishState: PipelineOrderTaskCommonState.PENDING,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      const postOrderEntity = await service.save(postOrder);
+      // console.log(postOrderEntity);
+      expect(postOrderEntity).toEqual(postOrder);
+      const postOrderEntityById = await repo.findOne(postOrder.id, {
+        relations: ['postMetadata'],
+      });
+      // console.log('postOrderEntityById', postOrderEntityById);
+      expect(postOrderEntityById.id).toBe(postOrder.id);
+      expect(postOrderEntityById.userId).toBe(postOrder.userId);
+      expect(postOrderEntityById.submitState).toBe(postOrder.submitState);
+      expect(postOrderEntityById.publishState).toBe(postOrder.publishState);
+      expect(postOrderEntityById.postMetadata.id).toBe(postOrderEntityById.id);
+      expect(postOrderEntityById.postMetadata.title).toBe(postMetadata.title);
     });
   });
 });
