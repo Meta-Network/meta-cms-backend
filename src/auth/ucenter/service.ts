@@ -10,6 +10,7 @@ import {
   JWTExpiredException,
   RequirdHttpHeadersNotFoundException,
 } from '../../exceptions';
+import { UCenterJWTPayload } from '../../types';
 
 @Injectable()
 export class UCenterAuthService {
@@ -18,7 +19,7 @@ export class UCenterAuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  validateJWT(req: Request) {
+  validateJWT(req: Request): Promise<Partial<UCenterJWTPayload>> {
     const cookie = req.cookies;
     const cookieName = this.configService.get<string>('jwt.cookieName');
     if (!cookie || !cookie[cookieName]) {
@@ -27,7 +28,7 @@ export class UCenterAuthService {
     const token: string = cookie[cookieName];
 
     try {
-      this.jwtService.verify(token, {
+      return this.jwtService.verify(token, {
         ignoreExpiration: process.env.NODE_ENV !== 'production',
       });
     } catch (error) {
