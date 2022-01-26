@@ -1,6 +1,17 @@
-import { serverVerificationSign } from '@metaio/meta-signature-util-v2';
-import { Inject, Injectable, LoggerService } from '@nestjs/common';
+import {
+  authorPostDigest,
+  authorPostDigestSign,
+  serverVerificationSign,
+  serverVerificationSignWithContent,
+} from '@metaio/meta-signature-util-v2';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  LoggerService,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { IPaginationMeta, IPaginationOptions } from 'nestjs-typeorm-paginate';
 import { In } from 'typeorm';
@@ -20,6 +31,7 @@ export class PostOrdersLogicService {
     private readonly logger: LoggerService,
     private readonly configService: ConfigService,
     private readonly postOrdersBaseService: PostOrdersBaseService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async pagiUserAllPostOrders(
@@ -79,11 +91,21 @@ export class PostOrdersLogicService {
   ): Promise<PostOrderResponseDto> {
     const digest = postOrderRequestDto.authorPostDigest;
     const sign = postOrderRequestDto.authorPostSign;
-    const serverVerification = serverVerificationSign.generate(
-      this.configService.get('metaSignature.serverKeys'),
-      this.configService.get('metaSignature.serverDomain'),
-      sign,
-      sign.signature,
+    if (!authorPostDigestSign.verify(sign)) {
+      throw new BadRequestException('Invalid author post digest signature');
+    }
+    if (!authorPostDigest.verify(digest)) {
+      throw new BadRequestException('Invalid author post digest');
+    }
+    const serverVerification = serverVerificationSignWithContent.generate(
+      digest,
+      digest.digest,
+      serverVerificationSign.generate(
+        this.configService.get('metaSignature.serverKeys'),
+        this.configService.get('metaSignature.serverDomain'),
+        sign,
+        sign.signature,
+      ),
     );
     const postMetadata = {
       id: sign.signature,

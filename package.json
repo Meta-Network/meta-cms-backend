@@ -1,6 +1,6 @@
 {
   "name": "cms-backend",
-  "version": "0.8.0",
+  "version": "1.0.0",
   "description": "CMS API testing branch",
   "author": "Meta Network <noreply@metanetwork.online>",
   "private": true,
@@ -31,7 +31,7 @@
     "@fleekhq/fleek-storage-js": "^1.0.20",
     "@metaio/auth-sdk": "^0.2.2",
     "@metaio/meta-signature-util": "^0.6.0",
-    "@metaio/meta-signature-util-v2": "^2.0.0",
+    "@metaio/meta-signature-util-v2": "^2.3.0",
     "@metaio/microservice-model": "^1.0.3",
     "@metaio/worker-model": "npm:@metaio/worker-model@1.7.6",
     "@metaio/worker-model2": "npm:@metaio/worker-model@2.1.0",

@@ -212,7 +212,30 @@ export class AuthorPostSignDto
   reference: ReferenceItem[];
 }
 
-export class AuthorPostSignServerVerificationDto {
+export class AuthorPostSignServerVerificationDto
+  implements BaseSignatureMetadata
+{
+  @ApiProperty({
+    description: '元数据：JSON-LD上下文',
+    required: true,
+  })
+  @IsString()
+  @IsNotEmpty()
+  '@context': 'https://metanetwork.online/ns/cms';
+  @ApiProperty({
+    description: '元数据：类型',
+    required: true,
+  })
+  @IsString()
+  @IsNotEmpty()
+  '@type': string;
+  @ApiProperty({
+    description: '元数据：版本号',
+    required: true,
+  })
+  @IsString()
+  @IsNotEmpty()
+  '@version': string;
   @ApiProperty({
     description: '签名算法',
     required: true,
@@ -259,6 +282,8 @@ export class AuthorPostSignServerVerificationDto {
   @IsNumber()
   @IsNotEmpty()
   ts: number;
+  @IsArray()
+  reference: ReferenceItem[];
 }
 
 export class PostOrderRequestDto {
