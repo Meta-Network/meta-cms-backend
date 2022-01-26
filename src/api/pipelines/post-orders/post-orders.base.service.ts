@@ -23,6 +23,8 @@ export class PostOrdersBaseService {
     private readonly logger: LoggerService,
     @InjectRepository(PostOrderEntity)
     private readonly postOrdersRepository: Repository<PostOrderEntity>,
+    @InjectRepository(PostMetadataEntity)
+    private readonly postMetadatasRepository: Repository<PostMetadataEntity>,
   ) {}
 
   async pagi(
@@ -43,6 +45,7 @@ export class PostOrdersBaseService {
   }
 
   async save(postOrderEntity: PostOrderEntity) {
-    return this.postOrdersRepository.save(postOrderEntity);
+    await this.postMetadatasRepository.save(postOrderEntity.postMetadata);
+    return await this.postOrdersRepository.save(postOrderEntity);
   }
 }

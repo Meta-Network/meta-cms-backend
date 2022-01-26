@@ -105,7 +105,7 @@ export class PostOrdersController {
     @User('id', ParseIntPipe) userId: number,
     @Body() postOrderRequestDto: PostOrderRequestDto,
   ): Promise<PostOrderResponseDto> {
-    return this.postOrdersLogicService.savePostOrder(
+    return await this.postOrdersLogicService.savePostOrder(
       userId,
       postOrderRequestDto,
     );
@@ -119,6 +119,6 @@ export class PostOrdersController {
     @User('id', ParseIntPipe) userId: number,
     @Param('id') id: string,
   ): Promise<void> {
-    return this.postOrdersLogicService.retryPostOrder(userId, id);
+    return await this.postOrdersLogicService.retryPostOrder(userId, id);
   }
 }
