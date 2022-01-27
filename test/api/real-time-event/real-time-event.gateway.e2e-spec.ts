@@ -91,7 +91,7 @@ describe('RealTimeEventGateway (e2e)', () => {
         message: InternalRealTimeEvent.POST_STATE_UPDATED,
         data: [
           {
-            id: 10,
+            id: '0x809036e271d32bc411b3f58f8c364f0d41c6536f31fd0c5d27217581ecdaa3f420e1098af06428644c235a034e4a986795e7934e0f151823b404549e3a3f828b',
             submit: RealTimeEventState.pending,
             publish: RealTimeEventState.pending,
           },
@@ -111,7 +111,7 @@ describe('RealTimeEventGateway (e2e)', () => {
           message: InternalRealTimeEvent.POST_STATE_UPDATED,
           data: [
             {
-              id: 10,
+              id: '0x809036e271d32bc411b3f58f8c364f0d41c6536f31fd0c5d27217581ecdaa3f420e1098af06428644c235a034e4a986795e7934e0f151823b404549e3a3f828b',
               submit: RealTimeEventState.pending,
               publish: RealTimeEventState.pending,
             },
