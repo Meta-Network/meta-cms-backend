@@ -12,12 +12,12 @@ import type {
   StateData,
   VerifiedSocket,
 } from '../../types';
-import { StateNotification } from '../../types';
 import {
   InternalRealTimeEvent,
-  RealTimeEventState,
+  PipelineOrderTaskCommonState,
   RealTimeNotificationEvent,
 } from '../../types/enum';
+import { PostOrdersLogicService } from '../pipelines/post-orders/post-orders.logic.service';
 import {
   InternalRealTimeMessage,
   RealTimeNotification,
@@ -39,16 +39,23 @@ export class RealTimeEventGateway {
   private logger = new Logger(RealTimeEventGateway.name);
   private clients = new Map<number, VerifiedSocket[]>();
 
-  constructor(private readonly ucenterAuthService: UCenterAuthService) {}
+  constructor(
+    private readonly ucenterAuthService: UCenterAuthService,
+    private readonly postOrdersLogicService: PostOrdersLogicService,
+  ) {}
 
-  getPostsCount() {
-    // fake data; for mock test
-    const publishedCount = 12;
-    const publishingCount = 12;
+  async getUserPostsCount(userId: number): Promise<PostPublishNotification> {
+    const {
+      [PipelineOrderTaskCommonState.PENDING]: pending,
+      [PipelineOrderTaskCommonState.DOING]: doing,
+      [PipelineOrderTaskCommonState.FINISHED]: finished,
+      [PipelineOrderTaskCommonState.FAILED]: failed,
+    } = await this.postOrdersLogicService.countUserPublishingPostOrders(userId);
     return {
-      publishingCount,
-      publishedCount,
-      allPostCount: publishedCount + publishingCount,
+      allPostCount: pending + doing + finished + failed,
+      publishingCount: pending + doing,
+      publishedCount: finished,
+      publishingAlertFlag: failed > 0,
     };
   }
 
@@ -80,8 +87,6 @@ export class RealTimeEventGateway {
     this.logger.log(
       `User(id: ${userId}) connected with socket id ${client.id}`,
     );
-
-    setTimeout(() => client.emit('hello', { a: 'somedata here' }), 3000);
   }
 
   /**
@@ -102,39 +107,18 @@ export class RealTimeEventGateway {
 
   @OnEvent(InternalRealTimeEvent.POST_STATE_UPDATED)
   async onPostStateUpdate(
-    internalMessage: InternalRealTimeMessage<StateData[]>,
+    internalMessage: InternalRealTimeMessage,
   ): Promise<void> {
     // default implementation
-    const notification: RealTimeNotification<StateNotification> =
-      new RealTimeNotification({
-        message: RealTimeNotificationEvent.POST_COUNT_UPDATED, // 'post.count.updated'
-        data: {},
-      });
+    const notification = new RealTimeNotification({
+      message: RealTimeNotificationEvent.POST_COUNT_UPDATED, // 'post.count.updated'
+      data: {} as any,
+    });
     const userClients = this.getUserClients(internalMessage.userId);
 
-    // if a post is failed, send the notification with an alert flag
-    if (
-      internalMessage.data.some((state) =>
-        Object.values(state).includes(RealTimeEventState.failed),
-      )
-    ) {
-      (notification.data as PostPublishNotification).publishingAlertFlag = true;
-    }
-
-    // if some posts are pending to submit or published, update the count
-    if (
-      internalMessage.data.some(
-        (state) =>
-          state.submit === RealTimeEventState.pending ||
-          state.publish === RealTimeEventState.finished,
-      )
-    ) {
-      notification.data = { ...this.getPostsCount(), ...notification.data };
-    }
-
-    // if we have the data
-    if (Object.keys(notification.data).length > 0) {
-      // emitting the data
+    // if some posts publish states are changed, update the count
+    if ((internalMessage.data as StateData[]).some((state) => state.publish)) {
+      notification.data = await this.getUserPostsCount(internalMessage.userId);
       userClients.forEach((client) => {
         client.emit(RealTimeNotificationEvent.POST_COUNT_UPDATED, notification);
       });
@@ -150,13 +134,13 @@ export class RealTimeEventGateway {
 
   @OnEvent(InternalRealTimeEvent.INVITATION_COUNT_UPDATED)
   async onInvitationCountUpdated(
-    internalMessage: InternalRealTimeMessage<InvitationCountData>,
+    internalMessage: InternalRealTimeMessage,
   ): Promise<void> {
     const userClients = this.getUserClients(internalMessage.userId);
     userClients.forEach((client) => {
       client.emit(
         RealTimeNotificationEvent.INVITATION_COUNT_UPDATED,
-        internalMessage.data,
+        internalMessage.data as InvitationCountData,
       );
     });
   }

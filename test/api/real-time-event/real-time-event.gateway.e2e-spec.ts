@@ -93,6 +93,7 @@ describe('RealTimeEventGateway (e2e)', () => {
           {
             id: 10,
             submit: RealTimeEventState.pending,
+            publish: RealTimeEventState.pending,
           },
         ],
       }),
@@ -112,6 +113,7 @@ describe('RealTimeEventGateway (e2e)', () => {
             {
               id: 10,
               submit: RealTimeEventState.pending,
+              publish: RealTimeEventState.pending,
             },
           ],
         }),

@@ -99,10 +99,10 @@ export interface PostPublishingStateNotification {
 }
 
 export interface PostPublishNotification {
-  allPostCount?: number;
-  publishingCount?: number;
-  publishedCount?: number;
-  publishingAlertFlag?: boolean;
+  allPostCount: number;
+  publishingCount: number;
+  publishedCount: number;
+  publishingAlertFlag: boolean;
 }
 
 export interface InvitationStateUpdatedNotification {
@@ -115,11 +115,11 @@ export type StateNotification =
   | InvitationStateUpdatedNotification;
 
 export interface StateData {
-  id: number;
+  id: string;
   submit?: RealTimeEventState;
   publish?: RealTimeEventState;
   certificate?: {
-    sign?: string;
+    sign: string;
     state: RealTimeEventState;
   };
 }
