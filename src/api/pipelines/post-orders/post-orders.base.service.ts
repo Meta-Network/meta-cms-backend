@@ -63,6 +63,15 @@ export class PostOrdersBaseService {
   ): Promise<PostOrderEntity> {
     return await this.postOrdersRepository.findOne(id, options);
   }
+  count(userId: number) {
+    return this.postOrdersRepository
+      .createQueryBuilder()
+      .select('publishState', 'state')
+      .addSelect('count(publishState)', 'count')
+      .where('userId = :userId', { userId })
+      .groupBy('state')
+      .getRawMany();
+  }
 
   async save(postOrderEntity: PostOrderEntity) {
     await this.postMetadatasRepository.save(postOrderEntity.postMetadata);
