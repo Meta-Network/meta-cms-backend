@@ -18,6 +18,7 @@ import { IPaginationMeta, IPaginationOptions } from 'nestjs-typeorm-paginate';
 import { In } from 'typeorm';
 
 import { PostOrderEntity } from '../../../entities/pipeline/post-order.entity';
+import { DataNotFoundException } from '../../../exceptions';
 import {
   InternalRealTimeEvent,
   MetadataStorageType,
@@ -203,6 +204,10 @@ export class PostOrdersLogicService {
     const postOrder = await this.postOrdersBaseService.getById(id, {
       relations: ['postMetadata'],
     });
+    // 权限校验
+    if (!postOrder || postOrder.userId !== userId) {
+      throw new DataNotFoundException('post order');
+    }
     // 区分失败在哪一步
     // 存证失败,需要重新处理存证
     if (PipelineOrderTaskCommonState.FAILED === postOrder.certificateState) {
