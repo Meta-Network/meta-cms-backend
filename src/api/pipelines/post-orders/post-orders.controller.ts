@@ -11,19 +11,25 @@ import {
 import {
   ApiOkResponse,
   ApiOperation,
+  ApiProperty,
   ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
 import { IPaginationOptions } from 'nestjs-typeorm-paginate';
 
 import { User } from '../../../decorators';
-import { PostState } from '../../../types/enum';
+import { TransformResponse } from '../../../utils/responseClass';
 import {
   PostOrderPaginationResponse,
   PostOrderRequestDto,
   PostOrderResponseDto,
 } from '../dto/post-order.dto';
 import { PostOrdersLogicService } from './post-orders.logic.service';
+
+class SavePostOrderResponse extends TransformResponse<PostOrderResponseDto> {
+  @ApiProperty({ type: PostOrderResponseDto })
+  readonly data: PostOrderResponseDto;
+}
 
 @ApiTags('pipeline')
 @Controller('v1/pipelines/post-orders')
@@ -100,6 +106,7 @@ export class PostOrdersController {
   @ApiOperation({
     summary: '用户请求发布文章',
   })
+  @ApiOkResponse({ type: SavePostOrderResponse })
   @Post()
   async savePostOrder(
     @User('id', ParseIntPipe) userId: number,
@@ -114,11 +121,12 @@ export class PostOrdersController {
   @ApiOperation({
     summary: '用户请求重新发布失败文章',
   })
+  @ApiOkResponse({ type: TransformResponse })
   @Post(':id/retry')
   async retryPostOrder(
     @User('id', ParseIntPipe) userId: number,
     @Param('id') id: string,
   ): Promise<void> {
-    return await this.postOrdersLogicService.retryPostOrder(userId, id);
+    await this.postOrdersLogicService.retryPostOrder(userId, id);
   }
 }

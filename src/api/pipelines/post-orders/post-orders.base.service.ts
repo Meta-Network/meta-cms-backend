@@ -10,11 +10,18 @@ import {
   DeepPartial,
   FindConditions,
   FindManyOptions,
+  FindOneOptions,
   Repository,
 } from 'typeorm';
+import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 
 import { PostMetadataEntity } from '../../../entities/pipeline/post-metadata.entity';
 import { PostOrderEntity } from '../../../entities/pipeline/post-order.entity';
+import { ServerVerificationEntity } from '../../../entities/pipeline/server-verification.entity';
+import {
+  MetadataStorageType,
+  PipelineOrderTaskCommonState,
+} from '../../../types/enum';
 
 @Injectable()
 export class PostOrdersBaseService {
@@ -40,10 +47,22 @@ export class PostOrdersBaseService {
     )) as Pagination<PostOrderEntity>;
   }
 
+  async find(
+    searchOptions?: FindManyOptions<PostOrderEntity>,
+  ): Promise<PostOrderEntity[]> {
+    return await this.postOrdersRepository.find(searchOptions);
+  }
+
   create(entityLike: DeepPartial<PostOrderEntity>) {
     return this.postOrdersRepository.create(entityLike);
   }
 
+  async getById(
+    id: string,
+    options?: FindOneOptions<PostOrderEntity>,
+  ): Promise<PostOrderEntity> {
+    return await this.postOrdersRepository.findOne(id, options);
+  }
   count(userId: number) {
     return this.postOrdersRepository
       .createQueryBuilder()
@@ -56,6 +75,14 @@ export class PostOrdersBaseService {
 
   async save(postOrderEntity: PostOrderEntity) {
     await this.postMetadatasRepository.save(postOrderEntity.postMetadata);
+
     return await this.postOrdersRepository.save(postOrderEntity);
+  }
+
+  async update(
+    postOrderId: string,
+    partialEntity: QueryDeepPartialEntity<PostOrderEntity>,
+  ) {
+    await this.postOrdersRepository.update(postOrderId, partialEntity);
   }
 }

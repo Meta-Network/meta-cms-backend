@@ -17,6 +17,7 @@ import {
 } from 'class-validator';
 
 import { PostOrderEntity } from '../../../entities/pipeline/post-order.entity';
+import { MetadataStorageType } from '../../../types/enum';
 import { PaginationResponse } from '../../../utils/responseClass';
 
 export class AuthorPostDigestDto implements AuthorPostDigestMetadata {
@@ -292,6 +293,12 @@ export class PostOrderRequestDto {
   authorPostDigest: AuthorPostDigestDto;
   @IsNotEmptyObject()
   authorPostSign: AuthorPostSignDto;
+  @ApiProperty({
+    description: '证书存放类型',
+    required: false,
+    enum: [MetadataStorageType.ARWEAVE],
+  })
+  certificateStorageType?: MetadataStorageType.ARWEAVE;
 }
 export class PostOrderResponseDto {
   @IsNotEmptyObject()
