@@ -45,12 +45,14 @@ export class RealTimeEventGateway {
   ) {}
 
   async getUserPostsCount(userId: number): Promise<PostPublishNotification> {
+    // Destructuring assignment with default value as 0
     const {
-      [PipelineOrderTaskCommonState.PENDING]: pending,
-      [PipelineOrderTaskCommonState.DOING]: doing,
-      [PipelineOrderTaskCommonState.FINISHED]: finished,
-      [PipelineOrderTaskCommonState.FAILED]: failed,
+      [PipelineOrderTaskCommonState.PENDING]: pending = 0,
+      [PipelineOrderTaskCommonState.DOING]: doing = 0,
+      [PipelineOrderTaskCommonState.FINISHED]: finished = 0,
+      [PipelineOrderTaskCommonState.FAILED]: failed = 0,
     } = await this.postOrdersLogicService.countUserPublishingPostOrders(userId);
+
     return {
       allPostCount: pending + doing + finished + failed,
       publishingCount: pending + doing,
@@ -119,6 +121,8 @@ export class RealTimeEventGateway {
     // if some posts publish states are changed, update the count
     if ((internalMessage.data as StateData[]).some((state) => state.publish)) {
       notification.data = await this.getUserPostsCount(internalMessage.userId);
+      console.log(internalMessage.userId);
+      console.log(notification.data);
       userClients.forEach((client) => {
         client.emit(RealTimeNotificationEvent.POST_COUNT_UPDATED, notification);
       });
