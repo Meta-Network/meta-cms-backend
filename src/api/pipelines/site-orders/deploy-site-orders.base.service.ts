@@ -14,6 +14,19 @@ export class DeploySiteOrdersBaseService {
     private readonly deploySiteOrdersRepository: Repository<DeploySiteOrderEntity>,
   ) {}
 
+  async getById(id: string): Promise<DeploySiteOrderEntity> {
+    return this.deploySiteOrdersRepository.findOne(id);
+  }
+  async getBySiteConfigUserId(
+    siteConfigId: number,
+    userId: number,
+  ): Promise<DeploySiteOrderEntity> {
+    return this.deploySiteOrdersRepository.findOne({
+      siteConfigId,
+      userId,
+    });
+  }
+
   async save(
     deploySiteOrderEntity: DeploySiteOrderEntity,
   ): Promise<DeploySiteOrderEntity> {

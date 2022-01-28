@@ -20,6 +20,7 @@ import { SiteConfigLogicService } from '../../site/config/logicService';
 import { PostOrderRequestDto } from '../dto/post-order.dto';
 import { DeploySiteOrderRequestDto } from '../dto/site-order.dto';
 import { PostOrdersLogicService } from '../post-orders/post-orders.logic.service';
+import { ServerVerificationBaseService } from '../server-verification/server-verification.base.service';
 import { DeploySiteOrdersBaseService } from './deploy-site-orders.base.service';
 import { PublishSiteOrdersBaseService } from './publlish-site-orders.base.service';
 import { SiteOrdersLogicService } from './site-orders.logic.service';
@@ -43,6 +44,10 @@ describe('SiteOrdersLogicService', () => {
     undefined,
     undefined,
     undefined,
+    undefined,
+  );
+  const serverVerificationBaseService = new ServerVerificationBaseService(
+    logger,
     undefined,
   );
   let service: SiteOrdersLogicService;
@@ -99,6 +104,11 @@ describe('SiteOrdersLogicService', () => {
           useFactory: (config) =>
             new SiteConfigLogicService(undefined, undefined, config),
         },
+        {
+          provide: ServerVerificationBaseService,
+          useFactory: () => serverVerificationBaseService,
+        },
+
         SiteOrdersLogicService,
       ],
     }).compile();
@@ -114,6 +124,29 @@ describe('SiteOrdersLogicService', () => {
   });
 
   describe('saveDeploySiteOrder', () => {
+    it('create deploySiteOrderRequestDto', async () => {
+      const digest = authorPostDigest.generate({
+        title: `测试标题`,
+        content: `测试内容`,
+        summary: `测试内容`,
+        cover: 'https://example.com/test-cover.png',
+        categories: '测试分类',
+        tags: '测试标签1,测试标签2',
+        license: 'CC 4.0',
+      });
+      const sign = authorPostDigestSign.generate(
+        authorKeys,
+        'meta-cms.mttk.net',
+        digest.digest,
+      );
+      console.log(
+        JSON.stringify({
+          siteConfigId: 214,
+          authorPostDigest: digest,
+          authorPostSign: sign,
+        }),
+      );
+    });
     it('should return deploySiteOrderResponseDto', async () => {
       const siteConfigId = 11;
       const deploySiteOrderRequestDto = {
@@ -223,12 +256,23 @@ describe('SiteOrdersLogicService', () => {
         .mockImplementation(async (deploySiteOrderEntity) => {
           return deploySiteOrderEntity;
         });
+      jest
+        .spyOn(deploySiteOrdersBaseService, 'getBySiteConfigUserId')
+        .mockImplementation(async (siteConfigId: number, userId: number) => {
+          // {
+          //   id: '0x7b0cd3a068527a29037e331b4baa4238807b24defe6ae4d8f880d075adb99fd8b4a65321cd904b107a0d4008229bd902dbdea1b4c10fae349142c71029898e8b',
+          //   userId,
+          //   siteConfigId,
+          //   createdAt: new Date(),
+          //   updatedAt: new Date(),
+          // };
+          return undefined;
+        });
       const userId = 1;
       const deploySiteOrderResponseDto = await service.saveDeploySiteOrder(
         userId,
         deploySiteOrderRequestDto,
       );
-      console.log(deploySiteOrderResponseDto);
       expect(deploySiteOrderResponseDto).toBeDefined();
       expect(deploySiteOrderResponseDto.serverVerification.signature).toEqual(
         deploySiteOrderResponseDto.deploySiteOrder.serverVerificationId,

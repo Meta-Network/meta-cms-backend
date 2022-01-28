@@ -31,6 +31,7 @@ export class ServerVerificationEntity {
     comment: 'server verification payload',
     nullable: false,
     default: '',
+    type: 'text',
   })
   payload: string;
   @CreateDateColumn()
