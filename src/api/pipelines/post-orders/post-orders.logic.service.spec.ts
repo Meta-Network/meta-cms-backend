@@ -150,10 +150,11 @@ describe('PostOrdersLogicService', () => {
         digest.digest,
       );
       const postOrderRequestDto = {
+        certificateStorageType: MetadataStorageType.ARWEAVE,
         authorPostDigest: digest,
         authorPostSign: sign,
       } as PostOrderRequestDto;
-      // console.log('postOrderRequestDto', JSON.stringify(postOrderRequestDto));
+      console.log('postOrderRequestDto', JSON.stringify(postOrderRequestDto));
       const userId = 1;
       jest
         .spyOn(postOrdersBaseService, 'create')
@@ -170,15 +171,15 @@ describe('PostOrdersLogicService', () => {
           return postOrder;
         });
       jest
-        .spyOn(metadataStorageService, 'upload')
-        .mockImplementationOnce(
+        .spyOn(service, 'doUploadCertificate')
+        .mockImplementation(
           async (
-            metadataStorageType: MetadataStorageType,
-            contentKey: string,
-            content: string,
+            certificateStorageType: MetadataStorageType,
+            postOrder: PostOrderEntity,
+            serverVerificationPayload: string,
+            postOrderId: string,
           ) => {
-            // console.log(content);
-            return 'sample_tx_id';
+            return;
           },
         );
       jest
@@ -190,6 +191,11 @@ describe('PostOrdersLogicService', () => {
             payload,
             createdAt: new Date(),
           };
+        });
+      jest
+        .spyOn(postOrdersBaseService, 'update')
+        .mockImplementation(async (postOrderId, postOrderEntity) => {
+          return;
         });
       jest
         .spyOn(postOrdersBaseService, 'find')
