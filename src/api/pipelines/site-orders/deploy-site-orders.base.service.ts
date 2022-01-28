@@ -13,4 +13,10 @@ export class DeploySiteOrdersBaseService {
     @InjectRepository(DeploySiteOrderEntity)
     private readonly deploySiteOrdersRepository: Repository<DeploySiteOrderEntity>,
   ) {}
+
+  async save(
+    deploySiteOrderEntity: DeploySiteOrderEntity,
+  ): Promise<DeploySiteOrderEntity> {
+    return this.deploySiteOrdersRepository.save(deploySiteOrderEntity);
+  }
 }
