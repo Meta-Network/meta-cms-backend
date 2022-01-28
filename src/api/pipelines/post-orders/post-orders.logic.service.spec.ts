@@ -205,7 +205,7 @@ describe('PostOrdersLogicService', () => {
       const result = await service.savePostOrder(userId, postOrderRequestDto);
       const resultJson = JSON.stringify(result);
       const codecResult = JSON.parse(resultJson);
-
+      console.log('postOrderResponseDto', codecResult);
       expect(result).toBeDefined();
       expect(eventData).toBeDefined();
       expect(eventData).toEqual(

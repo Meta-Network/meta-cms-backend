@@ -8,7 +8,6 @@ import {
 } from '../dto/site-order.dto';
 import { PostOrdersLogicService } from '../post-orders/post-orders.logic.service';
 import { DeploySiteOrdersBaseService } from './deploy-site-orders.base.service';
-import { PublishSiteOrdersBaseService } from './publlish-site-orders.base.service';
 
 @Injectable()
 export class SiteOrdersLogicService {
@@ -24,7 +23,7 @@ export class SiteOrdersLogicService {
     userId: number,
     deploySiteOrderRequestDto: DeploySiteOrderRequestDto,
   ): Promise<DeploySiteOrderResponseDto> {
-    this.siteConfigLogicService.validateSiteConfigUserId(
+    await this.siteConfigLogicService.validateSiteConfigUserId(
       deploySiteOrderRequestDto.siteConfigId,
       userId,
     );
