@@ -17,11 +17,6 @@ import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity
 
 import { PostMetadataEntity } from '../../../entities/pipeline/post-metadata.entity';
 import { PostOrderEntity } from '../../../entities/pipeline/post-order.entity';
-import { ServerVerificationEntity } from '../../../entities/pipeline/server-verification.entity';
-import {
-  MetadataStorageType,
-  PipelineOrderTaskCommonState,
-} from '../../../types/enum';
 
 @Injectable()
 export class PostOrdersBaseService {

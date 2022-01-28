@@ -10,6 +10,7 @@ import { PostOrderEntity } from '../entities/pipeline/post-order.entity';
 import { PostTaskEntity } from '../entities/pipeline/post-task.entity';
 import { PublishSiteOrderEntity } from '../entities/pipeline/publish-site-order.entity';
 import { PublishSiteTaskEntity } from '../entities/pipeline/publish-site-task.entity';
+import { ServerVerificationEntity } from '../entities/pipeline/server-verification.entity';
 import { PostEntity } from '../entities/post.entity';
 import { PostSiteConfigRelaEntity } from '../entities/postSiteConfigRela.entity';
 import { GiteePublisherProviderEntity } from '../entities/provider/publisher/gitee.entity';
@@ -67,6 +68,7 @@ const options: ConnectionOptions = {
     DeploySiteTaskEntity,
     PublishSiteOrderEntity,
     PublishSiteTaskEntity,
+    ServerVerificationEntity,
   ],
   synchronize: false,
   logging: process.env.NODE_ENV !== 'production',

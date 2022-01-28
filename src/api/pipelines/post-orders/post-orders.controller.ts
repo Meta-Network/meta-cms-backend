@@ -9,6 +9,7 @@ import {
   Query,
 } from '@nestjs/common';
 import {
+  ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
   ApiProperty,
@@ -18,6 +19,7 @@ import {
 import { IPaginationOptions } from 'nestjs-typeorm-paginate';
 
 import { User } from '../../../decorators';
+import { DataNotFoundException } from '../../../exceptions';
 import { TransformResponse } from '../../../utils/responseClass';
 import {
   PostOrderPaginationResponse,
@@ -122,6 +124,10 @@ export class PostOrdersController {
     summary: '用户请求重新发布失败文章',
   })
   @ApiOkResponse({ type: TransformResponse })
+  @ApiNotFoundResponse({
+    type: DataNotFoundException,
+    description: 'When request post order not found',
+  })
   @Post(':id/retry')
   async retryPostOrder(
     @User('id', ParseIntPipe) userId: number,
