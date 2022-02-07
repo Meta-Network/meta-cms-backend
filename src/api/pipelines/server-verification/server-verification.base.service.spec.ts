@@ -16,7 +16,7 @@ import { ServerVerificationBaseService } from './server-verification.base.servic
 describe('ServerVerificationBaseService', () => {
   let configService: ConfigService;
   let repo: Repository<ServerVerificationEntity>;
-  const testConnectionName = 'testConn';
+  const testConnectionName = 'testConn4ServerVerification';
   let service: ServerVerificationBaseService;
 
   beforeEach(async () => {
@@ -63,10 +63,6 @@ describe('ServerVerificationBaseService', () => {
     service = module.get<ServerVerificationBaseService>(
       ServerVerificationBaseService,
     );
-  });
-
-  it('should be defined', () => {
-    expect(service).toBeDefined();
   });
 
   describe('save', () => {

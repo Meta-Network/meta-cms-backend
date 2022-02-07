@@ -14,7 +14,7 @@ import {
 @Entity()
 export class DeploySiteOrderEntity {
   @PrimaryColumn({
-    comment: 'Use author signature as deploy site order id.',
+    comment: 'Use server signature as deploy site order id.',
     length: 255,
   })
   @ApiHideProperty()

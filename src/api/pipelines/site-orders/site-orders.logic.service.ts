@@ -1,17 +1,16 @@
 import {
-  ConflictException,
-  Inject,
-  Injectable,
-  LoggerService,
-} from '@nestjs/common';
+  authorPostDigest,
+  authorPostDigestSign,
+  PostMetadata,
+} from '@metaio/meta-signature-util-v2';
+import { Inject, Injectable, LoggerService } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
-import { SiteStatus } from '../../../types/enum';
+import { DeploySiteOrderEntity } from '../../../entities/pipeline/deploy-site-order.entity';
 import { SiteConfigLogicService } from '../../site/config/logicService';
-import {
-  DeploySiteOrderRequestDto,
-  DeploySiteOrderResponseDto,
-} from '../dto/site-order.dto';
+import { PostOrderRequestDto } from '../dto/post-order.dto';
+import { DeploySiteOrderRequestDto } from '../dto/site-order.dto';
 import { PostOrdersLogicService } from '../post-orders/post-orders.logic.service';
 import { ServerVerificationBaseService } from '../server-verification/server-verification.base.service';
 import { DeploySiteOrdersBaseService } from './deploy-site-orders.base.service';
@@ -25,18 +24,38 @@ export class SiteOrdersLogicService {
     private readonly postOrdersLogicService: PostOrdersLogicService,
     private readonly siteConfigLogicService: SiteConfigLogicService,
     private readonly serverVerificationBaseService: ServerVerificationBaseService,
-  ) {}
+    private readonly configService: ConfigService,
+  ) {
+    const postMetadata = this.getDefaultPostMetadata();
+    if (!postMetadata) {
+      throw new Error('Config key defaultPost: no value');
+    }
+    for (const key of [
+      'title',
+      'content',
+      'categories',
+      'tags',
+      'cover',
+      'license',
+      'summary',
+    ]) {
+      if (!postMetadata.hasOwnProperty(key)) {
+        throw new Error(`Config key defaultPost.${key}: no key`);
+      }
+    }
+  }
 
   async saveDeploySiteOrder(
     userId: number,
     deploySiteOrderRequestDto: DeploySiteOrderRequestDto,
-  ): Promise<DeploySiteOrderResponseDto> {
+  ): Promise<DeploySiteOrderEntity> {
     // 必须校验meta space是否属于当前用户
-    const siteConfigEntity =
-      await this.siteConfigLogicService.validateSiteConfigUserId(
-        deploySiteOrderRequestDto.siteConfigId,
-        userId,
-      );
+
+    await this.siteConfigLogicService.validateSiteConfigUserId(
+      deploySiteOrderRequestDto.siteConfigId,
+      userId,
+    );
+
     // 如果之前已经生成过repo，并初始化成功，并不需要再次deploy,直接返回就可以了，一般来说前端也会控制(注意旧数据的迁移)
     // 这里如果能取到数据，说明之前有做过
     // TODO 进一步判定重试操作？
@@ -45,42 +64,45 @@ export class SiteOrdersLogicService {
         deploySiteOrderRequestDto.siteConfigId,
         userId,
       );
-    if (deploySiteOrder?.serverVerificationId) {
-      const serverVerificationEntity =
-        await this.serverVerificationBaseService.getById(
-          deploySiteOrder.serverVerificationId,
-        );
-      // 从 serverVerification中的反序列化,也没那么重要
-      let serverVerification;
-      if (serverVerificationEntity?.payload) {
-        serverVerification = JSON.parse(serverVerificationEntity.payload);
-      }
-      // TODO 如果现有的失败了，是否在触发重试？或者是，另外做一个入口？
-      const deploySiteOrderResponseDto = {
-        deploySiteOrder,
-        serverVerification,
-      };
-      return deploySiteOrderResponseDto;
+    if (deploySiteOrder?.id) {
+      console.log(deploySiteOrder);
+      return deploySiteOrder;
     }
+    this.logger.verbose(
+      `Create deploy site order userId ${userId} siteConfigId ${deploySiteOrderRequestDto.siteConfigId}`,
+      SiteOrdersLogicService.name,
+    );
 
-    // 初始化自带一篇文章，做出对应的数据（内部也有校验）
-    const { postOrder, serverVerification } =
-      await this.postOrdersLogicService.savePostOrder(
-        userId,
-        deploySiteOrderRequestDto,
-      );
+    // 初始化自带一篇文章，做出对应的数据。这个数据由服务器生成并签名
+    const { postOrder } = await this.postOrdersLogicService.savePostOrder(
+      userId,
+      this.createDefaultPostOrderRequestDto(),
+    );
     //TODO 处理建站逻辑，建站完成后更新post的submitState和publishState
     deploySiteOrder = await this.deploySiteOrdersBaseService.save({
       id: postOrder.id,
       userId,
       siteConfigId: deploySiteOrderRequestDto.siteConfigId,
-      serverVerificationId: serverVerification.signature,
       createdAt: new Date(),
       updatedAt: new Date(),
     });
+    return deploySiteOrder;
+  }
+  createDefaultPostOrderRequestDto(): PostOrderRequestDto {
+    const postMetadata = this.getDefaultPostMetadata();
+    const defaultPostDigest = authorPostDigest.generate(postMetadata);
+    const defaultPostSign = authorPostDigestSign.generate(
+      this.configService.get('metaSignature.serverKeys'),
+      this.configService.get('metaSignature.serverDomain'),
+      defaultPostDigest.digest,
+    );
     return {
-      deploySiteOrder,
-      serverVerification,
+      authorPostDigest: defaultPostDigest,
+      authorPostSign: defaultPostSign,
     };
+  }
+
+  getDefaultPostMetadata(): PostMetadata {
+    return this.configService.get<PostMetadata>('defaultPost');
   }
 }
