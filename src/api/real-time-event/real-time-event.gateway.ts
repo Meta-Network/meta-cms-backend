@@ -8,13 +8,11 @@ import { UCenterAuthService } from '../../auth/ucenter/service';
 import { configBuilder } from '../../configs';
 import type {
   InvitationCountData,
-  PostPublishNotification,
   StateData,
   VerifiedSocket,
 } from '../../types';
 import {
   InternalRealTimeEvent,
-  PipelineOrderTaskCommonState,
   RealTimeNotificationEvent,
 } from '../../types/enum';
 import { PostOrdersLogicService } from '../pipelines/post-orders/post-orders.logic.service';
@@ -43,23 +41,6 @@ export class RealTimeEventGateway {
     private readonly ucenterAuthService: UCenterAuthService,
     private readonly postOrdersLogicService: PostOrdersLogicService,
   ) {}
-
-  async getUserPostsCount(userId: number): Promise<PostPublishNotification> {
-    // Destructuring assignment with default value as 0
-    const {
-      [PipelineOrderTaskCommonState.PENDING]: pending = 0,
-      [PipelineOrderTaskCommonState.DOING]: doing = 0,
-      [PipelineOrderTaskCommonState.FINISHED]: finished = 0,
-      [PipelineOrderTaskCommonState.FAILED]: failed = 0,
-    } = await this.postOrdersLogicService.countUserPublishingPostOrders(userId);
-
-    return {
-      allPostCount: pending + doing + finished + failed,
-      publishingCount: pending + doing,
-      publishedCount: finished,
-      publishingAlertFlag: failed > 0,
-    };
-  }
 
   getUserClients(userId: number) {
     return this.clients.get(userId) ?? [];
@@ -120,9 +101,10 @@ export class RealTimeEventGateway {
 
     // if some posts publish states are changed, update the count
     if ((internalMessage.data as StateData[]).some((state) => state.publish)) {
-      notification.data = await this.getUserPostsCount(internalMessage.userId);
-      console.log(internalMessage.userId);
-      console.log(notification.data);
+      notification.data =
+        await this.postOrdersLogicService.countUserPostOrdersAsNotification(
+          internalMessage.userId,
+        );
       userClients.forEach((client) => {
         client.emit(RealTimeNotificationEvent.POST_COUNT_UPDATED, notification);
       });

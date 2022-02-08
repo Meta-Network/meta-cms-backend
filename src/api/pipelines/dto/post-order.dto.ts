@@ -311,3 +311,10 @@ export class PostOrderPaginationResponse extends PaginationResponse<PostOrderEnt
   @ApiProperty({ type: PostOrderEntity, isArray: true })
   readonly items: PostOrderEntity[];
 }
+
+export class PostPublishNotificationDto {
+  allPostCount: number;
+  publishingCount: number;
+  publishedCount: number;
+  publishingAlertFlag: boolean;
+}

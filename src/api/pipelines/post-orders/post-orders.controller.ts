@@ -25,6 +25,7 @@ import {
   PostOrderPaginationResponse,
   PostOrderRequestDto,
   PostOrderResponseDto,
+  PostPublishNotificationDto,
 } from '../dto/post-order.dto';
 import { PostOrdersLogicService } from './post-orders.logic.service';
 
@@ -58,6 +59,16 @@ export class PostOrdersController {
     return await this.postOrdersLogicService.pagiUserAllPostOrders(
       userId,
       options,
+    );
+  }
+
+  @Get('/mine/count')
+  @ApiOkResponse({ type: PostPublishNotificationDto })
+  public async countUserPostOrdersAsNotification(
+    @User('id', ParseIntPipe) userId: number,
+  ) {
+    return await this.postOrdersLogicService.countUserPostOrdersAsNotification(
+      userId,
     );
   }
 
