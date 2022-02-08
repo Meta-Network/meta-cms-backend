@@ -7,6 +7,7 @@ import { Inject, Injectable, LoggerService } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
+import { defaultPostBuilder } from '../../../configs';
 import { DeploySiteOrderEntity } from '../../../entities/pipeline/deploy-site-order.entity';
 import { SiteConfigLogicService } from '../../site/config/logicService';
 import { PostOrderRequestDto } from '../dto/post-order.dto';
@@ -28,7 +29,7 @@ export class SiteOrdersLogicService {
   ) {
     const postMetadata = this.getDefaultPostMetadata();
     if (!postMetadata) {
-      throw new Error('Config key defaultPost: no value');
+      throw new Error('config default-post.yaml not found');
     }
     for (const key of [
       'title',
@@ -40,7 +41,7 @@ export class SiteOrdersLogicService {
       'summary',
     ]) {
       if (!postMetadata.hasOwnProperty(key)) {
-        throw new Error(`Config key defaultPost.${key}: no key`);
+        throw new Error(`Config default-post.yaml key ${key} not found`);
       }
     }
   }
@@ -103,6 +104,6 @@ export class SiteOrdersLogicService {
   }
 
   getDefaultPostMetadata(): PostMetadata {
-    return this.configService.get<PostMetadata>('defaultPost');
+    return defaultPostBuilder() as PostMetadata;
   }
 }

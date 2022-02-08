@@ -14,3 +14,9 @@ const filePath = join(CONFIG_PATH, YAML_CONFIG_FILENAME);
 export const configBuilder = () => {
   return yaml.load(readFileSync(filePath, 'utf8')) as Record<string, any>;
 };
+
+export const defaultPostBuilder = () => {
+  return yaml.load(
+    readFileSync(join(CONFIG_PATH, 'default-post.yaml'), 'utf8'),
+  );
+};
