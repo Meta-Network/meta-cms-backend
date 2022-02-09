@@ -30,7 +30,6 @@ import { StorageModule } from '../provider/storage/module';
 import { RealTimeEventModule } from '../real-time-event/real-time-event.module';
 import { SiteModule } from '../site/module';
 import { SynchronizerModule } from '../synchronizer/synchronizer.module';
-import { TasksModule } from '../task/tasks.module';
 import { ThemeTemplateModule } from '../theme/template/module';
 import { TokenModule } from '../token/token.module';
 
@@ -60,7 +59,6 @@ import { TokenModule } from '../token/token.module';
     SiteModule,
     StorageModule,
     PublisherModule,
-    TasksModule,
     SynchronizerModule,
     PostModule,
     TokenModule,
