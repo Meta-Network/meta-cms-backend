@@ -16,9 +16,13 @@ import { v4 as uuid } from 'uuid';
 
 import { IWorkerTask } from '../../../entities/pipeline/worker-task.interface';
 import { DataNotFoundException } from '../../../exceptions';
-import { UCenterJWTPayload } from '../../../types';
+import { UCenterJWTPayload, UCenterUser } from '../../../types';
 import { SiteStatus } from '../../../types/enum';
-import { WorkerModel2TaskConfig } from '../../../types/worker-model2';
+import {
+  WorkerModel2Config,
+  WorkerModel2TaskConfig,
+} from '../../../types/worker-model2';
+import { iso8601ToDate } from '../../../utils';
 import { MetaNetworkModule } from '../../microservices/meta-network/meta-network.module';
 import { PublisherService } from '../../provider/publisher/publisher.service';
 import { WorkerModel2PublisherService } from '../../provider/publisher/worker-model2.publisher.service';
@@ -48,11 +52,55 @@ export class WorkerTasksDispatcherService {
     protected readonly workerTasksQueue: Queue<WorkerTasksJobDetail>,
   ) {}
 
+  async handlePostTaskBySiteConfigId(siteConfigId: number) {
+    const { postTaskEntity, postOrderEntities, postMetadataEntities } =
+      await this.postTasksLogicService.getPendingPostsBySiteConfigId(
+        siteConfigId,
+      );
+    const user = await this.getUserById(postTaskEntity.userId);
+    const posts = [];
+    for (let i = 0; i < postOrderEntities.length; i++) {
+      const postOrderEntity = postOrderEntities[i];
+      const postMetaDataEntity = postMetadataEntities[i];
+      const post = {
+        title: postMetaDataEntity.title,
+        cover: postMetaDataEntity.cover,
+        summary: postMetaDataEntity.summary,
+        source: postMetaDataEntity.content,
+        categories: postMetaDataEntity.categories.split(','),
+        tags: postMetaDataEntity.tags.split(','),
+        license: postMetaDataEntity.license,
+
+        serverVerificationMetadataStorageType:
+          postOrderEntity.certificateStorageType,
+        serverVerificationMetadataRefer: postOrderEntity.certificateId,
+        createdAt: iso8601ToDate(postOrderEntity.createdAt).toISOString(),
+        updatedAt: iso8601ToDate(postOrderEntity.updatedAt).toISOString(),
+      };
+      posts.push(post);
+    }
+    const { postConfig, template } = await this.generatePostConfigAndTemplate(
+      user,
+      posts,
+      siteConfigId,
+    );
+    //
+    await this.addTask(
+      postTaskEntity,
+      MetaWorker.Enums.WorkerTaskMethod.CREATE_POSTS,
+      template,
+      postConfig,
+    );
+  }
+  async getUserById(userId: number): Promise<UCenterUser> {
+    throw new Error('Method not implemented.');
+  }
+
   async addTask(
     workerTask: IWorkerTask,
     workerTaskMethod: MetaWorker.Enums.WorkerTaskMethod,
     template: MetaWorker.Info.Template,
-    cfg: WorkerModel2TaskConfig,
+    cfg: WorkerModel2Config,
   ) {
     if (!workerTaskMethod) {
       throw new BadRequestException('Worker task method must not be empty');
@@ -81,7 +129,7 @@ export class WorkerTasksDispatcherService {
     workerTask: IWorkerTask,
     taskMethod: MetaWorker.Enums.WorkerTaskMethod,
     template: MetaWorker.Info.Template,
-    cfg: WorkerModel2TaskConfig,
+    cfg: WorkerModel2Config,
   ): WorkerTasksJobDetail {
     // const taskId = this.newTaskId(taskMethod);
     const { id: taskId, workerName } = workerTask;
@@ -92,7 +140,7 @@ export class WorkerTasksDispatcherService {
     const taskConfig = {
       ...cfg,
       task,
-    };
+    } as WorkerModel2TaskConfig;
     return {
       workerName,
       template,
@@ -106,7 +154,7 @@ export class WorkerTasksDispatcherService {
       .replace('_', '-')}-${uuid()}`;
   }
 
-  async findOneTaskForWorker(
+  async getWorkerTaskById(
     auth: string,
     workerTaskId: string,
   ): Promise<WorkerModel2TaskConfig> {
@@ -139,7 +187,7 @@ export class WorkerTasksDispatcherService {
       `Worker ${workerTaskId} report ${taskReport.reason} reason on ${taskReport.timestamp}`,
       this.constructor.name,
     );
-    const taskConfig = await this.findOneTaskForWorker(auth, workerTaskId);
+    const taskConfig = await this.getWorkerTaskById(auth, workerTaskId);
     const { taskMethod } = taskConfig.task;
     if (taskReport.reason === MetaWorker.Enums.TaskReportReason.HEALTH_CHECK) {
     } else if (
@@ -154,22 +202,15 @@ export class WorkerTasksDispatcherService {
       }
     }
   }
-  public async generateDeployConfigAndRepoEmpty(
-    user: Partial<UCenterJWTPayload>,
+  async generateDeployConfigAndRepoEmpty(
+    user: Partial<UCenterUser>,
     configId: number,
     validSiteStatus?: SiteStatus[],
   ): Promise<{
     deployConfig: MetaWorker.Configs.DeployConfig;
     repoEmpty: boolean;
   }> {
-    this.logger.verbose(
-      `Generate meta worker user info`,
-      this.constructor.name,
-    );
-    const userInfo: MetaWorker.Info.UCenterUser = {
-      username: user.username,
-      nickname: user.nickname,
-    };
+    this.logger.verbose(`Generate deploy config`, this.constructor.name);
 
     const { site, template, theme, storage } =
       await this.siteService.generateMetaWorkerSiteInfo(
@@ -189,7 +230,10 @@ export class WorkerTasksDispatcherService {
       );
     // console.log('gitInfo', gitInfo);
     const deployConfig: MetaWorker.Configs.DeployConfig = {
-      user: userInfo,
+      user: {
+        username: user.username,
+        nickname: user.nickname,
+      },
       site,
       template,
       theme,
@@ -205,7 +249,7 @@ export class WorkerTasksDispatcherService {
   }
 
   public async generatePublishConfigAndTemplate(
-    user: Partial<UCenterJWTPayload>,
+    user: Partial<UCenterUser>,
     configId: number,
   ): Promise<{
     publisherType: MetaWorker.Enums.PublisherType;
@@ -258,7 +302,7 @@ export class WorkerTasksDispatcherService {
   }
 
   public async generatePostConfigAndTemplate(
-    user: Partial<UCenterJWTPayload>,
+    user: Partial<UCenterUser>,
     post: MetaWorker.Info.Post | MetaWorker.Info.Post[],
     configId: number,
   ): Promise<{

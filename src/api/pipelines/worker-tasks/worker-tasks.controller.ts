@@ -14,11 +14,11 @@ export class WorkerTasksController {
   ) {}
   @Get(':workerTaskId')
   @SkipUCenterAuth(true)
-  async findOneTaskForWorker(
+  async getWorkerTaskById(
     @BasicAuth() auth: string,
     @Param('workerTaskId') workerTaskId: string,
   ): Promise<WorkerModel2TaskConfig> {
-    return await this.workerTasksDispatcherService.findOneTaskForWorker(
+    return await this.workerTasksDispatcherService.getWorkerTaskById(
       auth,
       workerTaskId,
     );

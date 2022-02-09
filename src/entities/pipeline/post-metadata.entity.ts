@@ -31,6 +31,15 @@ export class PostMetadataEntity {
   @IsString()
   @IsNotEmpty()
   title: string;
+  @Column({
+    comment: 'Post content',
+    nullable: false,
+    default: '',
+    type: 'text',
+  })
+  @IsString()
+  @IsNotEmpty()
+  content: string;
 
   @Column({ comment: 'Post cover', nullable: false, default: '' })
   @IsString()

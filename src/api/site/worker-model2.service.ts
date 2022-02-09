@@ -1,7 +1,7 @@
 import { MetaWorker } from '@metaio/worker-model2';
 import { Injectable } from '@nestjs/common';
 
-import { UCenterJWTPayload } from '../../types';
+import { UCenterJWTPayload, UCenterUser } from '../../types';
 import { SiteStatus } from '../../types/enum';
 import { SiteService } from './service';
 
@@ -28,7 +28,7 @@ export class WorkerModel2SiteService {
   constructor(private readonly siteService: SiteService) {}
 
   async generateMetaWorkerSiteInfo(
-    user: Partial<UCenterJWTPayload>,
+    user: Partial<UCenterUser>,
     siteConfigId: number,
     validSiteStatus?: SiteStatus[],
   ): Promise<GenerateMetaWorkerSiteInfo> {

@@ -292,6 +292,7 @@ export class PostOrdersLogicService {
         PostOrdersLogicService.name,
       ),
     );
+    // TODO 替换链接？建议在前端完成，否则请求和生成的链接对不上
     // 之前失败的文章跟随重试
     this.retryUserFailedPostOrders(postOrder.userId);
   }
