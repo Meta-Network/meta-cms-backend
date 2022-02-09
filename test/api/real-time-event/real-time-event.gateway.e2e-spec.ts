@@ -4,6 +4,7 @@ import { Test } from '@nestjs/testing';
 import { Request } from 'express';
 import { connect, Socket } from 'socket.io-client';
 
+import { PostOrdersLogicService } from '../../../src/api/pipelines/post-orders/post-orders.logic.service';
 import { InternalRealTimeMessage } from '../../../src/api/real-time-event/real-time-event.datatype';
 import { RealTimeEventGateway } from '../../../src/api/real-time-event/real-time-event.gateway';
 import { UCenterAuthService } from '../../../src/auth/ucenter/service';
@@ -27,6 +28,15 @@ describe('RealTimeEventGateway (e2e)', () => {
     }),
   };
 
+  const MockPostOrdersLogicService = {
+    countUserPostOrdersAsNotification: async () => ({
+      allPostCount: 21,
+      publishedCount: 5,
+      publishingAlertFlag: false,
+      publishingCount: 16,
+    }),
+  };
+
   const getSocketCookiesForUser = (userId: number) => ({
     transportOptions: {
       polling: {
@@ -45,12 +55,13 @@ describe('RealTimeEventGateway (e2e)', () => {
           provide: UCenterAuthService,
           useValue: MockAuthService,
         },
+        {
+          provide: PostOrdersLogicService,
+          useValue: MockPostOrdersLogicService,
+        },
         RealTimeEventGateway,
       ],
-    })
-      .overrideProvider(UCenterAuthService)
-      .useClass(MockAuthService)
-      .compile();
+    }).compile();
 
     eventEmitter = moduleRef.get<EventEmitter2>(EventEmitter2);
 
@@ -78,7 +89,12 @@ describe('RealTimeEventGateway (e2e)', () => {
       expect(data).toEqual({
         statusCode: 200,
         retryable: false,
-        data: { publishingCount: 12, publishedCount: 12, allPostCount: 24 },
+        data: {
+          allPostCount: 21,
+          publishedCount: 5,
+          publishingAlertFlag: false,
+          publishingCount: 16,
+        },
         message: 'post.count.updated',
       });
       done();

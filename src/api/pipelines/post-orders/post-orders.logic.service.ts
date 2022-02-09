@@ -19,6 +19,7 @@ import { In } from 'typeorm';
 
 import { PostOrderEntity } from '../../../entities/pipeline/post-order.entity';
 import { DataNotFoundException } from '../../../exceptions';
+import { PostPublishNotification } from '../../../types';
 import {
   InternalRealTimeEvent,
   MetadataStorageType,
@@ -64,7 +65,7 @@ export class PostOrdersLogicService {
     });
   }
 
-  async countUserPublishingPostOrders(
+  async countUserPostOrders(
     userId: number,
   ): Promise<Record<PipelineOrderTaskCommonState, number>> {
     const rows = await this.postOrdersBaseService.count(userId);
@@ -73,6 +74,23 @@ export class PostOrdersLogicService {
       result[row.state] = parseInt(row.count);
     });
     return result as Record<PipelineOrderTaskCommonState, number>;
+  }
+
+  async countUserPostOrdersAsNotification(
+    userId: number,
+  ): Promise<PostPublishNotification> {
+    const {
+      [PipelineOrderTaskCommonState.PENDING]: pending = 0,
+      [PipelineOrderTaskCommonState.DOING]: doing = 0,
+      [PipelineOrderTaskCommonState.FINISHED]: finished = 0,
+      [PipelineOrderTaskCommonState.FAILED]: failed = 0,
+    } = await this.countUserPostOrders(userId);
+    return {
+      allPostCount: pending + doing + finished + failed,
+      publishingCount: pending + doing,
+      publishedCount: finished,
+      publishingAlertFlag: failed > 0,
+    };
   }
 
   async pagiUserPublishingPostOrders(

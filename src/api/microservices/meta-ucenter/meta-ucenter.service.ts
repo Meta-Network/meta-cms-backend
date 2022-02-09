@@ -5,6 +5,7 @@ import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { firstValueFrom } from 'rxjs';
 
 import { DataNotFoundException } from '../../../exceptions';
+import { UCenterUser } from '../../../types';
 import { MetaMicroserviceClient } from '../../../types/enum';
 
 export class MetaUCenterService implements OnApplicationBootstrap {
@@ -14,6 +15,10 @@ export class MetaUCenterService implements OnApplicationBootstrap {
     @Inject(MetaMicroserviceClient.UCenter)
     private readonly ucenterClient: ClientProxy,
   ) {}
+
+  async getUserInfo(userId: number): Promise<MetaInternalResult<UCenterUser>> {
+    return firstValueFrom(await this.ucenterClient.send('getUserInfo', userId));
+  }
 
   async getGitHubAuthTokenByUserId(userId: number): Promise<string> {
     return await this.getSocialAuthTokenByUserId(userId, 'github');
