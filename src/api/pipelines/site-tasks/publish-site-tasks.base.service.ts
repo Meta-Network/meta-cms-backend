@@ -1,7 +1,7 @@
 import { Inject, Injectable, LoggerService } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
-import { DeepPartial, Repository } from 'typeorm';
+import { DeepPartial, FindManyOptions, Repository } from 'typeorm';
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 
 import { PublishSiteTaskEntity } from '../../../entities/pipeline/publish-site-task.entity';
@@ -32,6 +32,10 @@ export class PublishSiteTasksBaseService {
         },
       },
     );
+  }
+
+  async count(searchOptions?: FindManyOptions<PublishSiteTaskEntity>) {
+    return await this.publishSiteTasksRepository.count(searchOptions);
   }
   async save(publishSiteTaskEntity: DeepPartial<PublishSiteTaskEntity>) {
     return await this.publishSiteTasksRepository.save(publishSiteTaskEntity);

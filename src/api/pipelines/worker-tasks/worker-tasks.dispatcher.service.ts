@@ -65,21 +65,34 @@ export class WorkerTasksDispatcherService {
     private readonly ucenterService: MetaUCenterService,
   ) {}
 
+  async hasTaskInProgress(userId: number): Promise<boolean> {
+    return (
+      (await this.siteTasksLogicService.countUserDoingPublishSiteTask(userId)) >
+        0 ||
+      (await this.siteTasksLogicService.countUserDoingDeploySiteTask(userId)) >
+        0 ||
+      (await this.postTasksLogicService.countUserDoingPostTask(userId)) > 0
+    );
+  }
+
   async dispatchDeploySiteTask(
     siteConfigId: number,
     userId: number,
   ): Promise<DeploySiteTaskEntity> {
+    this.logger.verbose(
+      `Dispatch deploy site task siteConfigId ${siteConfigId} userId ${userId}`,
+      this.constructor.name,
+    );
+
     const { deploySiteTaskEntity, deploySiteOrderEntity } =
       await this.siteTasksLogicService.generateDeploySiteTask(
         siteConfigId,
         userId,
       );
-
-    const user = await this.getUserInfo(deploySiteTaskEntity.userId);
+    const user = await this.getUserInfo(userId);
     const { deployConfig } = await this.generateDeployConfigAndRepoEmpty(
       user,
       siteConfigId,
-      [SiteStatus.Configured],
     );
     deploySiteTaskEntity.workerName = this.getWorkerName();
     deploySiteTaskEntity.workerSecret = this.newWorkerSecret();
@@ -178,6 +191,9 @@ export class WorkerTasksDispatcherService {
         userId,
       );
     if (PipelineOrderTaskCommonState.PENDING !== publishSiteTaskEntity?.state) {
+      this.logger.warn(
+        `Dispatch publish site task siteConfigId ${siteConfigId} userId ${userId}: invalid pubish site task state ${publishSiteTaskEntity?.state}`,
+      );
       throw new ConflictException('Invalid publish site task state');
     }
     const user = await this.getUserInfo(publishSiteTaskEntity.userId);
@@ -213,6 +229,7 @@ export class WorkerTasksDispatcherService {
     template: MetaWorker.Info.Template,
     cfg: WorkerModel2Config,
   ) {
+    // console.log(cfg);
     if (!workerTaskMethod) {
       throw new BadRequestException('Worker task method must not be empty');
     }
@@ -272,6 +289,10 @@ export class WorkerTasksDispatcherService {
     auth: string,
     workerTaskId: string,
   ): Promise<WorkerModel2TaskConfig> {
+    this.logger.verbose(
+      `Get worker task by id ${workerTaskId} auth ${auth}`,
+      this.constructor.name,
+    );
     if (!auth) {
       throw new UnauthorizedException('Unauthorize');
     }
@@ -314,7 +335,9 @@ export class WorkerTasksDispatcherService {
       MetaWorker.Enums.TaskReportReason.ERRORED === taskReport.reason
     ) {
       this.logger.verbose(
-        `Worker ${workerTaskId} report ${taskReport.reason} reason on ${taskReport.timestamp} data: ${taskReport.data}`,
+        `Worker ${workerTaskId} report ${taskReport.reason} reason on ${
+          taskReport.timestamp
+        } data: ${JSON.stringify(taskReport.data)}`,
         this.constructor.name,
       );
       if (
@@ -361,6 +384,7 @@ export class WorkerTasksDispatcherService {
       await this.siteTasksLogicService.finishPublishSiteTask(
         taskConfig.task.taskId,
       );
+      //TODO dns 等建站成功后的动作
     }
     //TODO 异步拉动下一个任务
   }
@@ -391,7 +415,6 @@ export class WorkerTasksDispatcherService {
   async generateDeployConfigAndRepoEmpty(
     user: Partial<UCenterUser>,
     configId: number,
-    validSiteStatus?: SiteStatus[],
   ): Promise<{
     deployConfig: MetaWorker.Configs.DeployConfig;
     repoEmpty: boolean;
@@ -399,11 +422,10 @@ export class WorkerTasksDispatcherService {
     this.logger.verbose(`Generate deploy config`, this.constructor.name);
 
     const { site, template, theme, storage } =
-      await this.siteService.generateMetaWorkerSiteInfo(
-        user,
-        configId,
-        validSiteStatus,
-      );
+      await this.siteService.generateMetaWorkerSiteInfo(user, configId, [
+        SiteStatus.Configured,
+        SiteStatus.DeployFailed,
+      ]);
 
     const { storageProviderId, storageType } = storage;
     if (!storageProviderId)
@@ -450,8 +472,8 @@ export class WorkerTasksDispatcherService {
     const { site, template, storage, publisher } =
       await this.siteService.generateMetaWorkerSiteInfo(user, configId, [
         SiteStatus.Deployed,
-        SiteStatus.Publishing,
         SiteStatus.Published,
+        SiteStatus.PublishFailed,
       ]);
 
     const { publisherProviderId, publisherType } = publisher;
@@ -505,6 +527,7 @@ export class WorkerTasksDispatcherService {
         SiteStatus.Deployed,
         SiteStatus.Publishing,
         SiteStatus.Published,
+        SiteStatus.PublishFailed,
       ]);
     const { storageProviderId, storageType } = storage;
     if (!storageProviderId)

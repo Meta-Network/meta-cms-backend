@@ -1,6 +1,8 @@
 import { MetaWorker } from '@metaio/worker-model2';
 import { Injectable } from '@nestjs/common';
 
+import { GenerateMetaWorkerGitInfo } from '../../../types';
+import { WorkerModel2GitInfo } from '../../../types/worker-model2';
 import { getSpecificStorageService } from './service';
 
 @Injectable()
@@ -9,17 +11,40 @@ export class WorkerModel2StorageService {
     type: MetaWorker.Enums.StorageType,
     userId: number,
     storageProviderId: number,
-  ): Promise<any> {
+  ): Promise<WorkerModel2GitInfo> {
     const service = getSpecificStorageService(type);
-    return await service.generateMetaWorkerGitInfo(userId, storageProviderId);
+    const workerModel1GitInfo = await service.generateMetaWorkerGitInfo(
+      userId,
+      storageProviderId,
+    );
+
+    return this.model1tomodel2(workerModel1GitInfo);
+  }
+
+  private model1tomodel2(workerModel1GitInfo: GenerateMetaWorkerGitInfo) {
+    const { gitInfo } = workerModel1GitInfo;
+    const branchname = gitInfo.branchName;
+    delete gitInfo.branchName;
+    return {
+      gitInfo: {
+        ...gitInfo,
+        branchname,
+      },
+
+      repoEmpty: workerModel1GitInfo.repoEmpty,
+    };
   }
 
   public async getMetaWorkerGitInfo(
     type: MetaWorker.Enums.StorageType,
     userId: number,
     storageProviderId: number,
-  ): Promise<any> {
+  ): Promise<WorkerModel2GitInfo> {
     const service = getSpecificStorageService(type);
-    return await service.getMetaWorkerGitInfo(userId, storageProviderId);
+    const workerModel1GitInfo = await service.getMetaWorkerGitInfo(
+      userId,
+      storageProviderId,
+    );
+    return this.model1tomodel2(workerModel1GitInfo);
   }
 }

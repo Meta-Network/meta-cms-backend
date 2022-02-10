@@ -565,7 +565,7 @@ export class PostOrdersLogicService {
       );
     } else {
       this.logger.verbose(
-        `Finish publish post without relative order`,
+        `Fail publish post without relative order`,
         this.constructor.name,
       );
     }

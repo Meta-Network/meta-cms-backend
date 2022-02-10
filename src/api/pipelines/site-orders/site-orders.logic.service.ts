@@ -10,7 +10,7 @@ import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { defaultPostBuilder } from '../../../configs';
 import { DeploySiteOrderEntity } from '../../../entities/pipeline/deploy-site-order.entity';
 import { PublishSiteOrderEntity } from '../../../entities/pipeline/publish-site-order.entity';
-import { SiteStatus } from '../../../types/enum';
+import { PipelineOrderTaskCommonState, SiteStatus } from '../../../types/enum';
 import { SiteConfigLogicService } from '../../site/config/logicService';
 import { PostOrderRequestDto } from '../dto/post-order.dto';
 import { DeploySiteOrderRequestDto } from '../dto/site-order.dto';
@@ -56,48 +56,54 @@ export class SiteOrdersLogicService {
     userId: number,
     deploySiteOrderRequestDto: DeploySiteOrderRequestDto,
   ): Promise<DeploySiteOrderEntity> {
+    const { siteConfigId } = deploySiteOrderRequestDto;
     // 必须校验meta space是否属于当前用户
 
     const siteConfigEntity =
       await this.siteConfigLogicService.validateSiteConfigUserId(
-        deploySiteOrderRequestDto.siteConfigId,
+        siteConfigId,
         userId,
       );
-    // TODO 迁移的站点，没有deploySiteOrder也没有对应默认模板的文章，post列表也对不上
-    if (SiteStatus.Configured !== siteConfigEntity?.status) {
-      return;
-    }
+
     // 如果之前已经生成过repo，并初始化成功，并不需要再次deploy,直接返回就可以了，一般来说前端也会控制(注意旧数据的迁移)
     // 这里如果能取到数据，说明之前有做过
-    // TODO 进一步判定重试操作？
-    let deploySiteOrder =
+    const deploySiteOrder =
       await this.deploySiteOrdersBaseService.getBySiteConfigUserId(
-        deploySiteOrderRequestDto.siteConfigId,
+        siteConfigId,
         userId,
       );
     if (deploySiteOrder?.id) {
-      return deploySiteOrder;
-    }
-    this.logger.verbose(
-      `Create deploy site order userId ${userId} siteConfigId ${deploySiteOrderRequestDto.siteConfigId}`,
-      SiteOrdersLogicService.name,
-    );
+      if (SiteStatus.DeployFailed === siteConfigEntity.status) {
+        this.siteConfigLogicService.updateSiteConfigStatus(
+          siteConfigId,
+          SiteStatus.Configured,
+        );
+      }
+      // 关于其他状态为何不需要特别做什么的解析。
+      // Configured 刚点击过建站就会在这个状态。站点是配置好的，还没开启建站而已，只要等待就行了
+      // Deploying 正在建站中，等待结果就行了
+      // Deployed 已经建好了，不需要再建了，直接返回
+      // Publishing Published PublishFailed 都是要在上一步之后才能做的，道理是一样的，不需要再建了
+    } else {
+      // 这里是第一次创建用户的deploy site order
+      this.logger.verbose(
+        `Create deploy site order userId ${userId} siteConfigId ${deploySiteOrderRequestDto.siteConfigId}`,
+        SiteOrdersLogicService.name,
+      );
 
-    // 初始化自带一篇文章，做出对应的数据。这个数据由服务器生成并签名
-    const { postOrder } = await this.postOrdersLogicService.savePostOrder(
-      userId,
-      this.createDefaultPostOrderRequestDto(),
-    );
-    //处理建站逻辑，建站完成后更新post的submitState和publishState 在 worker-tasks.dispatcher.servcie->post-orders.logic.service
-    deploySiteOrder = await this.deploySiteOrdersBaseService.save({
-      id: postOrder.id,
-      userId,
-      siteConfigId: deploySiteOrderRequestDto.siteConfigId,
-      serverVerificationId: postOrder.serverVerificationId,
-      // createdAt: new Date(),
-      // updatedAt: new Date(),
-    });
-    return deploySiteOrder;
+      // 初始化自带一篇文章，做出对应的数据。这个数据由服务器生成并签名
+      const { postOrder } = await this.postOrdersLogicService.savePostOrder(
+        userId,
+        this.createDefaultPostOrderRequestDto(),
+      );
+      //处理建站逻辑，建站完成后更新post的submitState和publishState 在 worker-tasks.dispatcher.servcie->post-orders.logic.service
+      return await this.deploySiteOrdersBaseService.save({
+        id: postOrder.id,
+        userId,
+        siteConfigId,
+        serverVerificationId: postOrder.serverVerificationId,
+      });
+    }
   }
   async generatePublishSiteOrder(
     userId: number,

@@ -79,17 +79,17 @@ export class DockerProcessorsService implements WorkerTasksJobProcessor {
     containerCreateOptions?: ContainerCreateOptions,
   ): Promise<Container> {
     const { image } = processorOptions;
+
+    // https://github.com/apocas/dockerode#equivalent-of-docker-run-in-dockerode
+    const options = this.buildCreateDockerOptions(
+      processorOptions,
+      containerCreateOptions,
+    );
     this.logger.verbose(
-      `Run docker with image ${image}`,
+      `Run docker with image ${image} options : ${JSON.stringify(options)}`,
       DockerProcessorsService.name,
     );
-    // https://github.com/apocas/dockerode#equivalent-of-docker-run-in-dockerode
-    return await this.docker.run(
-      image,
-      [],
-      process.stdout,
-      this.buildCreateDockerOptions(processorOptions, containerCreateOptions),
-    );
+    return await this.docker.run(image, [], process.stdout, options);
   }
 
   buildCreateDockerOptions(
@@ -109,27 +109,27 @@ export class DockerProcessorsService implements WorkerTasksJobProcessor {
     const lokiUrl = this.configService.get<string>(
       'pipeline.processor.docker.env.loki.url',
     );
-
+    const env = [
+      // `NODE_ENV=${process.env.NODE_ENV}`,
+      `LOG_LEVEL=${logLevel}`,
+      `NO_COLOR=true`,
+      `WORKER_SECRET=${secret}`,
+      `WORKER_NAME=${workerName}`,
+      `WORKER_TASK_ID=${workerTaskId}`,
+      `WORKER_BACKEND_URL=${backendUrl}`,
+      `WORKER_LOKI_URL=${lokiUrl}`,
+    ];
     return {
       ...options,
       Image: image,
-      Volumes: {
-        '/tmp': {},
-      },
-      HostConfig: {
-        Binds: [`${hostTmpDir}:/tmp`],
-      },
+      // Volumes: {
+      //   '/tmp': {},
+      // },
+      // HostConfig: {
+      //   Binds: [`${hostTmpDir}:/tmp`],
+      // },
       name: secret,
-      Env: [
-        // `NODE_ENV=${process.env.NODE_ENV}`,
-        `LOG_LEVEL=${logLevel}`,
-        `NO_COLOR=true`,
-        `WORKER_SECRET=${secret}`,
-        `WORKER_NAME=${workerName}`,
-        `WORKER_TASK_ID=${workerTaskId}`,
-        `WORKER_BACKEND_URL=${backendUrl}`,
-        `WORKER_LOKI_URL=${lokiUrl}`,
-      ],
+      Env: env,
     };
   }
 }

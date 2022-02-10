@@ -1,7 +1,7 @@
 import { Inject, Injectable, LoggerService } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
-import { DeepPartial, Repository } from 'typeorm';
+import { DeepPartial, FindManyOptions, Repository } from 'typeorm';
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 
 import { DeploySiteTaskEntity } from '../../../entities/pipeline/deploy-site-task.entity';
@@ -17,6 +17,9 @@ export class DeploySiteTasksBaseService {
 
   async getById(id: string): Promise<DeploySiteTaskEntity> {
     return await this.deploySiteTasksRepository.findOne(id);
+  }
+  async count(searchOptions?: FindManyOptions<DeploySiteTaskEntity>) {
+    return await this.deploySiteTasksRepository.count(searchOptions);
   }
 
   async save(

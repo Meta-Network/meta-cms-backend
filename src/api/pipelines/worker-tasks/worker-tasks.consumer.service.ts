@@ -38,7 +38,11 @@ export class WorkerTasksConsumerService implements WorkerTasksJobProcessor {
 
   getProcessor(): WorkerTasksJobProcessor {
     const processorType = this.configService.get<TaskWorkerJobProcessorType>(
-      `task.pipeline.processor.type`,
+      `pipeline.processor.type`,
+    );
+    this.logger.verbose(
+      `Worker task processor type ${processorType}`,
+      this.constructor.name,
     );
     if (TaskWorkerJobProcessorType.DOCKER === processorType) {
       return this.dockerProcessorsService;

@@ -1,5 +1,10 @@
 import { MetaWorker } from '@metaio/worker-model2';
-import { Inject, Injectable, LoggerService } from '@nestjs/common';
+import {
+  ConflictException,
+  Inject,
+  Injectable,
+  LoggerService,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { v4 as uuid } from 'uuid';
@@ -38,12 +43,22 @@ export class SiteTasksLogicService {
     deploySiteOrderEntity: DeploySiteOrderEntity;
     deploySiteTaskEntity: DeploySiteTaskEntity;
   }> {
+    const siteConfig =
+      await this.siteConfigLogicService.validateSiteConfigUserId(
+        siteConfigId,
+        userId,
+      );
+    // 只有站点在Configured状态才可以创建建站任务
+    if (SiteStatus.Configured !== siteConfig.status) {
+      throw new ConflictException('Invalid site status');
+    }
     const deploySiteOrderEntity =
       await this.deploySiteOrderBaseService.getBySiteConfigUserId(
         siteConfigId,
         userId,
       );
-    const id = this.newDeploySiteTaskId();
+
+    const id = this.newDeploySiteTaskId(siteConfigId);
     const deploySiteTaskEntity = await this.deploySiteTasksBaseService.save({
       id,
       userId,
@@ -59,13 +74,30 @@ export class SiteTasksLogicService {
       deploySiteTaskEntity,
     };
   }
-  newDeploySiteTaskId(): string {
-    return `wt4site-deploy-site-${uuid()}`;
+  newDeploySiteTaskId(siteConfigId: number): string {
+    return `wt4site-${siteConfigId}-deploy-site-${uuid()}`;
   }
   async getDeploySiteTaskById(
     deploySiteTaskId: string,
   ): Promise<DeploySiteTaskEntity> {
     return await this.deploySiteTasksBaseService.getById(deploySiteTaskId);
+  }
+
+  async countUserDoingDeploySiteTask(userId: number): Promise<number> {
+    return await this.deploySiteTasksBaseService.count({
+      where: {
+        userId,
+        state: PipelineOrderTaskCommonState.DOING,
+      },
+    });
+  }
+  async countUserDoingPublishSiteTask(userId: number): Promise<number> {
+    return await this.publishSiteTasksBaseService.count({
+      where: {
+        userId,
+        state: PipelineOrderTaskCommonState.DOING,
+      },
+    });
   }
   async doingDeploySiteTask(deploySiteTaskEntity: DeploySiteTaskEntity) {
     deploySiteTaskEntity.state = PipelineOrderTaskCommonState.DOING;
@@ -80,12 +112,25 @@ export class SiteTasksLogicService {
     await this.deploySiteTasksBaseService.update(id, {
       state: PipelineOrderTaskCommonState.FINISHED,
     });
+    const deploySiteTaskEntity = await this.deploySiteTasksBaseService.getById(
+      id,
+    );
+    await this.siteConfigLogicService.updateSiteConfigStatus(
+      deploySiteTaskEntity.siteConfigId,
+      SiteStatus.Deployed,
+    );
   }
   async failDeploySiteTask(id: string) {
     await this.deploySiteTasksBaseService.update(id, {
       state: PipelineOrderTaskCommonState.FAILED,
     });
-    // SiteStatus没有对应的状态，会变成一直停在Deploying
+    const deploySiteTaskEntity = await this.deploySiteTasksBaseService.getById(
+      id,
+    );
+    await this.siteConfigLogicService.updateSiteConfigStatus(
+      deploySiteTaskEntity.siteConfigId,
+      SiteStatus.DeployFailed,
+    );
   }
 
   async linkOrGeneratePublishSiteTask(siteConfigId: number, userId: number) {
@@ -96,7 +141,7 @@ export class SiteTasksLogicService {
       );
     if (PipelineOrderTaskCommonState.PENDING !== publishSiteTaskEntity?.state) {
       //如果没有，先生成
-      const id = this.newPublishSiteTaskId();
+      const id = this.newPublishSiteTaskId(siteConfigId);
       publishSiteTaskEntity = await this.publishSiteTasksBaseService.save({
         id,
         userId,
@@ -111,8 +156,8 @@ export class SiteTasksLogicService {
     );
   }
 
-  newPublishSiteTaskId(): string {
-    return `wt4site-publish-site-${uuid()}`;
+  newPublishSiteTaskId(siteConfigId: number): string {
+    return `wt4site-${siteConfigId}-publish-site-${uuid()}`;
   }
   async getPublishSiteTaskById(
     publishSiteTaskId: string,
@@ -163,7 +208,6 @@ export class SiteTasksLogicService {
       publishSiteTaskEntity.userId,
       id,
     );
-    // Change site state to Published
     await this.siteConfigLogicService.updateSiteConfigStatus(
       publishSiteTaskEntity.siteConfigId,
       SiteStatus.Published,
@@ -179,6 +223,9 @@ export class SiteTasksLogicService {
       publishSiteTaskEntity.userId,
       id,
     );
-    // SiteStatus没有对应的状态，会变成一直停在Publishing
+    await this.siteConfigLogicService.updateSiteConfigStatus(
+      publishSiteTaskEntity.siteConfigId,
+      SiteStatus.PublishFailed,
+    );
   }
 }

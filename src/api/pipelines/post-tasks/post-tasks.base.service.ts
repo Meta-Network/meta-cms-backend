@@ -36,6 +36,10 @@ export class PostTasksBaseService {
     return await this.postTasksRepository.find(searchOptions);
   }
 
+  async count(searchOptions?: FindManyOptions<PostTaskEntity>) {
+    return await this.postTasksRepository.count(searchOptions);
+  }
+
   async save(postTaskEntity: DeepPartial<PostTaskEntity>) {
     return await this.postTasksRepository.save(postTaskEntity);
   }

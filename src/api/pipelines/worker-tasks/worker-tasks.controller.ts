@@ -1,10 +1,12 @@
 import { MetaWorker } from '@metaio/worker-model2';
 import {
   Body,
+  ConflictException,
   Controller,
   Get,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
@@ -31,7 +33,8 @@ export class WorkerTasksController {
     );
   }
 
-  @Post(':workerTaskId/report')
+  @Patch(':workerTaskId/reports')
+  @Post(':workerTaskId/reports')
   @SkipUCenterAuth(true)
   async report(
     @BasicAuth() auth: string,
@@ -50,6 +53,9 @@ export class WorkerTasksController {
     @User('id', ParseIntPipe) userId: number,
     @Param('siteConfigId', ParseIntPipe) siteConfigId: number,
   ) {
+    if (await this.workerTasksDispatcherService.hasTaskInProgress(userId)) {
+      throw new ConflictException('Having Task in progreses');
+    }
     return await this.workerTasksDispatcherService.dispatchDeploySiteTask(
       siteConfigId,
       userId,
@@ -61,6 +67,9 @@ export class WorkerTasksController {
     @User('id', ParseIntPipe) userId: number,
     @Param('siteConfigId', ParseIntPipe) siteConfigId: number,
   ) {
+    if (await this.workerTasksDispatcherService.hasTaskInProgress(userId)) {
+      throw new ConflictException('Having Task in progreses');
+    }
     return await this.workerTasksDispatcherService.dispatchCreatePostsTask(
       siteConfigId,
       userId,
@@ -72,6 +81,9 @@ export class WorkerTasksController {
     @User('id', ParseIntPipe) userId: number,
     @Param('siteConfigId', ParseIntPipe) siteConfigId: number,
   ) {
+    if (await this.workerTasksDispatcherService.hasTaskInProgress(userId)) {
+      throw new ConflictException('Having Task in progreses');
+    }
     await this.workerTasksDispatcherService.linkOrGeneratePublishSiteTask(
       siteConfigId,
       userId,

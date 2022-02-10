@@ -24,6 +24,15 @@ export class PostTasksLogicService {
     return await this.postTasksBaseService.getById(id);
   }
 
+  async countUserDoingPostTask(userId: number): Promise<number> {
+    return await this.postTasksBaseService.count({
+      where: {
+        userId,
+        state: PipelineOrderTaskCommonState.DOING,
+      },
+    });
+  }
+
   async generateUserPostTaskForPendingPosts(userId: number): Promise<{
     postTaskEntity: PostTaskEntity;
     postOrderEntities: PostOrderEntity[];
@@ -60,6 +69,7 @@ export class PostTasksLogicService {
     };
   }
   newCreatePostsTaskId(): string {
+    // post 目前没指定site的
     return `wt4site-create-posts-${uuid()}`;
   }
 

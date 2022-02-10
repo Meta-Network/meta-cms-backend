@@ -26,10 +26,12 @@ export enum SiteStatus {
   Deploying = 'DEPLOYING',
   /** Site deployed, e.g. repo init & push */
   Deployed = 'DEPLOYED',
+  DeployFailed = 'DEPLOY_FAILED',
   /** Publish worker running */
   Publishing = 'PUBLISHING',
   /** Site published, can be visit */
   Published = 'PUBLISHED',
+  PublishFailed = 'PUBLISH_FAILED',
 }
 
 export enum TaskCommonState {

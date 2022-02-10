@@ -163,3 +163,32 @@ metaSignature:
     private:
     public:
   serverDomain:
+pipeline:
+  queue:
+  processor:
+    type: DOCKER
+    docker:
+      image: meta-cms-worker-theme-bear:latest
+      env:
+        logging:
+          level:
+        backend:
+          url:
+        loki:
+          url:
+        7zip:
+          binName: 7zz
+      volumes:
+        tmp:
+    mock:
+      # mock progresss
+      progress:
+        - value: 5
+          timeout: 200
+        - value: 20
+          timeout: 1000
+        - value: 66
+          timeout: 2000
+      # Success rate of completing task steps
+      successRate: 1.0
+      timeout: 2500
