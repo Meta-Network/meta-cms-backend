@@ -28,6 +28,7 @@ interface Config {
   db: {
     host: string;
     port: number;
+    timezone: string;
     username: string;
     password: string;
     database: string;
@@ -71,6 +72,7 @@ const options: ConnectionOptions = {
     ServerVerificationEntity,
   ],
   synchronize: false,
+  timezone: config.db.timezone || 'Z',
   logging: process.env.NODE_ENV !== 'production',
   migrationsTableName: 'be_migrations',
   migrations: [
