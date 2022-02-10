@@ -8,7 +8,7 @@ import { PostOrdersModule } from '../post-orders/post-orders.module';
 import { PostTasksModule } from '../post-tasks/post-tasks.module';
 import { ServerVerificationModule } from '../server-verification/server-verification.module';
 import { DeploySiteOrdersBaseService } from './deploy-site-orders.base.service';
-import { PublishSiteOrdersBaseService } from './publlish-site-orders.base.service';
+import { PublishSiteOrdersBaseService } from './publish-site-orders.base.service';
 import { SiteOrdersController } from './site-orders.controller';
 import { SiteOrdersLogicService } from './site-orders.logic.service';
 

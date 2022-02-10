@@ -1,8 +1,15 @@
 import { MetaWorker } from '@metaio/worker-model2';
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+} from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
-import { BasicAuth, SkipUCenterAuth } from '../../../decorators';
+import { BasicAuth, SkipUCenterAuth, User } from '../../../decorators';
 import { WorkerModel2TaskConfig } from '../../../types/worker-model2';
 import { WorkerTasksDispatcherService } from './worker-tasks.dispatcher.service';
 
@@ -35,6 +42,43 @@ export class WorkerTasksController {
       auth,
       workerTaskId,
       taskReport,
+    );
+  }
+
+  @Post(':siteConfigId/deploy-site')
+  async deploySite(
+    @User('id', ParseIntPipe) userId: number,
+    @Param('siteConfigId', ParseIntPipe) siteConfigId: number,
+  ) {
+    return await this.workerTasksDispatcherService.dispatchDeploySiteTask(
+      siteConfigId,
+      userId,
+    );
+  }
+
+  @Post(':siteConfigId/create-posts')
+  async createPosts(
+    @User('id', ParseIntPipe) userId: number,
+    @Param('siteConfigId', ParseIntPipe) siteConfigId: number,
+  ) {
+    return await this.workerTasksDispatcherService.dispatchCreatePostsTask(
+      siteConfigId,
+      userId,
+    );
+  }
+
+  @Post(':siteConfigId/publish-site')
+  async publishSite(
+    @User('id', ParseIntPipe) userId: number,
+    @Param('siteConfigId', ParseIntPipe) siteConfigId: number,
+  ) {
+    await this.workerTasksDispatcherService.linkOrGeneratePublishSiteTask(
+      siteConfigId,
+      userId,
+    );
+    return await this.workerTasksDispatcherService.dispatchPublishSiteTask(
+      siteConfigId,
+      userId,
     );
   }
 }

@@ -19,6 +19,7 @@ import {
   WorkerTasksJobDetail,
   WorkerTasksJobProcessor,
 } from './processors/worker-tasks.job-processor';
+import { WorkerTasksDispatcherService } from './worker-tasks.dispatcher.service';
 
 @Processor(WORKER_TASKS_JOB_PROCESSOR)
 export class WorkerTasksConsumerService implements WorkerTasksJobProcessor {
@@ -28,6 +29,7 @@ export class WorkerTasksConsumerService implements WorkerTasksJobProcessor {
     private readonly configService: ConfigService,
     private readonly dockerProcessorsService: DockerProcessorsService,
     private readonly mockProcessorsService: MockProcessorsService,
+    private readonly workerTasksDispatcherService: WorkerTasksDispatcherService,
   ) {}
   @Process()
   async process(job: Job<WorkerTasksJobDetail>) {
@@ -63,10 +65,10 @@ export class WorkerTasksConsumerService implements WorkerTasksJobProcessor {
 
       this.constructor.name,
     );
-    // worker内部会通过report上报，不需要再在这里通知
-    // if (job?.data?.taskConfig) {
-    //   await this.workerTasksDispatcherService.finishTask(job?.data?.taskConfig);
-    // }
+    // worker内部POST单个异常会通过report上报，这里处理的是整体的结果
+    if (job?.data?.taskConfig) {
+      await this.workerTasksDispatcherService.finishTask(job?.data?.taskConfig);
+    }
   }
 
   @OnQueueFailed()
@@ -76,13 +78,10 @@ export class WorkerTasksConsumerService implements WorkerTasksJobProcessor {
       err,
     );
 
-    // worker内部会通过report上报，不需要再在这里通知一遍
-    // if (job?.data?.taskConfig) {
-    //   await this.workerTasksDispatcherService.rejectTask(
-    //     job.data.task.taskId,
-    //     err,
-    //   );
-    // }
+    // worker内部POST单个异常会通过report上报，这里处理的是整体的结果
+    if (job?.data?.taskConfig) {
+      await this.workerTasksDispatcherService.failTask(job?.data?.taskConfig);
+    }
   }
   @OnQueueError()
   async onError(err) {

@@ -17,7 +17,7 @@ import { DeploySiteOrderRequestDto } from '../dto/site-order.dto';
 import { PostOrdersLogicService } from '../post-orders/post-orders.logic.service';
 import { ServerVerificationBaseService } from '../server-verification/server-verification.base.service';
 import { DeploySiteOrdersBaseService } from './deploy-site-orders.base.service';
-import { PublishSiteOrdersBaseService } from './publlish-site-orders.base.service';
+import { PublishSiteOrdersBaseService } from './publish-site-orders.base.service';
 import { SiteOrdersLogicService } from './site-orders.logic.service';
 
 describe('SiteOrdersLogicService', () => {

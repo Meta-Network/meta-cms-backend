@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { DeploySiteTaskEntity } from '../../../entities/pipeline/deploy-site-task.entity';
 import { PublishSiteTaskEntity } from '../../../entities/pipeline/publish-site-task.entity';
+import { SiteConfigModule } from '../../site/config/module';
 import { ThemeTemplateModule } from '../../theme/template/module';
 import { PostOrdersModule } from '../post-orders/post-orders.module';
 import { PostTasksModule } from '../post-tasks/post-tasks.module';
@@ -18,7 +19,7 @@ import { SiteTasksLogicService } from './site-tasks.logic.service';
     PostOrdersModule,
     PostTasksModule,
     SiteOrdersModule,
-    ThemeTemplateModule,
+    SiteConfigModule,
   ],
   controllers: [SiteTasksController],
   providers: [

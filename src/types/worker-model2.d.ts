@@ -12,3 +12,5 @@ export type WorkerModel2GitInfo = {
   publishInfo?: MetaWorker.Info.Publish;
   repoEmpty: boolean;
 };
+export type WorkModel2PostTaskResult = MetaWorker.Info.Post &
+  PromiseSettledResult<void>;

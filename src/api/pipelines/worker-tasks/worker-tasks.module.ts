@@ -2,6 +2,7 @@ import { BullModule, BullModuleOptions } from '@nestjs/bull';
 import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
+import { MetaUCenterModule } from '../../microservices/meta-ucenter/meta-ucenter.module';
 import { PublisherModule } from '../../provider/publisher/publisher.module';
 import { StorageModule } from '../../provider/storage/module';
 import { SiteConfigModule } from '../../site/config/module';
@@ -31,9 +32,11 @@ import { WorkerTasksDispatcherService } from './worker-tasks.dispatcher.service'
     SiteTasksModule,
     DockerProcessorsModule,
     MockProcessorsModule,
+    SiteConfigModule,
     StorageModule,
     PublisherModule,
     SiteModule,
+    MetaUCenterModule,
   ],
   controllers: [WorkerTasksController],
   providers: [WorkerTasksConsumerService, WorkerTasksDispatcherService],
