@@ -11,10 +11,17 @@ import { v4 as uuid } from 'uuid';
 
 import { DeploySiteOrderEntity } from '../../../entities/pipeline/deploy-site-order.entity';
 import { DeploySiteTaskEntity } from '../../../entities/pipeline/deploy-site-task.entity';
-import { PublishSiteOrderEntity } from '../../../entities/pipeline/publish-site-order.entity';
 import { PublishSiteTaskEntity } from '../../../entities/pipeline/publish-site-task.entity';
+import { SiteConfigEntity } from '../../../entities/siteConfig.entity';
+import { DataNotFoundException } from '../../../exceptions';
+import { UCenterUser } from '../../../types';
 import { PipelineOrderTaskCommonState, SiteStatus } from '../../../types/enum';
+import { DnsService } from '../../provider/dns/dns.service';
+import { WorkerModel2DnsService } from '../../provider/dns/worker-model2.dns.service';
+import { WorkerModel2PublisherService } from '../../provider/publisher/worker-model2.publisher.service';
+import { WorkerModel2StorageService } from '../../provider/storage/worker-model2.service';
 import { SiteConfigLogicService } from '../../site/config/logicService';
+import { WorkerModel2SiteService } from '../../site/worker-model2.service';
 import { PostOrdersLogicService } from '../post-orders/post-orders.logic.service';
 import { DeploySiteOrdersBaseService } from '../site-orders/deploy-site-orders.base.service';
 import { SiteOrdersLogicService } from '../site-orders/site-orders.logic.service';
@@ -32,8 +39,11 @@ export class SiteTasksLogicService {
     private readonly publishSiteTasksBaseService: PublishSiteTasksBaseService,
     private readonly postOrdersLogicService: PostOrdersLogicService,
     private readonly siteOrdersLogicService: SiteOrdersLogicService,
-
     private readonly siteConfigLogicService: SiteConfigLogicService,
+    private readonly siteService: WorkerModel2SiteService,
+    private readonly storageService: WorkerModel2StorageService,
+    private readonly publisherService: WorkerModel2PublisherService,
+    private readonly dnsService: WorkerModel2DnsService,
   ) {}
 
   async generateDeploySiteTask(
@@ -202,15 +212,19 @@ export class SiteTasksLogicService {
     );
   }
 
-  async finishPublishSiteTask(id: string) {
+  async finishPublishSiteTask(
+    publishTaskConfig: MetaWorker.Configs.PublishTaskConfig,
+  ) {
+    const id = publishTaskConfig.task.taskId;
     await this.publishSiteTasksBaseService.update(id, {
       state: PipelineOrderTaskCommonState.FINISHED,
     });
     const publishSiteTaskEntity =
       await this.publishSiteTasksBaseService.getById(id);
-    await this.siteOrdersLogicService.finishPublishSite(
-      publishSiteTaskEntity.id,
-    );
+    const publisherType = publishTaskConfig.git.publisher
+      .serviceType as MetaWorker.Enums.PublisherType;
+    await this.updateDomain(publisherType, publishTaskConfig);
+    await this.siteOrdersLogicService.finishPublishSite(id);
     await this.postOrdersLogicService.finishPublishPost(
       publishSiteTaskEntity.userId,
       id,
@@ -235,5 +249,133 @@ export class SiteTasksLogicService {
       publishSiteTaskEntity.siteConfigId,
       SiteStatus.PublishFailed,
     );
+  }
+
+  async generateDeployConfigAndRepoEmpty(
+    user: Partial<UCenterUser>,
+    configId: number,
+  ): Promise<{
+    deployConfig: MetaWorker.Configs.DeployConfig;
+    repoEmpty: boolean;
+  }> {
+    this.logger.verbose(`Generate deploy config`, this.constructor.name);
+
+    const { site, template, theme, storage } =
+      await this.siteService.generateMetaWorkerSiteInfo(user, configId, [
+        SiteStatus.Configured,
+        SiteStatus.DeployFailed,
+      ]);
+
+    const { storageProviderId, storageType } = storage;
+    if (!storageProviderId)
+      throw new DataNotFoundException('storage provider id not found');
+    const { gitInfo, repoEmpty } =
+      await this.storageService.generateMetaWorkerGitInfo(
+        storageType,
+        user.id,
+        storageProviderId,
+      );
+    // console.log('gitInfo', gitInfo);
+    const deployConfig: MetaWorker.Configs.DeployConfig = {
+      user: {
+        username: user.username,
+        nickname: user.nickname,
+      },
+      site,
+      template,
+      theme,
+      git: {
+        storage: gitInfo,
+      },
+      gateway: this.configService.get('metaSpace.gateway'),
+    };
+    return {
+      deployConfig,
+      repoEmpty,
+    };
+  }
+  public async generatePublishConfigAndTemplate(
+    user: Partial<UCenterUser>,
+    configId: number,
+  ): Promise<{
+    publisherType: MetaWorker.Enums.PublisherType;
+    publishConfig: MetaWorker.Configs.PublishConfig;
+    template: MetaWorker.Info.Template;
+  }> {
+    this.logger.verbose(
+      `Generate meta worker site info`,
+      this.constructor.name,
+    );
+
+    const { site, template, storage, publisher } =
+      await this.siteService.generateMetaWorkerSiteInfo(user, configId, [
+        SiteStatus.Deployed,
+        SiteStatus.Published,
+        SiteStatus.PublishFailed,
+      ]);
+
+    const { publisherProviderId, publisherType } = publisher;
+
+    if (!publisherProviderId)
+      throw new DataNotFoundException('publisher provider id not found');
+    const { gitInfo: publisherGitInfo, publishInfo } =
+      await this.publisherService.generateMetaWorkerGitInfo(
+        publisherType,
+        user.id,
+        publisherProviderId,
+      );
+    const { storageProviderId, storageType } = storage;
+    const { gitInfo: storageGitInfo } =
+      await this.storageService.getMetaWorkerGitInfo(
+        storageType,
+        user.id,
+        storageProviderId,
+      );
+    const publishConfig: MetaWorker.Configs.PublishConfig = {
+      site,
+      git: {
+        storage: storageGitInfo,
+        publisher: publisherGitInfo,
+      },
+      publish: publishInfo,
+    };
+
+    return {
+      publisherType,
+      publishConfig,
+      template,
+    };
+  }
+
+  async updateDomain(
+    publisherType: MetaWorker.Enums.PublisherType,
+    publishConfig: MetaWorker.Configs.PublishConfig,
+  ) {
+    await this.updateDns(publisherType, publishConfig);
+    await this.publisherService.updateDomainName(publisherType, publishConfig);
+  }
+  async updateDns(
+    publisherType: MetaWorker.Enums.PublisherType,
+    publishConfig: MetaWorker.Configs.PublishConfig,
+  ) {
+    this.logger.verbose(
+      `Update DNS siteConfigId ${publishConfig.site.configId} ${publisherType}`,
+    );
+    const targetOriginDomain =
+      await this.publisherService.getTargetOriginDomain(
+        publisherType,
+        publishConfig,
+      );
+    const dnsRecord = {
+      type: MetaWorker.Enums.DnsRecordType.CNAME,
+      name: publishConfig.site.metaSpacePrefix,
+      content: targetOriginDomain,
+    };
+    this.logger.verbose(
+      `Update DNS siteConfigId ${
+        publishConfig.site.configId
+      } dnsRecord ${JSON.stringify(dnsRecord)}`,
+    );
+    await this.dnsService.updateDnsRecord(dnsRecord);
   }
 }

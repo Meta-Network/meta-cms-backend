@@ -13,19 +13,13 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { Queue } from 'bull';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
-import { publish } from 'rxjs';
 import { v4 as uuid } from 'uuid';
 
 import { DeploySiteTaskEntity } from '../../../entities/pipeline/deploy-site-task.entity';
 import { PostTaskEntity } from '../../../entities/pipeline/post-task.entity';
 import { IWorkerTask } from '../../../entities/pipeline/worker-task.interface';
-import { DataNotFoundException } from '../../../exceptions';
 import { UCenterUser } from '../../../types';
-import {
-  MetadataStorageType,
-  PipelineOrderTaskCommonState,
-  SiteStatus,
-} from '../../../types/enum';
+import { PipelineOrderTaskCommonState } from '../../../types/enum';
 import {
   WorkerModel2Config,
   WorkerModel2TaskConfig,
@@ -33,10 +27,6 @@ import {
 } from '../../../types/worker-model2';
 import { iso8601ToDate } from '../../../utils';
 import { MetaUCenterService } from '../../microservices/meta-ucenter/meta-ucenter.service';
-import { WorkerModel2PublisherService } from '../../provider/publisher/worker-model2.publisher.service';
-import { WorkerModel2StorageService } from '../../provider/storage/worker-model2.service';
-import { SiteConfigLogicService } from '../../site/config/logicService';
-import { WorkerModel2SiteService } from '../../site/worker-model2.service';
 import { PostOrdersLogicService } from '../post-orders/post-orders.logic.service';
 import { PostTasksLogicService } from '../post-tasks/post-tasks.logic.service';
 import { SiteOrdersLogicService } from '../site-orders/site-orders.logic.service';
@@ -56,9 +46,6 @@ export class WorkerTasksDispatcherService {
     private readonly postTasksLogicService: PostTasksLogicService,
     private readonly siteOrdersLogicService: SiteOrdersLogicService,
     private readonly siteTasksLogicService: SiteTasksLogicService,
-    private readonly siteService: WorkerModel2SiteService,
-    private readonly storageService: WorkerModel2StorageService,
-    private readonly publisherService: WorkerModel2PublisherService,
     @InjectQueue(WORKER_TASKS_JOB_PROCESSOR)
     private readonly workerTasksQueue: Queue<WorkerTasksJobDetail>,
     private readonly ucenterService: MetaUCenterService,
@@ -89,10 +76,11 @@ export class WorkerTasksDispatcherService {
         userId,
       );
     const user = await this.getUserInfo(userId);
-    const { deployConfig } = await this.generateDeployConfigAndRepoEmpty(
-      user,
-      siteConfigId,
-    );
+    const { deployConfig } =
+      await this.siteTasksLogicService.generateDeployConfigAndRepoEmpty(
+        user,
+        siteConfigId,
+      );
     deploySiteTaskEntity.workerName = this.getWorkerName();
     deploySiteTaskEntity.workerSecret = this.newWorkerSecret();
 
@@ -144,11 +132,12 @@ export class WorkerTasksDispatcherService {
       } as MetaWorker.Info.Post;
       posts.push(post);
     }
-    const { postConfig, template } = await this.generatePostConfigAndTemplate(
-      user,
-      posts,
-      siteConfigId,
-    );
+    const { postConfig, template } =
+      await this.postTasksLogicService.generatePostConfigAndTemplate(
+        user,
+        posts,
+        siteConfigId,
+      );
 
     postTaskEntity.workerName = this.getWorkerName();
     postTaskEntity.workerSecret = this.newWorkerSecret();
@@ -198,7 +187,10 @@ export class WorkerTasksDispatcherService {
     }
     const user = await this.getUserInfo(publishSiteTaskEntity.userId);
     const { publishConfig, template } =
-      await this.generatePublishConfigAndTemplate(user, siteConfigId);
+      await this.siteTasksLogicService.generatePublishConfigAndTemplate(
+        user,
+        siteConfigId,
+      );
     publishSiteTaskEntity.workerName = this.getWorkerName();
     publishSiteTaskEntity.workerSecret = this.newWorkerSecret();
     // Change task state to Doing & site state to Deploying
@@ -372,17 +364,21 @@ export class WorkerTasksDispatcherService {
       const postTaskEntity = await this.postTasksLogicService.getById(
         taskConfig.task.taskId,
       );
+      // let publishSiteOrderId;
+      // if (taskConfig.site.enableAutoPublish) {
       const publishSiteOrderEntity =
         await this.siteOrdersLogicService.generatePublishSiteOrder(
           postTaskEntity.userId,
         );
+      const publishSiteOrderId = publishSiteOrderEntity.id;
+      // }
       await this.postTasksLogicService.finishPostTask(
         taskConfig.task.taskId,
-        publishSiteOrderEntity.id,
+        publishSiteOrderId,
       );
     } else if (MetaWorker.Enums.WorkerTaskMethod.PUBLISH_SITE === taskMethod) {
       await this.siteTasksLogicService.finishPublishSiteTask(
-        taskConfig.task.taskId,
+        taskConfig as MetaWorker.Configs.PublishTaskConfig,
       );
     }
     //TODO 异步拉动下一个任务
@@ -409,147 +405,5 @@ export class WorkerTasksDispatcherService {
       );
     }
     //TODO 异步拉动下一个任务
-  }
-
-  async generateDeployConfigAndRepoEmpty(
-    user: Partial<UCenterUser>,
-    configId: number,
-  ): Promise<{
-    deployConfig: MetaWorker.Configs.DeployConfig;
-    repoEmpty: boolean;
-  }> {
-    this.logger.verbose(`Generate deploy config`, this.constructor.name);
-
-    const { site, template, theme, storage } =
-      await this.siteService.generateMetaWorkerSiteInfo(user, configId, [
-        SiteStatus.Configured,
-        SiteStatus.DeployFailed,
-      ]);
-
-    const { storageProviderId, storageType } = storage;
-    if (!storageProviderId)
-      throw new DataNotFoundException('storage provider id not found');
-    const { gitInfo, repoEmpty } =
-      await this.storageService.generateMetaWorkerGitInfo(
-        storageType,
-        user.id,
-        storageProviderId,
-      );
-    // console.log('gitInfo', gitInfo);
-    const deployConfig: MetaWorker.Configs.DeployConfig = {
-      user: {
-        username: user.username,
-        nickname: user.nickname,
-      },
-      site,
-      template,
-      theme,
-      git: {
-        storage: gitInfo,
-      },
-      gateway: this.configService.get('metaSpace.gateway'),
-    };
-    return {
-      deployConfig,
-      repoEmpty,
-    };
-  }
-
-  public async generatePublishConfigAndTemplate(
-    user: Partial<UCenterUser>,
-    configId: number,
-  ): Promise<{
-    publisherType: MetaWorker.Enums.PublisherType;
-    publishConfig: MetaWorker.Configs.PublishConfig;
-    template: MetaWorker.Info.Template;
-  }> {
-    this.logger.verbose(
-      `Generate meta worker site info`,
-      this.constructor.name,
-    );
-
-    const { site, template, storage, publisher } =
-      await this.siteService.generateMetaWorkerSiteInfo(user, configId, [
-        SiteStatus.Deployed,
-        SiteStatus.Published,
-        SiteStatus.PublishFailed,
-      ]);
-
-    const { publisherProviderId, publisherType } = publisher;
-
-    if (!publisherProviderId)
-      throw new DataNotFoundException('publisher provider id not found');
-    const { gitInfo: publisherGitInfo, publishInfo } =
-      await this.publisherService.generateMetaWorkerGitInfo(
-        publisherType,
-        user.id,
-        publisherProviderId,
-      );
-    const { storageProviderId, storageType } = storage;
-    const { gitInfo: storageGitInfo } =
-      await this.storageService.getMetaWorkerGitInfo(
-        storageType,
-        user.id,
-        storageProviderId,
-      );
-    const publishConfig: MetaWorker.Configs.PublishConfig = {
-      site,
-      git: {
-        storage: storageGitInfo,
-        publisher: publisherGitInfo,
-      },
-      publish: publishInfo,
-    };
-
-    return {
-      publisherType,
-      publishConfig,
-      template,
-    };
-  }
-
-  public async generatePostConfigAndTemplate(
-    user: Partial<UCenterUser>,
-    post: MetaWorker.Info.Post | MetaWorker.Info.Post[],
-    configId: number,
-  ): Promise<{
-    postConfig: MetaWorker.Configs.PostConfig;
-    template: MetaWorker.Info.Template;
-  }> {
-    this.logger.verbose(
-      `Generate meta worker site info`,
-      this.constructor.name,
-    );
-
-    const { site, template, storage } =
-      await this.siteService.generateMetaWorkerSiteInfo(user, configId, [
-        SiteStatus.Deployed,
-        SiteStatus.Publishing,
-        SiteStatus.Published,
-        SiteStatus.PublishFailed,
-      ]);
-    const { storageProviderId, storageType } = storage;
-    if (!storageProviderId)
-      throw new DataNotFoundException('storage provider id not found');
-    const { gitInfo } = await this.storageService.generateMetaWorkerGitInfo(
-      storageType,
-      user.id,
-      storageProviderId,
-    );
-    const postConfig: MetaWorker.Configs.PostConfig = {
-      user: {
-        username: user.username,
-        nickname: user.nickname,
-      },
-      site,
-      post,
-      git: {
-        storage: gitInfo,
-      },
-    };
-    return {
-      postConfig,
-      template,
-    };
   }
 }

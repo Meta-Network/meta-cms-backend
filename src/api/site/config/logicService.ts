@@ -218,7 +218,7 @@ export class SiteConfigLogicService {
   public async fetchUserDefaultSiteInfo(queries: {
     userId: number;
   }): Promise<MetaInternalResult<FetchSiteInfosReturn>> {
-    console.log('Fetching user default site info');
+    // console.log('Fetching user default site info');
     const config = await this.getUserDefaultSiteConfig(queries.userId);
     const result = new MetaInternalResult<FetchSiteInfosReturn>({
       serviceCode: ServiceCode.CMS,
