@@ -6,6 +6,7 @@ import { Socket } from 'socket.io';
 import { RealTimeEventState } from './enum';
 
 export interface UCenterUser {
+  id: number;
   bio: string;
   avatar: string;
   username: string;

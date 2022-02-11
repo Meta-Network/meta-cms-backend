@@ -1,7 +1,7 @@
 import { Inject, Injectable, LoggerService } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
-import { Repository } from 'typeorm';
+import { DeepPartial, Repository } from 'typeorm';
 
 import { DeploySiteOrderEntity } from '../../../entities/pipeline/deploy-site-order.entity';
 
@@ -28,7 +28,7 @@ export class DeploySiteOrdersBaseService {
   }
 
   async save(
-    deploySiteOrderEntity: DeploySiteOrderEntity,
+    deploySiteOrderEntity: DeepPartial<DeploySiteOrderEntity>,
   ): Promise<DeploySiteOrderEntity> {
     return this.deploySiteOrdersRepository.save(deploySiteOrderEntity);
   }

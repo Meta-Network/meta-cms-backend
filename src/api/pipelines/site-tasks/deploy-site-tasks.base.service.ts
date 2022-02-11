@@ -1,7 +1,8 @@
 import { Inject, Injectable, LoggerService } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
-import { Repository } from 'typeorm';
+import { DeepPartial, FindManyOptions, Repository } from 'typeorm';
+import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 
 import { DeploySiteTaskEntity } from '../../../entities/pipeline/deploy-site-task.entity';
 
@@ -13,4 +14,24 @@ export class DeploySiteTasksBaseService {
     @InjectRepository(DeploySiteTaskEntity)
     private readonly deploySiteTasksRepository: Repository<DeploySiteTaskEntity>,
   ) {}
+
+  async getById(id: string): Promise<DeploySiteTaskEntity> {
+    return await this.deploySiteTasksRepository.findOne(id);
+  }
+  async count(searchOptions?: FindManyOptions<DeploySiteTaskEntity>) {
+    return await this.deploySiteTasksRepository.count(searchOptions);
+  }
+
+  async save(
+    deploySiteTaskEntity: DeepPartial<DeploySiteTaskEntity>,
+  ): Promise<DeploySiteTaskEntity> {
+    return await this.deploySiteTasksRepository.save(deploySiteTaskEntity);
+  }
+
+  async update(
+    id: string,
+    partialEntity: QueryDeepPartialEntity<DeploySiteTaskEntity>,
+  ) {
+    return await this.deploySiteTasksRepository.update(id, partialEntity);
+  }
 }

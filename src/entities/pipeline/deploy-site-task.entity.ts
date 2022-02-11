@@ -49,7 +49,7 @@ export class DeploySiteTaskEntity implements IWorkerTask {
     nullable: false,
     default: PipelineOrderTaskCommonState.PENDING,
   })
-  readonly state: PipelineOrderTaskCommonState;
+  state: PipelineOrderTaskCommonState;
 
   @Column({
     comment: 'The name of the worker assigned to handle this task',

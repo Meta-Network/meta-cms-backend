@@ -23,9 +23,9 @@ import { TaskWorkersModule } from './workers/task-workers.module';
   imports: [
     TypeOrmModule.forFeature([PostSiteConfigRelaEntity]),
     TaskWorkersModule,
-    GitWorkersModule,
-    HexoWorkersModule,
-    DockerProcessorsModule,
+    // GitWorkersModule,
+    // HexoWorkersModule,
+    // DockerProcessorsModule,
     SiteModule,
     SiteInfoModule,
     SiteConfigModule,

@@ -243,7 +243,13 @@ describe('PostOrdersBaseService', () => {
       expect(postOrderEntityById.submitState).toBe(postOrder.submitState);
       expect(postOrderEntityById.publishState).toBe(postOrder.publishState);
       expect(postOrderEntityById.postMetadata.id).toBe(postOrderEntityById.id);
-      expect(postOrderEntityById.postMetadata.title).toBe(postMetadata.title);
+      expect(postOrderEntityById.postMetadata.title).toEqual(
+        postMetadata.title,
+      );
+      expect(postOrderEntityById.postMetadata.content).toEqual(
+        postMetadata.content,
+      );
+      expect(postOrderEntityById.postMetadata.content).toEqual('测试内容');
     });
   });
 });

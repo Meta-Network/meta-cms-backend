@@ -11,6 +11,8 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
+import { PipelineOrderTaskCommonState } from '../../types/enum';
+
 @Entity()
 export class PublishSiteOrderEntity {
   @PrimaryGeneratedColumn({ unsigned: true })
@@ -57,4 +59,14 @@ export class PublishSiteOrderEntity {
     default: '',
   })
   publishSiteTaskId?: string;
+
+  @ApiProperty({
+    description: 'Publish site order state',
+  })
+  @Column({
+    comment: 'Publish site order state',
+    nullable: false,
+    default: PipelineOrderTaskCommonState.PENDING,
+  })
+  state: PipelineOrderTaskCommonState;
 }

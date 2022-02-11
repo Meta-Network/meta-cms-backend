@@ -132,6 +132,7 @@ export class PostOrderEntity {
     default: '',
   })
   certificateState?: PipelineOrderTaskCommonState;
+  @Index()
   @Column({
     comment: 'The id of the task to process this order. Many to one',
     nullable: false,
@@ -145,6 +146,7 @@ export class PostOrderEntity {
     example: 'wt4site-123-create-posts-90c618b6-a3e8-4958-8e9e-93ec103a2a45',
   })
   postTaskId?: string;
+  @Index()
   @Column({
     comment: 'The id of the order to publish site for this post. Many to one',
     nullable: false,
@@ -158,6 +160,7 @@ export class PostOrderEntity {
     example: 123,
   })
   publishSiteOrderId?: number;
+  @Index()
   @Column({
     comment: 'The id oft the task to publish site for this post. Many to one',
     nullable: false,

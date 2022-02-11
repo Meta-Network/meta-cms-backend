@@ -310,6 +310,7 @@ export class PostOrdersLogicService {
         PostOrdersLogicService.name,
       ),
     );
+    // TODO 替换链接？建议在前端完成，否则请求和生成的链接对不上
     // 之前失败的文章跟随重试
     this.retryUserFailedPostOrders(postOrder.userId);
   }
@@ -320,10 +321,14 @@ export class PostOrdersLogicService {
     certificateStorageType?: MetadataStorageType,
   ) {
     if (certificateStorageType) {
+      this.logger.verbose(
+        `Handle certificatee postOrderId ${postOrder.id} certificateStorageType ${certificateStorageType}`,
+        this.constructor.name,
+      );
       const postOrderId = postOrder.id;
       await this.postOrdersBaseService.update(postOrderId, {
         certificateStorageType,
-        certificateState: PipelineOrderTaskCommonState.PENDING,
+        certificateState: PipelineOrderTaskCommonState.DOING,
       });
       try {
         await this.doUploadCertificate(
@@ -352,9 +357,16 @@ export class PostOrdersLogicService {
           );
           await this.postOrdersBaseService.update(postOrderId, {
             certificateState: PipelineOrderTaskCommonState.FAILED,
+            submitState: PipelineOrderTaskCommonState.FAILED,
+            publishState: PipelineOrderTaskCommonState.FAILED,
           });
         }
       }
+    } else {
+      this.logger.verbose(
+        `Handle certificatee postOrderId ${postOrder.id} empty certificateStorageType`,
+        this.constructor.name,
+      );
     }
   }
 
@@ -373,10 +385,189 @@ export class PostOrdersLogicService {
       ),
       serverVerificationPayload,
     );
-    // TODO 跟进 arweave打包进度，这里标记为DOING，viewblock确认打包成功再标记为FINISHED
+    // 也考虑过跟进 arweave打包进度，先标记为DOING，viewblock确认打包成功再标记为FINISHED。意义不大，因为这个阶段已经可以确认data-viewer了
     await this.postOrdersBaseService.update(postOrderId, {
-      certificateState: PipelineOrderTaskCommonState.DOING,
+      certificateState: PipelineOrderTaskCommonState.FINISHED,
       certificateId: txId,
     });
+  }
+
+  async doingSubmitPost(postTaskId: string) {
+    this.logger.verbose(
+      `Doing submit post postTaskId ${postTaskId} `,
+      this.constructor.name,
+    );
+    await this.postOrdersBaseService.batchUpdate(
+      { postTaskId },
+      {
+        submitState: PipelineOrderTaskCommonState.DOING,
+      },
+    );
+  }
+
+  async finishSubmitPost(postTaskId: string, publishSiteOrderId: number) {
+    this.logger.verbose(
+      `Finish submit post postTaskId ${postTaskId} & link publishSiteOrderId ${publishSiteOrderId} `,
+      this.constructor.name,
+    );
+    await this.postOrdersBaseService.batchUpdate(
+      {
+        postTaskId,
+
+        submitState: PipelineOrderTaskCommonState.DOING,
+      },
+      {
+        submitState: PipelineOrderTaskCommonState.FINISHED,
+        publishSiteOrderId,
+      },
+    );
+  }
+  /**
+   * 处理提交文章失败
+   * 任务可以批量处理post，失败可能是局部失败，那么，对postOrder需要处理这些失败的
+   * @param  postOrderId
+   */
+  async failSubmitPost(postOrderId: string) {
+    this.logger.verbose(
+      `Fail submit post postOrderId ${postOrderId} `,
+      this.constructor.name,
+    );
+    await this.postOrdersBaseService.update(
+      postOrderId,
+
+      {
+        submitState: PipelineOrderTaskCommonState.FAILED,
+        publishState: PipelineOrderTaskCommonState.FAILED,
+      },
+    );
+    const postOrderEntity = await this.postOrdersBaseService.getById(
+      postOrderId,
+    );
+    // 失败会引起pubishState变化，posts计数会发生变化，所以需要触发对应的事件
+    this.eventEmitter.emit(
+      InternalRealTimeEvent.POST_STATE_UPDATED,
+      new InternalRealTimeMessage({
+        userId: postOrderEntity.userId,
+        message: InternalRealTimeEvent.POST_STATE_UPDATED,
+        data: [
+          {
+            id: postOrderId,
+            submit: RealTimeEventState.failed,
+            publish: RealTimeEventState.failed,
+          },
+        ],
+      }),
+    );
+  }
+
+  async updatePublishSiteTaskId(
+    publishSiteOrderIds: number[],
+    publishSiteTaskId: string,
+  ) {
+    this.logger.verbose(
+      `Update post publishSiteTaskId to ${publishSiteTaskId} with publishSiteOrderId ${publishSiteOrderIds} `,
+      this.constructor.name,
+    );
+    await this.postOrdersBaseService.batchUpdate(
+      {
+        publishSiteOrderId: In(publishSiteOrderIds),
+        publishSiteTaskId: '',
+      },
+      { publishSiteTaskId },
+    );
+  }
+  async doingPublishPost(publishSiteTaskId: string) {
+    this.logger.verbose(
+      `Doing publish post publishSiteTaskId ${publishSiteTaskId} `,
+      this.constructor.name,
+    );
+    await this.postOrdersBaseService.batchUpdate(
+      { publishSiteTaskId },
+      {
+        publishState: PipelineOrderTaskCommonState.DOING,
+      },
+    );
+  }
+
+  async finishPublishPost(userId: number, publishSiteTaskId: string) {
+    this.logger.verbose(
+      `Finish publish post publishSiteTaskId ${publishSiteTaskId} `,
+      this.constructor.name,
+    );
+    await this.postOrdersBaseService.batchUpdate(
+      { publishSiteTaskId },
+      {
+        publishState: PipelineOrderTaskCommonState.FINISHED,
+      },
+    );
+    const finishPublishPostOrderEntities =
+      await this.postOrdersBaseService.find({
+        where: { publishSiteTaskId },
+      });
+    if (finishPublishPostOrderEntities?.length > 0) {
+      const internalRealTimeMessage = new InternalRealTimeMessage({
+        userId,
+        message: InternalRealTimeEvent.POST_STATE_UPDATED,
+        data: finishPublishPostOrderEntities.map((postOrderEntity) => ({
+          id: postOrderEntity.id,
+          publish: RealTimeEventState.finished,
+        })),
+      });
+      this.logger.verbose(
+        `Finish publish post internal real time message ${JSON.stringify(
+          internalRealTimeMessage,
+        )} `,
+        this.constructor.name,
+      );
+      // 发布成功会引起pubishState变化，posts计数会发生变化，所以需要触发对应的事件
+      this.eventEmitter.emit(
+        InternalRealTimeEvent.POST_STATE_UPDATED,
+        internalRealTimeMessage,
+      );
+    } else {
+      this.logger.verbose(
+        `Finish publish post without relative order`,
+        this.constructor.name,
+      );
+    }
+  }
+
+  async failPublishPost(userId: number, publishSiteTaskId: string) {
+    await this.postOrdersBaseService.batchUpdate(
+      { publishSiteTaskId },
+      {
+        publishState: PipelineOrderTaskCommonState.FAILED,
+      },
+    );
+    const failedPublishPostOrderEntities =
+      await this.postOrdersBaseService.find({
+        where: { publishSiteTaskId },
+      });
+    if (failedPublishPostOrderEntities?.length > 0) {
+      const internalRealTimeMessage = new InternalRealTimeMessage({
+        userId,
+        message: InternalRealTimeEvent.POST_STATE_UPDATED,
+        data: failedPublishPostOrderEntities.map((postOrderEntity) => ({
+          id: postOrderEntity.id,
+          publish: RealTimeEventState.failed,
+        })),
+      });
+      this.logger.verbose(
+        `Fail publish post internal real time message ${JSON.stringify(
+          internalRealTimeMessage,
+        )} `,
+        this.constructor.name,
+      );
+      // 发布失败会引起pubishState变化，posts计数会发生变化，所以需要触发对应的事件
+      this.eventEmitter.emit(
+        InternalRealTimeEvent.POST_STATE_UPDATED,
+        internalRealTimeMessage,
+      );
+    } else {
+      this.logger.verbose(
+        `Fail publish post without relative order`,
+        this.constructor.name,
+      );
+    }
   }
 }

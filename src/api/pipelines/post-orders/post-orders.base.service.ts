@@ -80,4 +80,10 @@ export class PostOrdersBaseService {
   ) {
     await this.postOrdersRepository.update(postOrderId, partialEntity);
   }
+  async batchUpdate(
+    creteria: string[] | FindConditions<PostOrderEntity>,
+    partialEntity: QueryDeepPartialEntity<PostOrderEntity>,
+  ) {
+    await this.postOrdersRepository.update(creteria, partialEntity);
+  }
 }

@@ -1,16 +1,52 @@
 import { Inject, Injectable, LoggerService } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
-import { Repository } from 'typeorm';
+import { DeepPartial, FindConditions, Repository } from 'typeorm';
+import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 
-import { PostOrderEntity } from '../../../entities/pipeline/post-order.entity';
+import { PublishSiteOrderEntity } from '../../../entities/pipeline/publish-site-order.entity';
+import { PipelineOrderTaskCommonState } from '../../../types/enum';
 
 @Injectable()
-export class PostOrdersBaseService {
+export class PublishSiteOrdersBaseService {
   constructor(
     @Inject(WINSTON_MODULE_NEST_PROVIDER)
     private readonly logger: LoggerService,
-    @InjectRepository(PostOrderEntity)
-    private readonly postOrdersRepository: Repository<PostOrderEntity>,
+    @InjectRepository(PublishSiteOrderEntity)
+    private readonly publishSiteOrdersRepository: Repository<PublishSiteOrderEntity>,
   ) {}
+
+  async getByPublishSiteOrderId(
+    publishSiteOrderId: number,
+  ): Promise<PublishSiteOrderEntity> {
+    return await this.publishSiteOrdersRepository.findOne(publishSiteOrderId);
+  }
+  async getByUserIdAndState(
+    userId: number,
+    state: PipelineOrderTaskCommonState,
+  ): Promise<PublishSiteOrderEntity> {
+    return await this.publishSiteOrdersRepository.findOne({
+      where: { userId, state },
+      order: { id: 'DESC' },
+    });
+  }
+
+  async getByPublishSiteTaskId(
+    publishSiteTaskId: string,
+  ): Promise<PublishSiteOrderEntity[]> {
+    return await this.publishSiteOrdersRepository.find({ publishSiteTaskId });
+  }
+
+  async save(
+    entity: DeepPartial<PublishSiteOrderEntity>,
+  ): Promise<PublishSiteOrderEntity> {
+    return await this.publishSiteOrdersRepository.save(entity);
+  }
+
+  async batchUpdate(
+    creteria: string[] | FindConditions<PublishSiteOrderEntity>,
+    partialEntity: QueryDeepPartialEntity<PublishSiteOrderEntity>,
+  ) {
+    await this.publishSiteOrdersRepository.update(creteria, partialEntity);
+  }
 }
