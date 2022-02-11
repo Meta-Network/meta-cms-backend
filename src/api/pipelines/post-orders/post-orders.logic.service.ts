@@ -328,7 +328,7 @@ export class PostOrdersLogicService {
       const postOrderId = postOrder.id;
       await this.postOrdersBaseService.update(postOrderId, {
         certificateStorageType,
-        certificateState: PipelineOrderTaskCommonState.PENDING,
+        certificateState: PipelineOrderTaskCommonState.DOING,
       });
       try {
         await this.doUploadCertificate(
@@ -385,9 +385,9 @@ export class PostOrdersLogicService {
       ),
       serverVerificationPayload,
     );
-    // TODO 跟进 arweave打包进度，这里标记为DOING，viewblock确认打包成功再标记为FINISHED
+    // 也考虑过跟进 arweave打包进度，先标记为DOING，viewblock确认打包成功再标记为FINISHED。意义不大，因为这个阶段已经可以确认data-viewer了
     await this.postOrdersBaseService.update(postOrderId, {
-      certificateState: PipelineOrderTaskCommonState.DOING,
+      certificateState: PipelineOrderTaskCommonState.FINISHED,
       certificateId: txId,
     });
   }
