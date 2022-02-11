@@ -149,6 +149,7 @@ export class SiteTasksLogicService {
         state: PipelineOrderTaskCommonState.PENDING,
       });
     }
+    // 把没发布/没发布成功的也都带上
     await this.siteOrdersLogicService.updatePublishSiteTaskId(
       siteConfigId,
       userId,
@@ -188,6 +189,9 @@ export class SiteTasksLogicService {
       workerSecret: publishSiteTaskEntity.workerSecret,
       state: PipelineOrderTaskCommonState.DOING,
     });
+    await this.siteOrdersLogicService.doingPublishSite(
+      publishSiteTaskEntity.id,
+    );
     await this.postOrdersLogicService.doingPublishPost(
       publishSiteTaskEntity.id,
     );
@@ -204,7 +208,10 @@ export class SiteTasksLogicService {
     });
     const publishSiteTaskEntity =
       await this.publishSiteTasksBaseService.getById(id);
-    this.postOrdersLogicService.finishPublishPost(
+    await this.siteOrdersLogicService.finishPublishSite(
+      publishSiteTaskEntity.id,
+    );
+    await this.postOrdersLogicService.finishPublishPost(
       publishSiteTaskEntity.userId,
       id,
     );
@@ -219,7 +226,8 @@ export class SiteTasksLogicService {
     });
     const publishSiteTaskEntity =
       await this.publishSiteTasksBaseService.getById(id);
-    this.postOrdersLogicService.failPublishPost(
+    await this.siteOrdersLogicService.failPublishSite(publishSiteTaskEntity.id);
+    await this.postOrdersLogicService.failPublishPost(
       publishSiteTaskEntity.userId,
       id,
     );

@@ -1,5 +1,6 @@
 import { MetaWorker } from '@metaio/worker-model2';
 import { Injectable } from '@nestjs/common';
+import { Service } from 'dockerode';
 
 import { GiteePublisherProviderEntity } from '../../../entities/provider/publisher/gitee.entity';
 import { GitHubPublisherProviderEntity } from '../../../entities/provider/publisher/github.entity';

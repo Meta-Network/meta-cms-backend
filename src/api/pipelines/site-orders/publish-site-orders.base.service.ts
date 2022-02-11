@@ -5,6 +5,7 @@ import { DeepPartial, FindConditions, Repository } from 'typeorm';
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 
 import { PublishSiteOrderEntity } from '../../../entities/pipeline/publish-site-order.entity';
+import { PipelineOrderTaskCommonState } from '../../../types/enum';
 
 @Injectable()
 export class PublishSiteOrdersBaseService {
@@ -15,7 +16,24 @@ export class PublishSiteOrdersBaseService {
     private readonly publishSiteOrdersRepository: Repository<PublishSiteOrderEntity>,
   ) {}
 
-  async getByPublishSiteTaskId(publishSiteTaskId: string) {
+  async getByPublishSiteOrderId(
+    publishSiteOrderId: number,
+  ): Promise<PublishSiteOrderEntity> {
+    return await this.publishSiteOrdersRepository.findOne(publishSiteOrderId);
+  }
+  async getByUserIdAndState(
+    userId: number,
+    state: PipelineOrderTaskCommonState,
+  ): Promise<PublishSiteOrderEntity> {
+    return await this.publishSiteOrdersRepository.findOne({
+      where: { userId, state },
+      order: { id: 'DESC' },
+    });
+  }
+
+  async getByPublishSiteTaskId(
+    publishSiteTaskId: string,
+  ): Promise<PublishSiteOrderEntity[]> {
     return await this.publishSiteOrdersRepository.find({ publishSiteTaskId });
   }
 

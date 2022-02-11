@@ -6,14 +6,19 @@ import {
 import { Inject, Injectable, LoggerService } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
+import { In } from 'typeorm';
 
 import { defaultPostBuilder } from '../../../configs';
 import { DeploySiteOrderEntity } from '../../../entities/pipeline/deploy-site-order.entity';
 import { PublishSiteOrderEntity } from '../../../entities/pipeline/publish-site-order.entity';
+import { AccessDeniedException } from '../../../exceptions';
 import { PipelineOrderTaskCommonState, SiteStatus } from '../../../types/enum';
 import { SiteConfigLogicService } from '../../site/config/logicService';
 import { PostOrderRequestDto } from '../dto/post-order.dto';
-import { DeploySiteOrderRequestDto } from '../dto/site-order.dto';
+import {
+  DeploySiteOrderRequestDto,
+  PublishSiteOrderInQueueResponseDto,
+} from '../dto/site-order.dto';
 import { PostOrdersLogicService } from '../post-orders/post-orders.logic.service';
 import { PostTasksLogicService } from '../post-tasks/post-tasks.logic.service';
 import { ServerVerificationBaseService } from '../server-verification/server-verification.base.service';
@@ -120,16 +125,51 @@ export class SiteOrdersLogicService {
     });
   }
 
+  async validateAndGetPublishSiteOrder(
+    publishSiteOrderId: number,
+    userId: number,
+  ): Promise<PublishSiteOrderEntity> {
+    const publishSiteOrderEntity =
+      await this.publishSiteOrdersBaseService.getByPublishSiteOrderId(
+        publishSiteOrderId,
+      );
+    if (publishSiteOrderEntity?.userId !== userId) {
+      throw new AccessDeniedException('access denied, user id inconsistent');
+    }
+    return publishSiteOrderEntity;
+  }
+
+  async getUserPublishSiteOrdersInQueue(
+    userId: number,
+  ): Promise<PublishSiteOrderInQueueResponseDto> {
+    const pending = await this.publishSiteOrdersBaseService.getByUserIdAndState(
+      userId,
+      PipelineOrderTaskCommonState.PENDING,
+    );
+    const doing = await this.publishSiteOrdersBaseService.getByUserIdAndState(
+      userId,
+      PipelineOrderTaskCommonState.DOING,
+    );
+    return {
+      pending,
+      doing,
+    };
+  }
+
   async updatePublishSiteTaskId(
     siteConfigId: number,
     userId: number,
     publishSiteTaskId: string,
   ) {
+    // 本来有判断publishSiteTaskId为空，目前看来是不需要的。因为就算之前关联上了，那个任务如果失败了的话，后续有成功的publishTask，一样会全部带出去，也就是说关联关系就是会更新的。那么应该根据状态来判断
     await this.publishSiteOrdersBaseService.batchUpdate(
       {
         siteConfigId,
         userId,
-        publishSiteTaskId: '',
+        state: In([
+          PipelineOrderTaskCommonState.PENDING,
+          PipelineOrderTaskCommonState.FAILED,
+        ]),
       },
       { publishSiteTaskId },
     );
@@ -161,5 +201,38 @@ export class SiteOrdersLogicService {
 
   getDefaultPostMetadata(): PostMetadata {
     return defaultPostBuilder() as PostMetadata;
+  }
+
+  async doingPublishSite(publishSiteTaskId: string) {
+    await this.publishSiteOrdersBaseService.batchUpdate(
+      {
+        publishSiteTaskId,
+      },
+      {
+        state: PipelineOrderTaskCommonState.DOING,
+      },
+    );
+  }
+
+  async finishPublishSite(publishSiteTaskId: string) {
+    await this.publishSiteOrdersBaseService.batchUpdate(
+      {
+        publishSiteTaskId,
+      },
+      {
+        state: PipelineOrderTaskCommonState.FINISHED,
+      },
+    );
+  }
+
+  async failPublishSite(publishSiteTaskId: string) {
+    await this.publishSiteOrdersBaseService.batchUpdate(
+      {
+        publishSiteTaskId,
+      },
+      {
+        state: PipelineOrderTaskCommonState.FAILED,
+      },
+    );
   }
 }

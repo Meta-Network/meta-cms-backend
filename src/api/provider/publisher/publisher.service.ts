@@ -40,6 +40,7 @@ export interface SpecificPublisherService {
   getPublisherConfigById(
     sid: number,
   ): Promise<GitHubPublisherProviderEntity | GiteePublisherProviderEntity>;
+
   getGitTreeList(info: MetaWorker.Info.Git): Promise<GitTreeInfo[]>;
   getGitBlobsByTreeList(
     info: MetaWorker.Info.Git,

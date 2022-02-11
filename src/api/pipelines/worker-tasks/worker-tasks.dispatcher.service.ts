@@ -56,7 +56,6 @@ export class WorkerTasksDispatcherService {
     private readonly postTasksLogicService: PostTasksLogicService,
     private readonly siteOrdersLogicService: SiteOrdersLogicService,
     private readonly siteTasksLogicService: SiteTasksLogicService,
-    private readonly siteConfigLogicService: SiteConfigLogicService,
     private readonly siteService: WorkerModel2SiteService,
     private readonly storageService: WorkerModel2StorageService,
     private readonly publisherService: WorkerModel2PublisherService,
@@ -142,7 +141,7 @@ export class WorkerTasksDispatcherService {
         serverVerificationMetadataRefer: postOrderEntity.certificateId,
         createdAt: iso8601ToDate(postOrderEntity.createdAt).toISOString(),
         updatedAt: iso8601ToDate(postOrderEntity.updatedAt).toISOString(),
-      };
+      } as MetaWorker.Info.Post;
       posts.push(post);
     }
     const { postConfig, template } = await this.generatePostConfigAndTemplate(
@@ -150,6 +149,7 @@ export class WorkerTasksDispatcherService {
       posts,
       siteConfigId,
     );
+
     postTaskEntity.workerName = this.getWorkerName();
     postTaskEntity.workerSecret = this.newWorkerSecret();
     // Change task state to Doing
@@ -384,7 +384,6 @@ export class WorkerTasksDispatcherService {
       await this.siteTasksLogicService.finishPublishSiteTask(
         taskConfig.task.taskId,
       );
-      //TODO dns 等建站成功后的动作
     }
     //TODO 异步拉动下一个任务
   }
