@@ -444,19 +444,26 @@ export class PostOrdersLogicService {
       postOrderId,
     );
     // 失败会引起pubishState变化，posts计数会发生变化，所以需要触发对应的事件
+    const internalRealTimeMessage = new InternalRealTimeMessage({
+      userId: postOrderEntity.userId,
+      message: InternalRealTimeEvent.POST_STATE_UPDATED,
+      data: [
+        {
+          id: postOrderId,
+          submit: RealTimeEventState.failed,
+          publish: RealTimeEventState.failed,
+        },
+      ],
+    });
+    this.logger.verbose(
+      `Fail submit post internal real time message ${JSON.stringify(
+        internalRealTimeMessage,
+      )} `,
+      this.constructor.name,
+    );
     this.eventEmitter.emit(
       InternalRealTimeEvent.POST_STATE_UPDATED,
-      new InternalRealTimeMessage({
-        userId: postOrderEntity.userId,
-        message: InternalRealTimeEvent.POST_STATE_UPDATED,
-        data: [
-          {
-            id: postOrderId,
-            submit: RealTimeEventState.failed,
-            publish: RealTimeEventState.failed,
-          },
-        ],
-      }),
+      internalRealTimeMessage,
     );
   }
 
@@ -514,7 +521,9 @@ export class PostOrdersLogicService {
         })),
       });
       this.logger.verbose(
-        `Finish publish post internal real time message ${JSON.stringify(
+        `Finish publish ${
+          finishPublishPostOrderEntities.length
+        } post(s) internal real time message ${JSON.stringify(
           internalRealTimeMessage,
         )} `,
         this.constructor.name,

@@ -12,11 +12,10 @@ import { v4 as uuid } from 'uuid';
 import { DeploySiteOrderEntity } from '../../../entities/pipeline/deploy-site-order.entity';
 import { DeploySiteTaskEntity } from '../../../entities/pipeline/deploy-site-task.entity';
 import { PublishSiteTaskEntity } from '../../../entities/pipeline/publish-site-task.entity';
-import { SiteConfigEntity } from '../../../entities/siteConfig.entity';
 import { DataNotFoundException } from '../../../exceptions';
 import { UCenterUser } from '../../../types';
 import { PipelineOrderTaskCommonState, SiteStatus } from '../../../types/enum';
-import { DnsService } from '../../provider/dns/dns.service';
+import { MetaNetworkService } from '../../microservices/meta-network/meta-network.service';
 import { WorkerModel2DnsService } from '../../provider/dns/worker-model2.dns.service';
 import { WorkerModel2PublisherService } from '../../provider/publisher/worker-model2.publisher.service';
 import { WorkerModel2StorageService } from '../../provider/storage/worker-model2.service';
@@ -44,6 +43,7 @@ export class SiteTasksLogicService {
     private readonly storageService: WorkerModel2StorageService,
     private readonly publisherService: WorkerModel2PublisherService,
     private readonly dnsService: WorkerModel2DnsService,
+    private readonly metaNetworkService: MetaNetworkService,
   ) {}
 
   async generateDeploySiteTask(
@@ -229,10 +229,26 @@ export class SiteTasksLogicService {
       publishSiteTaskEntity.userId,
       id,
     );
-    await this.siteConfigLogicService.updateSiteConfigStatus(
+    const config = await this.siteConfigLogicService.updateSiteConfigStatus(
       publishSiteTaskEntity.siteConfigId,
       SiteStatus.Published,
     );
+    this.logger.verbose(
+      `Site published ${publishTaskConfig.site.domain}.notify Meta-Network-BE`,
+      this.constructor.name,
+    );
+
+    if (Number.isNaN(config.lastPublishedAt.getTime())) {
+      this.metaNetworkService.notifyMetaSpaceSiteCreated({
+        ...publishTaskConfig.site,
+        userId: publishSiteTaskEntity.userId,
+      });
+    } else {
+      this.metaNetworkService.notifyMetaSpaceSitePublished({
+        ...publishTaskConfig.site,
+        userId: publishSiteTaskEntity.userId,
+      });
+    }
   }
   async failPublishSiteTask(id: string) {
     await this.publishSiteTasksBaseService.update(id, {

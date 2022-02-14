@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { DeploySiteTaskEntity } from '../../../entities/pipeline/deploy-site-task.entity';
 import { PublishSiteTaskEntity } from '../../../entities/pipeline/publish-site-task.entity';
+import { MetaNetworkModule } from '../../microservices/meta-network/meta-network.module';
 import { DnsModule } from '../../provider/dns/dns.module';
 import { PublisherModule } from '../../provider/publisher/publisher.module';
 import { StorageModule } from '../../provider/storage/module';
@@ -27,6 +28,7 @@ import { SiteTasksLogicService } from './site-tasks.logic.service';
     PublisherModule,
     SiteModule,
     DnsModule,
+    MetaNetworkModule,
   ],
   controllers: [SiteTasksController],
   providers: [
