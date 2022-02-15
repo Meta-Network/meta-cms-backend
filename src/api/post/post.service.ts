@@ -18,6 +18,7 @@ import {
   paginate,
   Pagination,
 } from 'nestjs-typeorm-paginate';
+import path from 'path';
 import { lastValueFrom } from 'rxjs';
 import { PartialDeep } from 'type-fest';
 import { Repository } from 'typeorm';
@@ -425,7 +426,11 @@ export class PostService {
     );
     const parsed = blobList.map((blob) => {
       if (blob.content && blob.encoding === 'utf-8') {
-        return yfmParse(blob.content) as HexoFrontMatterParseObject;
+        const parsed = yfmParse(blob.content);
+        return {
+          ...parsed,
+          slug: blob.path ? path.parse(blob.path).name : '',
+        } as HexoFrontMatterParseObject;
       }
     });
     return parsed;

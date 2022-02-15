@@ -86,6 +86,7 @@ export type GitBlobInfo = {
   sha?: string;
   size?: number;
   node_id?: string;
+  path?: string;
 };
 
 export type GetGitTreeResult = {

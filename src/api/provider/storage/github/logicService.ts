@@ -233,15 +233,18 @@ export class GitHubStorageLogicService implements SpecificStorageService {
     treeList: GitTreeInfo[],
   ): Promise<GitBlobInfo[]> {
     const { token, username, reponame } = info;
-    const getBlobs = treeList.map(
-      async (blob) =>
-        await this.octokitService.getGitBlob(
-          token,
-          username,
-          reponame,
-          blob.sha,
-        ),
-    );
+    const getBlobs = treeList.map(async (blob) => {
+      const blobInfo = await this.octokitService.getGitBlob(
+        token,
+        username,
+        reponame,
+        blob.sha,
+      );
+      return {
+        ...blobInfo,
+        path: blob.path,
+      };
+    });
     const blobList = await Promise.all(getBlobs);
     return blobList;
   }
