@@ -1,4 +1,3 @@
-import { PostMetadata } from '@metaio/meta-signature-util-v2';
 import {
   ApiHideProperty,
   ApiProperty,
@@ -54,6 +53,7 @@ export class PostOrderEntity {
     example: 1,
   })
   readonly userId: number;
+
   @ApiHideProperty()
   @ApiProperty({
     description: '文章提交状态',
@@ -67,6 +67,7 @@ export class PostOrderEntity {
     default: PipelineOrderTaskCommonState.PENDING,
   })
   submitState: PipelineOrderTaskCommonState;
+
   @ApiHideProperty()
   @ApiResponseProperty({
     example: PipelineOrderTaskCommonState.PENDING,
@@ -93,6 +94,7 @@ export class PostOrderEntity {
       '0xa1983a9ad9bf4a305af98c28055af9e6d49927b88653aef10f36c78d7c6fa69cf6a246e04e5d8ff2243e4f16bf4b1ce81db1118df640d685d3d1a3bd6211a702',
   })
   serverVerificationId?: string;
+
   @ApiHideProperty()
   @ApiProperty({
     description: '存证仓储类型',
@@ -107,6 +109,7 @@ export class PostOrderEntity {
     default: '',
   })
   certificateStorageType?: MetadataStorageType;
+
   @ApiHideProperty()
   @ApiProperty({
     description:
@@ -121,6 +124,7 @@ export class PostOrderEntity {
     default: '',
   })
   certificateId?: string;
+
   @ApiHideProperty()
   @ApiProperty({
     description:
@@ -132,6 +136,7 @@ export class PostOrderEntity {
     default: '',
   })
   certificateState?: PipelineOrderTaskCommonState;
+
   @Index()
   @Column({
     comment: 'The id of the task to process this order. Many to one',
@@ -146,6 +151,7 @@ export class PostOrderEntity {
     example: 'wt4site-123-create-posts-90c618b6-a3e8-4958-8e9e-93ec103a2a45',
   })
   postTaskId?: string;
+
   @Index()
   @Column({
     comment: 'The id of the order to publish site for this post. Many to one',
@@ -160,6 +166,7 @@ export class PostOrderEntity {
     example: 123,
   })
   publishSiteOrderId?: number;
+
   @Index()
   @Column({
     comment: 'The id oft the task to publish site for this post. Many to one',
@@ -174,6 +181,7 @@ export class PostOrderEntity {
     example: 'wt4site-123-publsh-site-8bde738e-f25a-40cb-812d-ed6b2c09e28e',
   })
   publishSiteTaskId?: string;
+
   @ApiHideProperty()
   @ApiProperty({
     description: '文章元数据',

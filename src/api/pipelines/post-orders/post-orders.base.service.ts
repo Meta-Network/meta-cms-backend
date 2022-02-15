@@ -73,6 +73,7 @@ export class PostOrdersBaseService {
   ): Promise<PostOrderEntity> {
     return await this.postOrdersRepository.findOne(id, options);
   }
+
   count(userId: number) {
     return this.postOrdersRepository
       .createQueryBuilder()
@@ -95,6 +96,7 @@ export class PostOrdersBaseService {
   ) {
     await this.postOrdersRepository.update(postOrderId, partialEntity);
   }
+
   async batchUpdate(
     creteria: string[] | FindConditions<PostOrderEntity>,
     partialEntity: QueryDeepPartialEntity<PostOrderEntity>,
