@@ -33,6 +33,10 @@ import {
   PostOrderRequestDto,
   PostOrderResponseDto,
 } from '../dto/post-order.dto';
+import {
+  GENERATE_PUBLISH_SITE_ORDER_EVENT,
+  GeneratePublishSiteOrderEvent,
+} from '../event/site-order.event';
 import { ServerVerificationBaseService } from '../server-verification/server-verification.base.service';
 import { PostOrdersBaseService } from './post-orders.base.service';
 
@@ -54,15 +58,21 @@ export class PostOrdersLogicService {
     userId: number,
     options: IPaginationOptions<IPaginationMeta>,
   ) {
-    return await this.postOrdersBaseService.pagi(options, {
-      where: {
-        userId,
-      },
-      order: {
-        createdAt: 'DESC',
-      },
-      relations: ['postMetadata'],
-    });
+    return await this.postOrdersBaseService.pagiByQueryBuilder(
+      this.postOrdersBaseService
+        .createQueryBuilder()
+        .leftJoinAndSelect('postOrderEntity.postMetadata', 'postMetadata')
+        .where(`postOrderEntity.userId = :userId`, { userId })
+
+        .orderBy(
+          `(CASE WHEN postOrderEntity.publishState = 'pending' THEN 3 WHEN postOrderEntity.publishState = 'doing' THEN 1 WHEN postOrderEntity.publishState = 'failed' THEN 2 WHEN postOrderEntity.publishState ='finished' THEN 4 ELSE null END)`,
+          'ASC',
+        )
+
+        .addOrderBy('postOrderEntity.createdAt', 'ASC'),
+
+      options,
+    );
   }
 
   async countUserPostOrders(
@@ -97,19 +107,40 @@ export class PostOrdersLogicService {
     userId: number,
     options: IPaginationOptions<IPaginationMeta>,
   ) {
-    return await this.postOrdersBaseService.pagi(options, {
-      where: {
-        userId,
-        publishState: In([
-          PipelineOrderTaskCommonState.PENDING,
-          PipelineOrderTaskCommonState.DOING,
-        ]),
-      },
-      order: {
-        createdAt: 'DESC',
-      },
-      relations: ['postMetadata'],
-    });
+    return await this.postOrdersBaseService.pagiByQueryBuilder(
+      this.postOrdersBaseService
+        .createQueryBuilder()
+        .leftJoinAndSelect('postOrderEntity.postMetadata', 'postMetadata')
+        .where(`postOrderEntity.userId = :userId`, { userId })
+        .andWhere(`postOrderEntity.publishState In (:...publishStates)`, {
+          publishStates: [
+            PipelineOrderTaskCommonState.PENDING,
+            PipelineOrderTaskCommonState.DOING,
+          ],
+        })
+        .orderBy(
+          `(CASE WHEN postOrderEntity.publishState = 'pending' THEN 3 WHEN postOrderEntity.publishState = 'doing' THEN 1 WHEN postOrderEntity.publishState = 'failed' THEN 2 WHEN postOrderEntity.publishState ='finished' THEN 4 ELSE null END)`,
+          'ASC',
+        )
+
+        .addOrderBy('postOrderEntity.createdAt', 'ASC'),
+
+      options,
+    );
+    //   options, {
+    //   where: {
+    //     userId,
+    //     publishState: In([
+    //       PipelineOrderTaskCommonState.PENDING,
+    //       PipelineOrderTaskCommonState.DOING,
+    //     ]),
+    //   },
+    //   order: {
+    //     publishState: 'ASC',
+    //     createdAt: 'ASC',
+    //   },
+    //   relations: ['postMetadata'],
+    // });
   }
   async pagiUserPublishedPostOrders(
     userId: number,
@@ -139,6 +170,7 @@ export class PostOrdersLogicService {
     });
   }
   async retryUserFailedPostOrders(userId: number) {
+    this.logger.verbose(`Retry user failed post orders userId ${userId}`);
     (await this.listUserFailedPostOrders(userId)).forEach((postOrderEntity) => {
       this.retryPostOrder(userId, postOrderEntity.id).catch((e) =>
         this.logger.error(
@@ -218,6 +250,7 @@ export class PostOrdersLogicService {
 
   async retryPostOrder(userId: number, id: string) {
     let postStateUpdatedPayload;
+    this.logger.verbose(`Retry post order userId ${userId} postOrderId ${id}`);
     // 只有publishState=failed才可以重试
     const postOrder = await this.postOrdersBaseService.getById(id, {
       relations: ['postMetadata'],
@@ -269,13 +302,22 @@ export class PostOrdersLogicService {
     // 发布失败，需要重新处理发布。相当于从提交成功重新开始
     else if (PipelineOrderTaskCommonState.FAILED === postOrder.publishState) {
       postOrder.publishState = PipelineOrderTaskCommonState.PENDING;
-      //TODO 发出事件，通知基于此postOrder对应的postTask创建publishSiteOrder
+      //TODO 考虑过发出事件，通知基于此postOrder对应的postTask创建publishSiteOrder。
+      //这里没有产生新的postTask，也就是不需要重新提交，postTaskId的关联不需要变，但是要随着新的发布出去。所以这里等于要触发一次发布
       postOrder.publishSiteOrderId = 0;
       postOrder.publishSiteTaskId = '';
       postStateUpdatedPayload = {
         id: postOrder.id,
         publish: RealTimeEventState.pending,
       };
+      const { postTaskId } = postOrder;
+      this.logger.verbose(
+        `Retry publish site event userId ${userId} postTaskId ${postTaskId}`,
+      );
+      this.eventEmitter.emit(GENERATE_PUBLISH_SITE_ORDER_EVENT, {
+        userId,
+        postTaskId,
+      } as GeneratePublishSiteOrderEvent);
     }
     // 没有失败状态，不用重试
     else {
@@ -464,6 +506,67 @@ export class PostOrdersLogicService {
     this.eventEmitter.emit(
       InternalRealTimeEvent.POST_STATE_UPDATED,
       internalRealTimeMessage,
+    );
+  }
+
+  async failSubmitPostByPostTaskId(postTaskId: string) {
+    this.logger.verbose(
+      `Fail submit post postTaskId ${postTaskId} `,
+      this.constructor.name,
+    );
+    await this.postOrdersBaseService.batchUpdate(
+      {
+        postTaskId,
+
+        submitState: PipelineOrderTaskCommonState.DOING,
+      },
+      {
+        submitState: PipelineOrderTaskCommonState.FAILED,
+        publishState: PipelineOrderTaskCommonState.FAILED,
+      },
+    );
+
+    // 失败会引起pubishState变化，posts计数会发生变化，所以需要触发对应的事件
+    const postOrderEntities = await this.postOrdersBaseService.find({
+      where: { postTaskId },
+    });
+    if (postOrderEntities?.length > 0) {
+      const internalRealTimeMessage = new InternalRealTimeMessage({
+        userId: postOrderEntities[0].userId,
+        message: InternalRealTimeEvent.POST_STATE_UPDATED,
+        data: postOrderEntities.map((postOrderEntity) => ({
+          id: postOrderEntity.id,
+          submit: RealTimeEventState.failed,
+          publish: RealTimeEventState.failed,
+        })),
+      });
+      this.logger.verbose(
+        `Fail submit ${
+          postOrderEntities?.length
+        } posts internal real time message ${JSON.stringify(
+          internalRealTimeMessage,
+        )} `,
+        this.constructor.name,
+      );
+      this.eventEmitter.emit(
+        InternalRealTimeEvent.POST_STATE_UPDATED,
+        internalRealTimeMessage,
+      );
+    }
+  }
+
+  async updatePublishOrderId(postTaskId: string, publishSiteOrderId: number) {
+    this.logger.verbose(
+      `Update post publishSiteOrderId to ${publishSiteOrderId} with postTaskId ${postTaskId} `,
+      this.constructor.name,
+    );
+    await this.postOrdersBaseService.batchUpdate(
+      {
+        postTaskId,
+      },
+      {
+        publishSiteOrderId,
+      },
     );
   }
 

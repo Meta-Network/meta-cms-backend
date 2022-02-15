@@ -9,11 +9,20 @@ import {
   Patch,
   Post,
 } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiProperty, ApiTags } from '@nestjs/swagger';
 
 import { BasicAuth, SkipUCenterAuth, User } from '../../../decorators';
 import { WorkerModel2TaskConfig } from '../../../types/worker-model2';
 import { WorkerTasksDispatcherService } from './worker-tasks.dispatcher.service';
+
+export class WorkerTaskDispatchDto {
+  @ApiProperty({
+    description: '是否自动失败',
+    required: false,
+    default: false,
+  })
+  autoFailed?: boolean;
+}
 
 @ApiTags('pipeline')
 @Controller('v1/pipelines/worker-tasks')
@@ -52,6 +61,7 @@ export class WorkerTasksController {
   async deploySite(
     @User('id', ParseIntPipe) userId: number,
     @Param('siteConfigId', ParseIntPipe) siteConfigId: number,
+    @Body() workerTaskDispatchDto: WorkerTaskDispatchDto,
   ) {
     if (await this.workerTasksDispatcherService.hasTaskInProgress(userId)) {
       throw new ConflictException('Having Task in progreses');
@@ -59,6 +69,7 @@ export class WorkerTasksController {
     return await this.workerTasksDispatcherService.dispatchDeploySiteTask(
       siteConfigId,
       userId,
+      workerTaskDispatchDto.autoFailed,
     );
   }
 
@@ -66,6 +77,7 @@ export class WorkerTasksController {
   async createPosts(
     @User('id', ParseIntPipe) userId: number,
     @Param('siteConfigId', ParseIntPipe) siteConfigId: number,
+    @Body() workerTaskDispatchDto: WorkerTaskDispatchDto,
   ) {
     if (await this.workerTasksDispatcherService.hasTaskInProgress(userId)) {
       throw new ConflictException('Having Task in progreses');
@@ -73,6 +85,7 @@ export class WorkerTasksController {
     return await this.workerTasksDispatcherService.dispatchCreatePostsTask(
       siteConfigId,
       userId,
+      workerTaskDispatchDto.autoFailed,
     );
   }
 
@@ -80,6 +93,7 @@ export class WorkerTasksController {
   async publishSite(
     @User('id', ParseIntPipe) userId: number,
     @Param('siteConfigId', ParseIntPipe) siteConfigId: number,
+    @Body() workerTaskDispatchDto: WorkerTaskDispatchDto,
   ) {
     if (await this.workerTasksDispatcherService.hasTaskInProgress(userId)) {
       throw new ConflictException('Having Task in progreses');
@@ -91,6 +105,7 @@ export class WorkerTasksController {
     return await this.workerTasksDispatcherService.dispatchPublishSiteTask(
       siteConfigId,
       userId,
+      workerTaskDispatchDto.autoFailed,
     );
   }
 }

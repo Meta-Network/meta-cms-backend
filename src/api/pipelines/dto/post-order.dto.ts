@@ -4,6 +4,7 @@ import {
   BaseSignatureMetadata,
 } from '@metaio/meta-signature-util-v2';
 import { ApiProperty } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import {
   IsArray,
   IsHexadecimal,
@@ -14,6 +15,7 @@ import {
   IsUrl,
   MaxLength,
   MinLength,
+  ValidateNested,
 } from 'class-validator';
 
 import { PostOrderEntity } from '../../../entities/pipeline/post-order.entity';
@@ -289,8 +291,12 @@ export class AuthorPostSignServerVerificationDto
 }
 
 export class PostOrderRequestDto {
+  @ValidateNested()
+  @Type(() => AuthorPostDigestDto)
   @IsNotEmptyObject()
   authorPostDigest: AuthorPostDigestDto;
+  @ValidateNested()
+  @Type(() => AuthorPostSignDto)
   @IsNotEmptyObject()
   authorPostSign: AuthorPostSignDto;
   @ApiProperty({

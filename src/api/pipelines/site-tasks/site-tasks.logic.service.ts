@@ -376,6 +376,7 @@ export class SiteTasksLogicService {
   ) {
     this.logger.verbose(
       `Update DNS siteConfigId ${publishConfig.site.configId} ${publisherType}`,
+      this.constructor.name,
     );
     const targetOriginDomain =
       await this.publisherService.getTargetOriginDomain(

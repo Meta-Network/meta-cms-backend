@@ -120,7 +120,25 @@ export class PostTasksLogicService {
     await this.postTasksBaseService.update(id, {
       state: PipelineOrderTaskCommonState.FAILED,
     });
-    // post order submit state 是单个处理的，不在这里
+    // post order submit state 是单个处理的，但如果整体失败了，也是需要整体更新的
+    await this.postOrdersLogicService.failSubmitPostByPostTaskId(id);
+  }
+
+  async updatePublishSiteOrderId(
+    postTaskId: string,
+    publishSiteOrderId: number,
+  ) {
+    this.logger.verbose(
+      `Update post publishSiteOrderId to ${publishSiteOrderId} with postTaskId ${postTaskId} `,
+      this.constructor.name,
+    );
+    await this.postTasksBaseService.update(postTaskId, {
+      publishSiteOrderId,
+    });
+    await this.postOrdersLogicService.updatePublishOrderId(
+      postTaskId,
+      publishSiteOrderId,
+    );
   }
 
   async updatePublishSiteTaskId(
