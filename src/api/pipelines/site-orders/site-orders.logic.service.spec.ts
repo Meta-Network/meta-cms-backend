@@ -15,6 +15,7 @@ import { PipelineOrderTaskCommonState } from '../../../types/enum';
 import { SiteConfigLogicService } from '../../site/config/logicService';
 import { DeploySiteOrderRequestDto } from '../dto/site-order.dto';
 import { PostOrdersLogicService } from '../post-orders/post-orders.logic.service';
+import { PostTasksLogicService } from '../post-tasks/post-tasks.logic.service';
 import { ServerVerificationBaseService } from '../server-verification/server-verification.base.service';
 import { DeploySiteOrdersBaseService } from './deploy-site-orders.base.service';
 import { PublishSiteOrdersBaseService } from './publish-site-orders.base.service';
@@ -35,6 +36,7 @@ describe('SiteOrdersLogicService', () => {
   // );
   let siteConfigLogicService;
   let postOrdersLogicService;
+  let postTasksLogicService;
   //  = new PostOrdersLogicService(
   //   logger,
   //   configService,
@@ -286,6 +288,19 @@ Our products are future-proof and passionately moving towards the "creator econo
             ),
         },
         {
+          provide: PostTasksLogicService,
+          inject: [WINSTON_MODULE_NEST_PROVIDER, PostOrdersLogicService],
+          useFactory: (logger, postOrdersLogicService) =>
+            new PostTasksLogicService(
+              logger,
+              undefined,
+              postOrdersLogicService,
+              undefined,
+              undefined,
+              undefined,
+            ),
+        },
+        {
           provide: SiteConfigLogicService,
           inject: [ConfigService],
           useFactory: (config) =>
@@ -310,6 +325,9 @@ Our products are future-proof and passionately moving towards the "creator econo
     );
     postOrdersLogicService = module.get<PostOrdersLogicService>(
       PostOrdersLogicService,
+    );
+    postTasksLogicService = module.get<PostTasksLogicService>(
+      PostTasksLogicService,
     );
     siteConfigLogicService = module.get<SiteConfigLogicService>(
       SiteConfigLogicService,

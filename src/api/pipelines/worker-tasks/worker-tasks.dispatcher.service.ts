@@ -64,6 +64,7 @@ export class WorkerTasksDispatcherService {
   async dispatchDeploySiteTask(
     siteConfigId: number,
     userId: number,
+    autoFailed?: boolean,
   ): Promise<DeploySiteTaskEntity> {
     this.logger.verbose(
       `Dispatch deploy site task siteConfigId ${siteConfigId} userId ${userId}`,
@@ -91,6 +92,7 @@ export class WorkerTasksDispatcherService {
       MetaWorker.Enums.WorkerTaskMethod.DEPLOY_SITE,
       deployConfig.template,
       deployConfig,
+      autoFailed,
     );
     // 处理完成不在这里，而是在report待worker上报后一处理
     return deploySiteTaskEntity;
@@ -99,6 +101,7 @@ export class WorkerTasksDispatcherService {
   async dispatchCreatePostsTask(
     siteConfigId: number,
     userId: number,
+    autoFailed?: boolean,
   ): Promise<PostTaskEntity> {
     this.logger.verbose(
       `Dispatch create posts task siteConfigId ${siteConfigId} userId ${userId}`,
@@ -151,6 +154,7 @@ export class WorkerTasksDispatcherService {
       MetaWorker.Enums.WorkerTaskMethod.CREATE_POSTS,
       template,
       postConfig,
+      autoFailed,
     );
     return postTaskEntity;
   }
@@ -169,7 +173,11 @@ export class WorkerTasksDispatcherService {
     );
   }
 
-  async dispatchPublishSiteTask(siteConfigId: number, userId: number) {
+  async dispatchPublishSiteTask(
+    siteConfigId: number,
+    userId: number,
+    autoFailed?: boolean,
+  ) {
     this.logger.verbose(
       `Dispatch publish site task siteConfigId ${siteConfigId} userId ${userId}`,
       this.constructor.name,
@@ -202,6 +210,7 @@ export class WorkerTasksDispatcherService {
       MetaWorker.Enums.WorkerTaskMethod.PUBLISH_SITE,
       template,
       publishConfig,
+      autoFailed,
     );
 
     // 处理完成不在这里，由worker来调用finishTask/failTask
@@ -220,6 +229,7 @@ export class WorkerTasksDispatcherService {
     workerTaskMethod: MetaWorker.Enums.WorkerTaskMethod,
     template: MetaWorker.Info.Template,
     cfg: WorkerModel2Config,
+    autoFailed?: boolean,
   ) {
     // console.log(cfg);
     if (!workerTaskMethod) {
@@ -232,20 +242,24 @@ export class WorkerTasksDispatcherService {
       cfg,
     );
 
-    try {
-      // const jobId = uuid();
-      // const workerName = `meta-cms-worker-${workerNo}`;
-      const { workerSecret } = workerTask;
-      // 这里会包含实际执行的时间?
-      return await this.workerTasksQueue.add(jobDetail, {
-        jobId: workerSecret,
-      });
-      // return await this.workerTasksJobProcessor.process(job);
-    } catch (err) {
-      this.logger.error(`Pipeline Exception: ${err}`, this.constructor.name);
-      throw new InternalServerErrorException('Pipeline Exception');
-    } finally {
-      this.logger.verbose(`Dispatch task finished`, this.constructor.name);
+    if (autoFailed) {
+      await this.failTask(jobDetail.taskConfig);
+    } else {
+      try {
+        // const jobId = uuid();
+        // const workerName = `meta-cms-worker-${workerNo}`;
+        const { workerSecret } = workerTask;
+        // 这里会包含实际执行的时间?
+        return await this.workerTasksQueue.add(jobDetail, {
+          jobId: workerSecret,
+        });
+        // return await this.workerTasksJobProcessor.process(job);
+      } catch (err) {
+        this.logger.error(`Pipeline Exception: ${err}`, this.constructor.name);
+        throw new InternalServerErrorException('Pipeline Exception');
+      } finally {
+        this.logger.verbose(`Dispatch task finished`, this.constructor.name);
+      }
     }
   }
   initMetaWorkerTasksJobDetail(

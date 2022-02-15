@@ -5,6 +5,7 @@ import {
 } from '@metaio/meta-signature-util-v2';
 import { Inject, Injectable, LoggerService } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { OnEvent } from '@nestjs/event-emitter';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { In } from 'typeorm';
 
@@ -19,6 +20,10 @@ import {
   DeploySiteOrderRequestDto,
   PublishSiteOrderInQueueResponseDto,
 } from '../dto/site-order.dto';
+import {
+  GENERATE_PUBLISH_SITE_ORDER_EVENT,
+  GeneratePublishSiteOrderEvent,
+} from '../event/site-order.event';
 import { PostOrdersLogicService } from '../post-orders/post-orders.logic.service';
 import { PostTasksLogicService } from '../post-tasks/post-tasks.logic.service';
 import { ServerVerificationBaseService } from '../server-verification/server-verification.base.service';
@@ -123,6 +128,19 @@ export class SiteOrdersLogicService {
       userId,
       siteConfigId: defaultSiteConfig.id,
     });
+  }
+
+  @OnEvent(GENERATE_PUBLISH_SITE_ORDER_EVENT)
+  async handleGeneratePublishSiteOrderEvent(
+    generatePublishSiteOrderEvent: GeneratePublishSiteOrderEvent,
+  ) {
+    const publishSiteOrderEntity = await this.generatePublishSiteOrder(
+      generatePublishSiteOrderEvent.userId,
+    );
+    await this.postTasksLogicService.updatePublishSiteOrderId(
+      generatePublishSiteOrderEvent.postTaskId,
+      publishSiteOrderEntity.id,
+    );
   }
 
   async validateAndGetPublishSiteOrder(

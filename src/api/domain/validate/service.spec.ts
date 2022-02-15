@@ -60,7 +60,7 @@ describe('DomainValidateService', () => {
 
   it('"metanetwork" should be a reserve prefix', async () => {
     const prefix = 'metanetwork';
-    const data = await service.validateMetaSpacePrefix(prefix);
+    const data = await service.validateMetaSpacePrefix(prefix, 1);
     expect(data).toMatchObject<DomainvalidateResult>({
       value: prefix,
       status: DomainvalidateStatus.Reserve,
@@ -69,7 +69,7 @@ describe('DomainValidateService', () => {
 
   it('"metanetvvork" should be a reserve prefix', async () => {
     const prefix = 'metanetvvork';
-    const data = await service.validateMetaSpacePrefix(prefix);
+    const data = await service.validateMetaSpacePrefix(prefix, 1);
     expect(data).toMatchObject<DomainvalidateResult>({
       value: prefix,
       status: DomainvalidateStatus.Reserve,
@@ -78,7 +78,7 @@ describe('DomainValidateService', () => {
 
   it('"fuck" should be a disable prefix', async () => {
     const prefix = 'fuck';
-    const data = await service.validateMetaSpacePrefix(prefix);
+    const data = await service.validateMetaSpacePrefix(prefix, 1);
     expect(data).toMatchObject<DomainvalidateResult>({
       value: prefix,
       status: DomainvalidateStatus.Disable,
@@ -90,7 +90,11 @@ describe('DomainValidateService', () => {
     jest
       .spyOn(siteConfigLogicService, 'checkPrefixIsExists')
       .mockImplementationOnce(async (prefix) => true);
-    const data = await service.validateMetaSpacePrefix(prefix);
+    jest
+      .spyOn(siteConfigLogicService, 'getUserDefaultSiteConfig')
+      .mockImplementationOnce(async (userId: number) => undefined);
+
+    const data = await service.validateMetaSpacePrefix(prefix, 1);
     expect(data).toMatchObject<DomainvalidateResult>({
       value: prefix,
       status: DomainvalidateStatus.Occupied,

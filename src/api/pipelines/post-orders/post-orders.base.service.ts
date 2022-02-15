@@ -12,6 +12,7 @@ import {
   FindManyOptions,
   FindOneOptions,
   Repository,
+  SelectQueryBuilder,
 } from 'typeorm';
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 
@@ -40,6 +41,20 @@ export class PostOrdersBaseService {
       options,
       searchOptions,
     )) as Pagination<PostOrderEntity>;
+  }
+
+  async pagiByQueryBuilder(
+    queryBuilder: SelectQueryBuilder<PostOrderEntity>,
+    options: IPaginationOptions,
+  ): Promise<Pagination<PostOrderEntity>> {
+    return (await paginate<PostOrderEntity>(
+      queryBuilder,
+      options,
+    )) as Pagination<PostOrderEntity>;
+  }
+
+  createQueryBuilder(): SelectQueryBuilder<PostOrderEntity> {
+    return this.postOrdersRepository.createQueryBuilder('postOrderEntity');
   }
 
   async find(
