@@ -65,7 +65,7 @@ export class PostOrdersLogicService {
         .where(`postOrderEntity.userId = :userId`, { userId })
 
         .orderBy(
-          `(CASE WHEN postOrderEntity.publishState = 'pending' THEN 3 WHEN postOrderEntity.publishState = 'doing' THEN 1 WHEN postOrderEntity.publishState = 'failed' THEN 2 WHEN postOrderEntity.publishState ='finished' THEN 4 ELSE null END)`,
+          `(CASE WHEN postOrderEntity.publishState = 'pending' THEN 2 WHEN postOrderEntity.publishState = 'doing' THEN 1 WHEN postOrderEntity.publishState = 'failed' THEN 3 WHEN postOrderEntity.publishState ='finished' THEN 4 ELSE null END)`,
           'ASC',
         )
 
