@@ -116,7 +116,10 @@ export class PostTasksLogicService {
   }
 
   async failPostTask(id: string) {
-    this.logger.verbose(`Fail post task id ${id}  `, this.constructor.name);
+    this.logger.verbose(
+      `Updte post task state to ‘failed’ by id ${id}  `,
+      this.constructor.name,
+    );
     await this.postTasksBaseService.update(id, {
       state: PipelineOrderTaskCommonState.FAILED,
     });

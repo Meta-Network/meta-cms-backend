@@ -364,7 +364,7 @@ export class PostOrdersLogicService {
   ) {
     if (certificateStorageType) {
       this.logger.verbose(
-        `Handle certificatee postOrderId ${postOrder.id} certificateStorageType ${certificateStorageType}`,
+        `Handle certificate postOrderId ${postOrder.id} certificateStorageType ${certificateStorageType}`,
         this.constructor.name,
       );
       const postOrderId = postOrder.id;
@@ -406,7 +406,7 @@ export class PostOrdersLogicService {
       }
     } else {
       this.logger.verbose(
-        `Handle certificatee postOrderId ${postOrder.id} empty certificateStorageType`,
+        `Handle certificate postOrderId ${postOrder.id} empty certificateStorageType`,
         this.constructor.name,
       );
     }
@@ -471,7 +471,7 @@ export class PostOrdersLogicService {
    */
   async failSubmitPost(postOrderId: string) {
     this.logger.verbose(
-      `Fail submit post postOrderId ${postOrderId} `,
+      `Update post submitState&publishState to 'failed' by postOrderId ${postOrderId} `,
       this.constructor.name,
     );
     await this.postOrdersBaseService.update(
@@ -498,7 +498,7 @@ export class PostOrdersLogicService {
       ],
     });
     this.logger.verbose(
-      `Fail submit post internal real time message ${JSON.stringify(
+      `Emit post internal real time message ${JSON.stringify(
         internalRealTimeMessage,
       )} `,
       this.constructor.name,
@@ -511,7 +511,7 @@ export class PostOrdersLogicService {
 
   async failSubmitPostByPostTaskId(postTaskId: string) {
     this.logger.verbose(
-      `Fail submit post postTaskId ${postTaskId} `,
+      `Update post submitState&publishState to 'failed' by postTaskId ${postTaskId} `,
       this.constructor.name,
     );
     await this.postOrdersBaseService.batchUpdate(
@@ -541,9 +541,7 @@ export class PostOrdersLogicService {
         })),
       });
       this.logger.verbose(
-        `Fail submit ${
-          postOrderEntities?.length
-        } posts internal real time message ${JSON.stringify(
+        `Emit post internal real time message ${JSON.stringify(
           internalRealTimeMessage,
         )} `,
         this.constructor.name,
@@ -665,7 +663,7 @@ export class PostOrdersLogicService {
         })),
       });
       this.logger.verbose(
-        `Fail publish post internal real time message ${JSON.stringify(
+        `Emit post internal real time message ${JSON.stringify(
           internalRealTimeMessage,
         )} `,
         this.constructor.name,
@@ -677,7 +675,7 @@ export class PostOrdersLogicService {
       );
     } else {
       this.logger.verbose(
-        `Fail publish post without relative order`,
+        `No relative post order, no internal real time message.`,
         this.constructor.name,
       );
     }

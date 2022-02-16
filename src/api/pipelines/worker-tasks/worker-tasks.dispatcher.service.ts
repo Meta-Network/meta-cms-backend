@@ -398,7 +398,7 @@ export class WorkerTasksDispatcherService {
     //TODO 异步拉动下一个任务
   }
   async failTask(taskConfig: WorkerModel2TaskConfig) {
-    this.logger.verbose(
+    this.logger.error(
       `Fail task taskMethod ${taskConfig.task.taskMethod} taskId ${taskConfig.task.taskId} siteConfigId ${taskConfig.site.configId} `,
       this.constructor.name,
     );
