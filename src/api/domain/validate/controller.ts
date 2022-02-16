@@ -12,6 +12,8 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 
+import { User } from '../../../decorators';
+import { UCenterJWTPayload } from '../../../types';
 import { TransformResponse } from '../../../utils/responseClass';
 import { PostMethodValidation } from '../../../utils/validation';
 import { DomainValidateRequest, DomainvalidateResult } from './dto';
@@ -31,8 +33,11 @@ export class DomainValidateController {
   @ApiOkResponse({ type: ValidateMetaSpacePrefixResponse })
   @Post()
   @UsePipes(new ValidationPipe(PostMethodValidation))
-  async validateMetaSpacePrefix(@Body() reqDto: DomainValidateRequest) {
+  async validateMetaSpacePrefix(
+    @User() user: UCenterJWTPayload,
+    @Body() reqDto: DomainValidateRequest,
+  ) {
     const { domain } = reqDto;
-    return await this.service.validateMetaSpacePrefix(domain);
+    return await this.service.validateMetaSpacePrefix(domain, user.id);
   }
 }
