@@ -88,9 +88,9 @@ task:
     # Docker processor config
     docker:
       env:
-        debug: true
         logging:
           level: debug
+          debug: true
         backend:
           #  'Meta-CMS-BE' server url
           url:
