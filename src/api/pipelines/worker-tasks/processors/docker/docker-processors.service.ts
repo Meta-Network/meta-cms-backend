@@ -100,6 +100,9 @@ export class DockerProcessorsService implements WorkerTasksJobProcessor {
     const hostTmpDir = this.configService.get<string>(
       'pipeline.processor.docker.volumes.tmp',
     );
+    const debug = this.configService.get<string>(
+      'pipeline.processor.docker.env.logging.debug',
+    );
     const logLevel = this.configService.get<string>(
       'pipeline.processor.docker.env.logging.level',
     );
@@ -111,6 +114,7 @@ export class DockerProcessorsService implements WorkerTasksJobProcessor {
     );
     const env = [
       // `NODE_ENV=${process.env.NODE_ENV}`,
+      `DEBUG=${debug}`,
       `LOG_LEVEL=${logLevel}`,
       `NO_COLOR=true`,
       `WORKER_SECRET=${secret}`,
@@ -122,12 +126,12 @@ export class DockerProcessorsService implements WorkerTasksJobProcessor {
     return {
       ...options,
       Image: image,
-      // Volumes: {
-      //   '/tmp': {},
-      // },
-      // HostConfig: {
-      //   Binds: [`${hostTmpDir}:/tmp`],
-      // },
+      Volumes: {
+        '/tmp': {},
+      },
+      HostConfig: {
+        Binds: [`${hostTmpDir}:/tmp`],
+      },
       name: secret,
       Env: env,
     };
