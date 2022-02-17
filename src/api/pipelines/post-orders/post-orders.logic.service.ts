@@ -64,12 +64,12 @@ export class PostOrdersLogicService {
         .leftJoinAndSelect('postOrderEntity.postMetadata', 'postMetadata')
         .where(`postOrderEntity.userId = :userId`, { userId })
 
-        .orderBy(
-          `(CASE WHEN postOrderEntity.publishState = 'pending' THEN 2 WHEN postOrderEntity.publishState = 'doing' THEN 1 WHEN postOrderEntity.publishState = 'failed' THEN 3 WHEN postOrderEntity.publishState ='finished' THEN 4 ELSE null END)`,
-          'ASC',
-        )
+        // .orderBy(
+        //   `(CASE WHEN postOrderEntity.publishState = 'pending' THEN 2 WHEN postOrderEntity.publishState = 'doing' THEN 1 WHEN postOrderEntity.publishState = 'failed' THEN 3 WHEN postOrderEntity.publishState ='finished' THEN 4 ELSE null END)`,
+        //   'ASC',
+        // )
 
-        .addOrderBy('postOrderEntity.createdAt', 'ASC'),
+        .orderBy('postOrderEntity.createdAt', 'DESC'),
 
       options,
     );
@@ -118,12 +118,12 @@ export class PostOrdersLogicService {
             PipelineOrderTaskCommonState.DOING,
           ],
         })
-        .orderBy(
-          `(CASE WHEN postOrderEntity.publishState = 'pending' THEN 3 WHEN postOrderEntity.publishState = 'doing' THEN 1 WHEN postOrderEntity.publishState = 'failed' THEN 2 WHEN postOrderEntity.publishState ='finished' THEN 4 ELSE null END)`,
-          'ASC',
-        )
+        // .orderBy(
+        //   `(CASE WHEN postOrderEntity.publishState = 'pending' THEN 3 WHEN postOrderEntity.publishState = 'doing' THEN 1 WHEN postOrderEntity.publishState = 'failed' THEN 2 WHEN postOrderEntity.publishState ='finished' THEN 4 ELSE null END)`,
+        //   'ASC',
+        // )
 
-        .addOrderBy('postOrderEntity.createdAt', 'ASC'),
+        .orderBy('postOrderEntity.createdAt', 'DESC'),
 
       options,
     );

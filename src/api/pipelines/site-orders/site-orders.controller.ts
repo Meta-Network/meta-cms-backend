@@ -5,6 +5,8 @@ import {
   Param,
   ParseIntPipe,
   Post,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
 import {
   ApiOkResponse,
@@ -16,6 +18,7 @@ import {
 import { User } from '../../../decorators';
 import { PublishSiteOrderEntity } from '../../../entities/pipeline/publish-site-order.entity';
 import { TransformResponse } from '../../../utils/responseClass';
+import { PostMethodValidation } from '../../../utils/validation';
 import {
   DeploySiteOrderRequestDto,
   PublishSiteOrderInQueueResponseDto,
@@ -47,6 +50,7 @@ export class SiteOrdersController {
   })
   @ApiOkResponse({ type: TransformResponse })
   @Post('deploy')
+  @UsePipes(new ValidationPipe(PostMethodValidation))
   async deploy(
     @User('id', ParseIntPipe) userId: number,
     @Body() deploySiteOrderRequestDto: DeploySiteOrderRequestDto,
@@ -89,6 +93,7 @@ export class SiteOrdersController {
   })
   @ApiOkResponse({ type: PublishSiteOrderResponse })
   @Post('publish')
+  @UsePipes(new ValidationPipe(PostMethodValidation))
   async publish(
     @User('id', ParseIntPipe) userId: number,
   ): Promise<PublishSiteOrderEntity> {

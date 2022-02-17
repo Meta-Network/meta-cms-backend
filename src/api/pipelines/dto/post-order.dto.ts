@@ -11,8 +11,10 @@ import {
   IsNotEmpty,
   IsNotEmptyObject,
   IsNumber,
+  IsOptional,
   IsString,
   IsUrl,
+  Matches,
   MaxLength,
   MinLength,
   ValidateNested,
@@ -65,6 +67,8 @@ export class AuthorPostDigestDto implements AuthorPostDigestMetadata {
     required: true,
   })
   @IsString()
+  @IsOptional()
+  @MaxLength(200)
   categories: string;
   @ApiProperty({
     description: '文章正文内容',
@@ -73,19 +77,29 @@ export class AuthorPostDigestDto implements AuthorPostDigestMetadata {
   @IsString()
   @IsNotEmpty()
   @MinLength(3)
-  @MaxLength(1000000)
+  @MaxLength(10000)
   content: string;
   @ApiProperty({
     description: '文章头图/封面URL',
     required: true,
   })
-  @IsUrl()
+  @MaxLength(256)
+  @IsString()
+  @Matches(
+    /^$|((([A-Za-z]{3,9}:(?:\/\/)?)(?:[\-;:&=\+\$,\w]+@)?[A-Za-z0-9\.\-]+|(?:www\.|[\-;:&=\+\$,\w]+@)[A-Za-z0-9\.\-]+)((?:\/[\+~%\/\.\w\-_]*)?\??(?:[\-\+=&;%@\.\w_]*)#?(?:[\.\!\/\\\w]*))?)/,
+    {
+      message: 'must be an URL address',
+    },
+  )
+  @IsOptional()
   cover: string;
   @ApiProperty({
     description: '文章基于的许可协议',
     required: true,
   })
   @IsString()
+  @MaxLength(50)
+  @IsOptional()
   license: string;
   @ApiProperty({
     description: '文章概述',
@@ -101,6 +115,8 @@ export class AuthorPostDigestDto implements AuthorPostDigestMetadata {
     required: true,
   })
   @IsString()
+  @MaxLength(200)
+  @IsOptional()
   tags: string;
   @ApiProperty({
     description: '文章数字摘要',
@@ -110,20 +126,8 @@ export class AuthorPostDigestDto implements AuthorPostDigestMetadata {
   @IsNotEmpty()
   @MaxLength(128)
   digest: string;
-  @ApiProperty({
-    description: '作者签名时混入的随机数',
-    required: true,
-  })
-  @IsString()
+  @IsNumber()
   @IsNotEmpty()
-  nonce: string;
-  @ApiProperty({
-    description: '作者签名时的宣称',
-    required: true,
-  })
-  @IsString()
-  @IsNotEmpty()
-  claim: string;
   ts: number;
 }
 export class ReferenceItem {
@@ -213,6 +217,7 @@ export class AuthorPostSignDto
     required: true,
   })
   @IsArray()
+  @IsOptional()
   reference: ReferenceItem[];
 }
 

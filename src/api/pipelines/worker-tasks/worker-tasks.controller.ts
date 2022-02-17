@@ -8,11 +8,14 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
 import { ApiProperty, ApiTags } from '@nestjs/swagger';
 
 import { BasicAuth, SkipUCenterAuth, User } from '../../../decorators';
 import { WorkerModel2TaskConfig } from '../../../types/worker-model2';
+import { PostMethodValidation } from '../../../utils/validation';
 import { WorkerTasksDispatcherService } from './worker-tasks.dispatcher.service';
 
 export class WorkerTaskDispatchDto {
@@ -44,6 +47,7 @@ export class WorkerTasksController {
 
   @Patch(':workerTaskId/reports')
   @Post(':workerTaskId/reports')
+  @UsePipes(new ValidationPipe(PostMethodValidation))
   @SkipUCenterAuth(true)
   async report(
     @BasicAuth() auth: string,
@@ -58,6 +62,7 @@ export class WorkerTasksController {
   }
 
   @Post(':siteConfigId/deploy-site')
+  @UsePipes(new ValidationPipe(PostMethodValidation))
   async deploySite(
     @User('id', ParseIntPipe) userId: number,
     @Param('siteConfigId', ParseIntPipe) siteConfigId: number,
@@ -74,6 +79,7 @@ export class WorkerTasksController {
   }
 
   @Post(':siteConfigId/create-posts')
+  @UsePipes(new ValidationPipe(PostMethodValidation))
   async createPosts(
     @User('id', ParseIntPipe) userId: number,
     @Param('siteConfigId', ParseIntPipe) siteConfigId: number,
@@ -90,6 +96,7 @@ export class WorkerTasksController {
   }
 
   @Post(':siteConfigId/publish-site')
+  @UsePipes(new ValidationPipe(PostMethodValidation))
   async publishSite(
     @User('id', ParseIntPipe) userId: number,
     @Param('siteConfigId', ParseIntPipe) siteConfigId: number,

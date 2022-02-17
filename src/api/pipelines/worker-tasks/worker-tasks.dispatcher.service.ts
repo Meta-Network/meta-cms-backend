@@ -249,7 +249,7 @@ export class WorkerTasksDispatcherService {
         // const jobId = uuid();
         // const workerName = `meta-cms-worker-${workerNo}`;
         const { workerSecret } = workerTask;
-        // 这里会包含实际执行的时间?
+        // not including the actual execution time
         return await this.workerTasksQueue.add(jobDetail, {
           jobId: workerSecret,
         });

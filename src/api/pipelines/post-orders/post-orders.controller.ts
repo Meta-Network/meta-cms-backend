@@ -7,6 +7,8 @@ import {
   ParseIntPipe,
   Post,
   Query,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
 import {
   ApiNotFoundResponse,
@@ -21,6 +23,7 @@ import { IPaginationOptions } from 'nestjs-typeorm-paginate';
 import { User } from '../../../decorators';
 import { DataNotFoundException } from '../../../exceptions';
 import { TransformResponse } from '../../../utils/responseClass';
+import { PostMethodValidation } from '../../../utils/validation';
 import {
   PostOrderPaginationResponse,
   PostOrderRequestDto,
@@ -121,6 +124,7 @@ export class PostOrdersController {
   })
   @ApiOkResponse({ type: SavePostOrderResponse })
   @Post()
+  @UsePipes(new ValidationPipe(PostMethodValidation))
   async savePostOrder(
     @User('id', ParseIntPipe) userId: number,
     @Body() postOrderRequestDto: PostOrderRequestDto,

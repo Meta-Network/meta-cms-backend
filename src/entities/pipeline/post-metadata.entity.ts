@@ -33,30 +33,33 @@ export class PostMetadataEntity {
   title: string;
   @Column({
     comment: 'Post content',
-    nullable: false,
-    default: '',
     type: 'text',
   })
   @IsString()
   @IsNotEmpty()
   content: string;
 
-  @Column({ comment: 'Post cover', nullable: false, default: '' })
+  @Column({ comment: 'Post cover', nullable: false, default: '', length: 1024 })
   @IsString()
   @IsOptional()
   cover: string;
 
-  @Column({ comment: 'Post summary', nullable: false, default: '' })
+  @Column({
+    comment: 'Post summary',
+    nullable: false,
+    default: '',
+    length: 1000,
+  })
   @IsString()
   @IsOptional()
   summary: string;
 
-  @Column({ comment: 'Post categories', nullable: true })
+  @Column({ comment: 'Post categories', nullable: true, length: 1000 })
   @IsString()
   @IsOptional()
   categories: string;
 
-  @Column({ nullable: true, comment: 'Post tags' })
+  @Column({ nullable: true, comment: 'Post tags', length: 1000 })
   @IsString()
   @IsOptional()
   tags: string;
