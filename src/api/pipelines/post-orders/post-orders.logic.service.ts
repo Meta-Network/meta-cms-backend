@@ -193,6 +193,12 @@ export class PostOrdersLogicService {
     if (!authorPostDigest.verify(digest)) {
       throw new BadRequestException('Invalid author post digest');
     }
+    const postOrderEntity = await this.postOrdersBaseService.getById(
+      sign.signature,
+    );
+    if (postOrderEntity?.id) {
+      throw new ConflictException('Already exists');
+    }
     const serverVerification = serverVerificationSignWithContent.generate(
       digest,
       digest.digest,

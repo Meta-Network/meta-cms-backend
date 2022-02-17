@@ -7,6 +7,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
   IsArray,
+  IsEnum,
   IsHexadecimal,
   IsNotEmpty,
   IsNotEmptyObject,
@@ -60,6 +61,7 @@ export class AuthorPostDigestDto implements AuthorPostDigestMetadata {
     required: true,
   })
   @IsString()
+  @MaxLength(60)
   @IsNotEmpty()
   title: string;
   @ApiProperty({
@@ -309,6 +311,9 @@ export class PostOrderRequestDto {
     required: false,
     enum: [MetadataStorageType.ARWEAVE],
   })
+  @IsString()
+  @IsEnum(['', MetadataStorageType.ARWEAVE])
+  @IsOptional()
   certificateStorageType?: MetadataStorageType.ARWEAVE;
 }
 export class PostOrderResponseDto {
