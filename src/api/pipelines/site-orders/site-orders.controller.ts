@@ -9,6 +9,7 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import {
+  ApiCreatedResponse,
   ApiOkResponse,
   ApiOperation,
   ApiProperty,
@@ -48,7 +49,7 @@ export class SiteOrdersController {
   @ApiOperation({
     summary: '用户请求创建Meta Space',
   })
-  @ApiOkResponse({ type: TransformResponse })
+  @ApiCreatedResponse({ type: TransformResponse })
   @Post('deploy')
   @UsePipes(new ValidationPipe(PostMethodValidation))
   async deploy(
@@ -91,7 +92,7 @@ export class SiteOrdersController {
   @ApiOperation({
     summary: '用户请求发布Meta Space',
   })
-  @ApiOkResponse({ type: PublishSiteOrderResponse })
+  @ApiCreatedResponse({ type: PublishSiteOrderResponse })
   @Post('publish')
   @UsePipes(new ValidationPipe(PostMethodValidation))
   async publish(

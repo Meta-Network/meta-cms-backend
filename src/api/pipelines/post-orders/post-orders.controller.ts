@@ -11,6 +11,8 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import {
+  ApiConflictResponse,
+  ApiCreatedResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
@@ -122,7 +124,10 @@ export class PostOrdersController {
   @ApiOperation({
     summary: '用户请求发布文章',
   })
-  @ApiOkResponse({ type: SavePostOrderResponse })
+  @ApiCreatedResponse({ type: SavePostOrderResponse })
+  @ApiConflictResponse({
+    description: '相同签名的文章已存在的情况下返回',
+  })
   @Post()
   @UsePipes(new ValidationPipe(PostMethodValidation))
   async savePostOrder(
@@ -138,7 +143,7 @@ export class PostOrdersController {
   @ApiOperation({
     summary: '用户请求重新发布失败文章',
   })
-  @ApiOkResponse({ type: TransformResponse })
+  @ApiCreatedResponse({ type: TransformResponse })
   @ApiNotFoundResponse({
     type: DataNotFoundException,
     description: 'When request post order not found',
