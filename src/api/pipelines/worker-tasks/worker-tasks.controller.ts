@@ -12,6 +12,7 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { ApiProperty, ApiTags } from '@nestjs/swagger';
+import { IsBoolean, IsOptional } from 'class-validator';
 
 import { BasicAuth, SkipUCenterAuth, User } from '../../../decorators';
 import { WorkerModel2TaskConfig } from '../../../types/worker-model2';
@@ -24,6 +25,8 @@ export class WorkerTaskDispatchDto {
     required: false,
     default: false,
   })
+  @IsOptional()
+  @IsBoolean()
   autoFailed?: boolean;
 }
 
