@@ -233,9 +233,9 @@ export class SiteTasksLogicService {
       publishSiteTaskEntity.userId,
       id,
     );
-    const config = await this.siteConfigLogicService.updateSiteConfigStatus(
+
+    const config = await this.siteConfigLogicService.setPublished(
       publishSiteTaskEntity.siteConfigId,
-      SiteStatus.Published,
     );
     this.logger.verbose(
       `Site published ${publishTaskConfig.site.domain}.notify Meta-Network-BE`,
