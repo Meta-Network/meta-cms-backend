@@ -29,8 +29,6 @@ export class ServerVerificationEntity {
   })
   @Column({
     comment: 'server verification payload',
-    nullable: false,
-    default: '',
     type: 'text',
   })
   payload: string;

@@ -12,6 +12,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Queue } from 'bull';
+import { isEmpty } from 'class-validator';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { v4 as uuid } from 'uuid';
 
@@ -123,8 +124,14 @@ export class WorkerTasksDispatcherService {
         cover: postMetaDataEntity.cover,
         summary: postMetaDataEntity.summary,
         source: postMetaDataEntity.content,
-        categories: postMetaDataEntity.categories.split(','),
-        tags: postMetaDataEntity.tags.split(','),
+        categories: isEmpty(postMetaDataEntity.categories)
+          ? []
+          : postMetaDataEntity.categories.split(','),
+
+        tags: isEmpty(postMetaDataEntity.tags)
+          ? []
+          : postMetaDataEntity.tags.split(','),
+
         license: postMetaDataEntity.license,
 
         serverVerificationMetadataStorageType:
@@ -132,7 +139,7 @@ export class WorkerTasksDispatcherService {
         serverVerificationMetadataRefer: postOrderEntity.certificateId,
         createdAt: iso8601ToDate(postOrderEntity.createdAt).toISOString(),
         updatedAt: iso8601ToDate(postOrderEntity.updatedAt).toISOString(),
-      } as MetaWorker.Info.Post;
+      } as unknown as MetaWorker.Info.Post;
       posts.push(post);
     }
     const { postConfig, template } =

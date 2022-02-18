@@ -54,12 +54,17 @@ export class PostMetadataEntity {
   @IsOptional()
   summary: string;
 
-  @Column({ comment: 'Post categories', nullable: true, length: 1000 })
+  @Column({
+    comment: 'Post categories',
+    nullable: false,
+    default: '',
+    length: 1000,
+  })
   @IsString()
   @IsOptional()
   categories: string;
 
-  @Column({ nullable: true, comment: 'Post tags', length: 1000 })
+  @Column({ comment: 'Post tags', nullable: false, default: '', length: 1000 })
   @IsString()
   @IsOptional()
   tags: string;

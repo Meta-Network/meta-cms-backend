@@ -67,6 +67,10 @@ export class SiteTasksLogicService {
         siteConfigId,
         userId,
       );
+    //如果这里获取不到，应该直接返回
+    if (!deploySiteOrderEntity?.id) {
+      throw new DataNotFoundException('Deploy site order not found');
+    }
 
     const id = this.newDeploySiteTaskId(siteConfigId);
     const deploySiteTaskEntity = await this.deploySiteTasksBaseService.save({
