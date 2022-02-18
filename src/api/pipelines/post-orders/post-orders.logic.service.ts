@@ -187,10 +187,21 @@ export class PostOrdersLogicService {
   ): Promise<PostOrderResponseDto> {
     const digest = postOrderRequestDto.authorPostDigest;
     const sign = postOrderRequestDto.authorPostSign;
-    if (!authorPostDigestSign.verify(sign)) {
+    let validAuthorPostDigest, validAuthorPostSign;
+    try {
+      validAuthorPostSign = authorPostDigestSign.verify(sign);
+    } catch (err) {
+      this.logger.error(`Invalid author post sign`, err);
+    }
+    if (!validAuthorPostSign) {
       throw new BadRequestException('Invalid author post sign');
     }
-    if (!authorPostDigest.verify(digest)) {
+    try {
+      validAuthorPostDigest = authorPostDigest.verify(digest);
+    } catch (err) {
+      this.logger.error(`Invalid author post digest`, err);
+    }
+    if (!validAuthorPostDigest) {
       throw new BadRequestException('Invalid author post digest');
     }
     const postOrderEntity = await this.postOrdersBaseService.getById(
