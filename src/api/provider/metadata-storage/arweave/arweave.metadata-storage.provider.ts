@@ -83,7 +83,7 @@ export class ArweaveMetadataStorageProvider implements MetadataStorageProvider {
       await uploader.uploadChunk();
     }
     this.logger.debug(
-      `Upload metadata to IPFS ${uploader.uploadedChunks}`,
+      `Upload metadata to Arweave, chunk ${uploader.uploadedChunks}`,
       this.constructor.name,
     );
     // TODO(550): How to confirm tx is mined.
