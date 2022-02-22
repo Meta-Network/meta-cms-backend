@@ -7,10 +7,14 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   PrimaryColumn,
   UpdateDateColumn,
 } from 'typeorm';
 
+import { PipelineOrderTaskCommonState } from '../../types/enum';
+
+@Index(['userId', 'siteConfigId'])
 @Entity()
 export class DeploySiteOrderEntity {
   @PrimaryColumn({
@@ -58,6 +62,7 @@ export class DeploySiteOrderEntity {
   })
   serverVerificationId?: string;
 
+  @Index()
   @Column({
     comment: 'Deploy site task id',
     nullable: false,
@@ -68,4 +73,11 @@ export class DeploySiteOrderEntity {
     example: 'wt4site-123-deploy-site-5eb1ea9f-ee35-4b97-a44d-edb0c04ba406',
   })
   deploySiteTaskId?: string;
+  @Index()
+  @Column({
+    comment: 'Deploy site order state',
+    nullable: false,
+    default: PipelineOrderTaskCommonState.PENDING,
+  })
+  state: PipelineOrderTaskCommonState;
 }

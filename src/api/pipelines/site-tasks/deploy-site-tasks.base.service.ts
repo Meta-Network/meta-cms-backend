@@ -18,6 +18,16 @@ export class DeploySiteTasksBaseService {
   async getById(id: string): Promise<DeploySiteTaskEntity> {
     return await this.deploySiteTasksRepository.findOne(id);
   }
+  async getBySiteConfigUserId(
+    siteConfigId: number,
+    userId: number,
+  ): Promise<DeploySiteTaskEntity> {
+    // match index order
+    return await this.deploySiteTasksRepository.findOne({
+      userId,
+      siteConfigId,
+    });
+  }
   async count(searchOptions?: FindManyOptions<DeploySiteTaskEntity>) {
     return await this.deploySiteTasksRepository.count(searchOptions);
   }

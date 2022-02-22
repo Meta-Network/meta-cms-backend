@@ -19,8 +19,9 @@ import { v4 as uuid } from 'uuid';
 import { DeploySiteTaskEntity } from '../../../entities/pipeline/deploy-site-task.entity';
 import { PostTaskEntity } from '../../../entities/pipeline/post-task.entity';
 import { IWorkerTask } from '../../../entities/pipeline/worker-task.interface';
+import { InvalidStatusException } from '../../../exceptions';
 import { UCenterUser } from '../../../types';
-import { PipelineOrderTaskCommonState } from '../../../types/enum';
+import { PipelineOrderTaskCommonState, SiteStatus } from '../../../types/enum';
 import {
   WorkerModel2Config,
   WorkerModel2TaskConfig,
@@ -72,31 +73,57 @@ export class WorkerTasksDispatcherService {
       this.constructor.name,
     );
 
-    const { deploySiteTaskEntity, deploySiteOrderEntity } =
+    const { deploySiteTaskEntity, deploySiteOrderEntity, siteConfig } =
       await this.siteTasksLogicService.generateDeploySiteTask(
         siteConfigId,
         userId,
       );
-    const user = await this.getUserInfo(userId);
-    const { deployConfig } =
-      await this.siteTasksLogicService.generateDeployConfigAndRepoEmpty(
-        user,
-        siteConfigId,
+    //如果不需要新开任务来处理，直接返回
+    if (
+      SiteStatus.Deploying === siteConfig.status ||
+      SiteStatus.Deployed === siteConfig.status ||
+      SiteStatus.Publishing === siteConfig.status ||
+      SiteStatus.Published === siteConfig.status ||
+      SiteStatus.PublishFailed === siteConfig.status
+    ) {
+      this.logger.verbose(
+        `SiteConfigId ${siteConfigId} userId ${userId} SiteStatus ${siteConfig.status}. dispatch deploy site task finished`,
       );
+      return deploySiteOrderEntity;
+    }
     deploySiteTaskEntity.workerName = this.getWorkerName();
     deploySiteTaskEntity.workerSecret = this.newWorkerSecret();
 
-    // Change task state to Doing & site state to Deploying
+    // 因为获取token等动作有可能失败，失败后要更新状态，更新条件中有要求submitState是doing，所以开始这种操作之前都先更新一次状态
     await this.siteTasksLogicService.doingDeploySiteTask(deploySiteTaskEntity);
-    await this.dispatchTask(
-      deploySiteTaskEntity,
-      MetaWorker.Enums.WorkerTaskMethod.DEPLOY_SITE,
-      deployConfig.template,
-      deployConfig,
-      autoFailed,
-    );
-    // 处理完成不在这里，而是在report待worker上报后一处理
-    return deploySiteTaskEntity;
+    try {
+      const user = await this.getUserInfo(userId);
+
+      const { deployConfig } =
+        await this.siteTasksLogicService.generateDeployConfigAndRepoEmpty(
+          user,
+          siteConfigId,
+        );
+
+      await this.dispatchTask(
+        deploySiteTaskEntity,
+        MetaWorker.Enums.WorkerTaskMethod.DEPLOY_SITE,
+        deployConfig.template,
+        deployConfig,
+        autoFailed,
+      );
+      return deploySiteTaskEntity;
+    } catch (err) {
+      //有可能因为获取不到GitHub OAuth token等原因导致失败。这种情况下直接标记任务为失败返回
+      this.logger.error(err.message);
+      await this.siteTasksLogicService.failDeploySiteTask(
+        deploySiteTaskEntity.id,
+      );
+      // this.nextTask();
+      // throw err;
+    } finally {
+      this.logger.verbose(`Dispatch deploy site task finished`);
+    }
   }
 
   async dispatchCreatePostsTask(
@@ -113,61 +140,76 @@ export class WorkerTasksDispatcherService {
         userId,
       );
 
-    const user = await this.getUserInfo(userId);
-    const posts = [];
-    for (let i = 0; i < postOrderEntities.length; i++) {
-      const postOrderEntity = postOrderEntities[i];
-      const postMetaDataEntity = postOrderEntity.postMetadata;
-      const post = {
-        id: postMetaDataEntity.id,
-        title: postMetaDataEntity.title,
-        cover: postMetaDataEntity.cover,
-        summary: postMetaDataEntity.summary,
-        source: postMetaDataEntity.content,
-        categories: isEmpty(postMetaDataEntity.categories)
-          ? []
-          : postMetaDataEntity.categories.split(','),
-
-        tags: isEmpty(postMetaDataEntity.tags)
-          ? []
-          : postMetaDataEntity.tags.split(','),
-
-        license: postMetaDataEntity.license,
-
-        serverVerificationMetadataStorageType:
-          postOrderEntity.certificateStorageType,
-        serverVerificationMetadataRefer: postOrderEntity.certificateId,
-        createdAt: iso8601ToDate(postOrderEntity.createdAt).toISOString(),
-        updatedAt: iso8601ToDate(postOrderEntity.updatedAt).toISOString(),
-      } as unknown as MetaWorker.Info.Post;
-      posts.push(post);
-    }
-    const { postConfig, template } =
-      await this.postTasksLogicService.generatePostConfigAndTemplate(
-        user,
-        posts,
-        siteConfigId,
-      );
-
     postTaskEntity.workerName = this.getWorkerName();
     postTaskEntity.workerSecret = this.newWorkerSecret();
-    // Change task state to Doing
+    // 因为获取token等动作有可能失败，失败后要更新状态，更新条件中有要求submitState是doing，所以开始这种操作之前都先更新一次状态
     await this.postTasksLogicService.doingPostTask(
       postTaskEntity,
       postOrderEntities,
     );
-    await this.dispatchTask(
-      postTaskEntity,
-      MetaWorker.Enums.WorkerTaskMethod.CREATE_POSTS,
-      template,
-      postConfig,
-      autoFailed,
-    );
-    return postTaskEntity;
+
+    try {
+      const user = await this.getUserInfo(userId);
+      const posts = [];
+      for (let i = 0; i < postOrderEntities.length; i++) {
+        const postOrderEntity = postOrderEntities[i];
+        const postMetaDataEntity = postOrderEntity.postMetadata;
+        const post = {
+          id: postMetaDataEntity.id,
+          title: postMetaDataEntity.title,
+          cover: postMetaDataEntity.cover,
+          summary: postMetaDataEntity.summary,
+          source: postMetaDataEntity.content,
+          categories: isEmpty(postMetaDataEntity.categories)
+            ? []
+            : postMetaDataEntity.categories.split(','),
+
+          tags: isEmpty(postMetaDataEntity.tags)
+            ? []
+            : postMetaDataEntity.tags.split(','),
+
+          license: postMetaDataEntity.license,
+
+          serverVerificationMetadataStorageType:
+            postOrderEntity.certificateStorageType,
+          serverVerificationMetadataRefer: postOrderEntity.certificateId,
+          createdAt: iso8601ToDate(postOrderEntity.createdAt).toISOString(),
+          updatedAt: iso8601ToDate(postOrderEntity.updatedAt).toISOString(),
+        } as unknown as MetaWorker.Info.Post;
+        posts.push(post);
+      }
+
+      const { postConfig, template } =
+        await this.postTasksLogicService.generatePostConfigAndTemplate(
+          user,
+          posts,
+          siteConfigId,
+        );
+
+      await this.dispatchTask(
+        postTaskEntity,
+        MetaWorker.Enums.WorkerTaskMethod.CREATE_POSTS,
+        template,
+        postConfig,
+        autoFailed,
+      );
+      return postTaskEntity;
+    } catch (err) {
+      //有可能因为获取不到GitHub OAuth token等原因导致失败。这种情况下直接标记任务为失败返回
+      this.logger.error(err.message);
+      await this.postTasksLogicService.failPostTask(postTaskEntity.id);
+      // this.nextTask();
+      // throw err;
+    } finally {
+      this.logger.verbose(`Dispatch create posts task finished`);
+    }
   }
 
   getWorkerName() {
-    return `meta-cms-worker-0-`;
+    const dispatcherNo = this.configService.get<number>(
+      'pipeline.dispatcher.number',
+    );
+    return `meta-cms-worker-${dispatcherNo}-`;
   }
   newWorkerSecret(): string {
     return uuid();
@@ -189,39 +231,78 @@ export class WorkerTasksDispatcherService {
       `Dispatch publish site task siteConfigId ${siteConfigId} userId ${userId}`,
       this.constructor.name,
     );
-    const { publishSiteTaskEntity } =
+    // 用于兜底
+    await this.linkOrGeneratePublishSiteTask(siteConfigId, userId);
+    const { publishSiteTaskEntity, siteConfigEntity } =
       await this.siteTasksLogicService.getPendingPublishSiteTask(
         siteConfigId,
         userId,
       );
+    //如果已经在发布中了，什么都不做，直接返回
+    if (SiteStatus.Publishing === siteConfigEntity?.status) {
+      return;
+    }
+    // 正常情况不会发生的，还没初始化成功就来发布的
+    else if (
+      SiteStatus.Configured === siteConfigEntity?.status ||
+      SiteStatus.Deploying === siteConfigEntity?.status ||
+      SiteStatus.DeployFailed === siteConfigEntity?.status ||
+      !siteConfigEntity?.status
+    ) {
+      this.logger.error(
+        `Dispatch publish site task siteConfigId ${siteConfigId} userId ${userId}: invalid site status ${siteConfigEntity?.status}`,
+      );
+      throw new InvalidStatusException(
+        `invalid site status ${siteConfigEntity.status}`,
+      );
+    }
+    // 剩下的 Deployed Published PublishFailed是可以处理的
     if (PipelineOrderTaskCommonState.PENDING !== publishSiteTaskEntity?.state) {
-      this.logger.warn(
+      this.logger.error(
         `Dispatch publish site task siteConfigId ${siteConfigId} userId ${userId}: invalid pubish site task state ${publishSiteTaskEntity?.state}`,
       );
-      throw new ConflictException('Invalid publish site task state');
+
+      throw new InvalidStatusException('invalid publish site task state');
     }
-    const user = await this.getUserInfo(publishSiteTaskEntity.userId);
-    const { publishConfig, template } =
-      await this.siteTasksLogicService.generatePublishConfigAndTemplate(
-        user,
-        siteConfigId,
-      );
+
     publishSiteTaskEntity.workerName = this.getWorkerName();
     publishSiteTaskEntity.workerSecret = this.newWorkerSecret();
-    // Change task state to Doing & site state to Deploying
+    // 因为获取token等动作有可能失败，失败后要更新状态，更新条件中有要求submitState是doing，所以开始这种操作之前都先更新一次状态
+    // 注意可以迁移的状态
     await this.siteTasksLogicService.doingPublishSiteTask(
       publishSiteTaskEntity,
     );
-    await this.dispatchTask(
-      publishSiteTaskEntity,
-      MetaWorker.Enums.WorkerTaskMethod.PUBLISH_SITE,
-      template,
-      publishConfig,
-      autoFailed,
-    );
 
-    // 处理完成不在这里，由worker来调用finishTask/failTask
-    return publishSiteTaskEntity;
+    try {
+      const user = await this.getUserInfo(publishSiteTaskEntity.userId);
+
+      const { publishConfig, template } =
+        await this.siteTasksLogicService.generatePublishConfigAndTemplate(
+          user,
+          siteConfigId,
+        );
+
+      await this.dispatchTask(
+        publishSiteTaskEntity,
+        MetaWorker.Enums.WorkerTaskMethod.PUBLISH_SITE,
+        template,
+        publishConfig,
+        autoFailed,
+      );
+
+      // 处理完成不在这里，由worker来调用finishTask/failTask
+      return publishSiteTaskEntity;
+    } catch (err) {
+      //有可能因为获取不到GitHub OAuth token等原因导致失败。这种情况下直接标记任务为失败活返回
+      this.logger.error(err.message);
+      await this.siteTasksLogicService.failPublishSiteTask(
+        publishSiteTaskEntity.id,
+      );
+      // this.nextTask();
+      // throw err;
+    } finally {
+      this.logger.verbose(`Dispatch create publish site task finished`);
+    }
   }
 
   async getUserInfo(userId: number): Promise<UCenterUser> {
@@ -265,7 +346,10 @@ export class WorkerTasksDispatcherService {
         this.logger.error(`Pipeline Exception: ${err}`, this.constructor.name);
         throw new InternalServerErrorException('Pipeline Exception');
       } finally {
-        this.logger.verbose(`Dispatch task finished`, this.constructor.name);
+        this.logger.verbose(
+          `Dispatch task finished Queue active count: ${await this.workerTasksQueue.getActiveCount()} waiting count: ${await this.workerTasksQueue.getWaitingCount()}`,
+          this.constructor.name,
+        );
       }
     }
   }
@@ -369,14 +453,27 @@ export class WorkerTasksDispatcherService {
 
   async finishTask(taskConfig: WorkerModel2TaskConfig) {
     this.logger.verbose(
-      `Finish task taskMethod ${taskConfig.task.taskMethod} taskId ${taskConfig.task.taskId} siteConfigId ${taskConfig.site.configId} `,
+      `Finish task taskMethod ${taskConfig.task.taskMethod} taskId ${
+        taskConfig.task.taskId
+      } siteConfigId ${
+        taskConfig.site.configId
+      } Queue active count: ${await this.workerTasksQueue.getActiveCount()} waiting count: ${await this.workerTasksQueue.getWaitingCount()} completed count: ${await this.workerTasksQueue.getCompletedCount()}`,
       this.constructor.name,
     );
     const { taskMethod } = taskConfig.task;
     if (MetaWorker.Enums.WorkerTaskMethod.DEPLOY_SITE === taskMethod) {
+      const deploySiteTaskEntity =
+        await this.siteTasksLogicService.getDeploySiteTaskById(
+          taskConfig.task.taskId,
+        );
       await this.siteTasksLogicService.finishDeploySiteTask(
         taskConfig.task.taskId,
       );
+      //生成一个建站order
+      const publishSiteOrderEntity =
+        await this.siteOrdersLogicService.generatePublishSiteOrder(
+          deploySiteTaskEntity.userId,
+        );
     } else if (
       MetaWorker.Enums.WorkerTaskMethod.CREATE_POSTS === taskMethod ||
       MetaWorker.Enums.WorkerTaskMethod.UPDATE_POSTS === taskMethod ||
@@ -391,6 +488,7 @@ export class WorkerTasksDispatcherService {
         await this.siteOrdersLogicService.generatePublishSiteOrder(
           postTaskEntity.userId,
         );
+
       const publishSiteOrderId = publishSiteOrderEntity.id;
       // }
       await this.postTasksLogicService.finishPostTask(
@@ -402,11 +500,16 @@ export class WorkerTasksDispatcherService {
         taskConfig as MetaWorker.Configs.PublishTaskConfig,
       );
     }
-    //TODO 异步拉动下一个任务
+    // TODO 异步拉动下一个任务
+    // this.nextTask();
   }
   async failTask(taskConfig: WorkerModel2TaskConfig) {
     this.logger.error(
-      `Fail task taskMethod ${taskConfig.task.taskMethod} taskId ${taskConfig.task.taskId} siteConfigId ${taskConfig.site.configId} `,
+      `Fail task taskMethod ${taskConfig.task.taskMethod} taskId ${
+        taskConfig.task.taskId
+      } siteConfigId ${
+        taskConfig.site.configId
+      } Queue active count: ${await this.workerTasksQueue.getActiveCount()} waiting count: ${await this.workerTasksQueue.getWaitingCount()} Failed count: ${await this.workerTasksQueue.getFailedCount()}`,
       this.constructor.name,
     );
     const { taskMethod } = taskConfig.task;
@@ -425,6 +528,109 @@ export class WorkerTasksDispatcherService {
         taskConfig.task.taskId,
       );
     }
-    //TODO 异步拉动下一个任务
+    // TODO 异步拉动下一个任务
+    // this.nextTask();
+  }
+
+  async processTask(taskConfig: WorkerModel2TaskConfig) {
+    const activeCount = await this.workerTasksQueue.getActiveCount(),
+      waitingCount = await this.workerTasksQueue.getWaitingCount();
+    this.logger.verbose(
+      `Process task taskMethod ${taskConfig.task.taskMethod} taskId ${taskConfig.task.taskId} siteConfigId ${taskConfig.site.configId} Queue active count: ${activeCount} waiting count: ${waitingCount} `,
+      this.constructor.name,
+    );
+    // TODO 异步拉动下一个任务
+    // this.nextTask();
+  }
+
+  async nextTask() {
+    const activeCount = await this.workerTasksQueue.getActiveCount(),
+      waitingCount = await this.workerTasksQueue.getWaitingCount();
+    this.logger.verbose('Dispatch next task');
+    try {
+      if (
+        this.configService.get<boolean>(
+          'pipeline.dispatcher.autoDispatchWorkerTask',
+        ) &&
+        activeCount + waitingCount <
+          this.configService.get<number>('pipeline.dispatcher.wipLimit')
+      ) {
+        const pendingDeploySiteOrderEntity =
+          await this.siteOrdersLogicService.getFirstPendingDeploySiteOrder();
+
+        const pendingPublishSiteOrderEntity =
+          await this.siteOrdersLogicService.getFirstPendingPublishSiteOrder();
+
+        const pendingPostOrderEntity =
+          await this.postOrdersLogicService.getFirstPendingPostOrder();
+
+        // 算出最早的任务
+
+        const orderOptions = [
+          pendingDeploySiteOrderEntity,
+          pendingPublishSiteOrderEntity,
+          pendingPostOrderEntity,
+        ];
+        this.logger.verbose(`Order options ${JSON.stringify(orderOptions)}`);
+        const createdAtArray = orderOptions
+          .filter((item) => !isEmpty(item?.createdAt))
+          .map((item) => item.createdAt.getTime()) as number[];
+        const minCreatedAt = Math.min(...createdAtArray);
+        if (
+          pendingDeploySiteOrderEntity?.siteConfigId &&
+          pendingDeploySiteOrderEntity?.createdAt.getTime() === minCreatedAt
+        ) {
+          this.logger.verbose(
+            `Dispatch deploy site task based on ${JSON.stringify(
+              pendingDeploySiteOrderEntity,
+            )}`,
+            this.constructor.name,
+          );
+          await this.dispatchDeploySiteTask(
+            pendingDeploySiteOrderEntity?.siteConfigId,
+            pendingDeploySiteOrderEntity?.userId,
+          );
+
+          return;
+        }
+        if (
+          pendingPublishSiteOrderEntity?.siteConfigId &&
+          pendingPublishSiteOrderEntity?.createdAt.getTime() === minCreatedAt
+        ) {
+          this.logger.verbose(
+            `Dispatch publish site task based on ${JSON.stringify(
+              pendingPublishSiteOrderEntity,
+            )}`,
+            this.constructor.name,
+          );
+          await this.dispatchPublishSiteTask(
+            pendingPublishSiteOrderEntity?.siteConfigId,
+            pendingPublishSiteOrderEntity?.userId,
+          );
+          return;
+        }
+        if (
+          pendingPostOrderEntity?.userId &&
+          pendingPostOrderEntity?.createdAt.getTime() === minCreatedAt
+        ) {
+          this.logger.verbose(
+            `Dispatch post task based on ${JSON.stringify(
+              pendingPostOrderEntity,
+            )}`,
+            this.constructor.name,
+          );
+          const userDefaultSiteConfig =
+            await this.siteOrdersLogicService.getUserDefaultSiteConfig(
+              pendingPostOrderEntity.userId,
+            );
+          await this.dispatchCreatePostsTask(
+            userDefaultSiteConfig?.id,
+            pendingPostOrderEntity.userId,
+          );
+        }
+      }
+    } catch (err) {
+      this.logger.error(`Next task err ${err.message}`, err);
+    }
   }
 }

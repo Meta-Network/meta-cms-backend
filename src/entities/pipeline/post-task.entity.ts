@@ -3,12 +3,19 @@ import {
   ApiProperty,
   ApiResponseProperty,
 } from '@nestjs/swagger';
-import { Column, CreateDateColumn, Entity, UpdateDateColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  Index,
+  UpdateDateColumn,
+} from 'typeorm';
 import { PrimaryColumn } from 'typeorm/decorator/columns/PrimaryColumn';
 
 import { PipelineOrderTaskCommonState } from '../../types/enum';
 import { IWorkerTask } from './worker-task.interface';
 
+@Index(['userId', 'state'])
 @Entity()
 export class PostTaskEntity implements IWorkerTask {
   @PrimaryColumn({
@@ -66,6 +73,7 @@ export class PostTaskEntity implements IWorkerTask {
   @ApiResponseProperty({
     example: 123,
   })
+  @Index()
   @Column({
     comment: 'Publish site order id',
     nullable: false,
@@ -79,6 +87,7 @@ export class PostTaskEntity implements IWorkerTask {
   @ApiResponseProperty({
     example: 123,
   })
+  @Index()
   @Column({
     comment: 'Publish site task id',
     nullable: false,

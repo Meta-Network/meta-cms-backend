@@ -7,12 +7,14 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 
 import { PipelineOrderTaskCommonState } from '../../types/enum';
 
+@Index(['state', 'userId', 'siteConfigId'])
 @Entity()
 export class PublishSiteOrderEntity {
   @PrimaryGeneratedColumn({ unsigned: true })
@@ -53,6 +55,7 @@ export class PublishSiteOrderEntity {
   })
   serverVerificationId?: string;
 
+  @Index()
   @Column({
     comment: 'Publish site task id',
     nullable: false,

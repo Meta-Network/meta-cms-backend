@@ -5,7 +5,7 @@ import {
 } from '@metaio/meta-signature-util-v2';
 import { Inject, Injectable, LoggerService } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { OnEvent } from '@nestjs/event-emitter';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { In } from 'typeorm';
 
@@ -23,6 +23,8 @@ import {
 import {
   GENERATE_PUBLISH_SITE_ORDER_EVENT,
   GeneratePublishSiteOrderEvent,
+  LINK_OR_GENERATE_PUBLISH_SITE_TASK_EVENT,
+  LinkOrGeneratePublishSiteTaskEvent,
 } from '../event/site-order.event';
 import { PostOrdersLogicService } from '../post-orders/post-orders.logic.service';
 import { PostTasksLogicService } from '../post-tasks/post-tasks.logic.service';
@@ -42,6 +44,7 @@ export class SiteOrdersLogicService {
     private readonly postTasksLogicService: PostTasksLogicService,
     private readonly siteConfigLogicService: SiteConfigLogicService,
     private readonly serverVerificationBaseService: ServerVerificationBaseService,
+    private readonly eventEmitter: EventEmitter2,
   ) {
     const postMetadata = this.getDefaultPostMetadata();
     if (!postMetadata) {
@@ -94,18 +97,25 @@ export class SiteOrdersLogicService {
       // Deploying 正在建站中，等待结果就行了
       // Deployed 已经建好了，不需要再建了，直接返回
       // Publishing Published PublishFailed 都是要在上一步之后才能做的，道理是一样的，不需要再建了
+      return deploySiteOrder;
     } else {
       // 这里是第一次创建用户的deploy site order
       this.logger.verbose(
         `Create deploy site order userId ${userId} siteConfigId ${deploySiteOrderRequestDto.siteConfigId}`,
         SiteOrdersLogicService.name,
       );
-
+      // 因为这里的时间戳是先有postOrder再有deploySiteOrder，需要注意和自动调度机制的配合。自动调度机制是按时间戳来优先处理的，如果postOrder的submitState是pending，那会变成先处理，然后没有repo失败
+      // 做成提交成功发布成功的状态
       // 初始化自带一篇文章，做出对应的数据。这个数据由服务器生成并签名
       const { postOrder } = await this.postOrdersLogicService.savePostOrder(
         userId,
         this.createDefaultPostOrderRequestDto(),
+        {
+          submitState: PipelineOrderTaskCommonState.FINISHED,
+          publishState: PipelineOrderTaskCommonState.FINISHED,
+        },
       );
+
       //处理建站逻辑，建站完成后更新post的submitState和publishState 在 worker-tasks.dispatcher.servcie->post-orders.logic.service
       return await this.deploySiteOrdersBaseService.save({
         id: postOrder.id,
@@ -118,16 +128,33 @@ export class SiteOrdersLogicService {
   async generatePublishSiteOrder(
     userId: number,
   ): Promise<PublishSiteOrderEntity> {
-    const defaultSiteConfig =
-      await this.siteConfigLogicService.getUserDefaultSiteConfig(userId);
+    const defaultSiteConfig = await this.getUserDefaultSiteConfig(userId);
     this.logger.verbose(
       `Generate publish site order siteConfigId ${defaultSiteConfig.id} userId ${userId} `,
       this.constructor.name,
     );
-    return await this.publishSiteOrdersBaseService.save({
+    const siteConfigId = defaultSiteConfig.id;
+    //如果有现成的就直接用
+    let publishSiteOrder =
+      await this.publishSiteOrdersBaseService.getBySiteConfigUserIdAndState(
+        siteConfigId,
+        userId,
+        PipelineOrderTaskCommonState.PENDING,
+      );
+    if (!publishSiteOrder) {
+      publishSiteOrder = await this.publishSiteOrdersBaseService.save({
+        userId,
+        siteConfigId,
+      });
+    }
+    this.eventEmitter.emit(LINK_OR_GENERATE_PUBLISH_SITE_TASK_EVENT, {
       userId,
-      siteConfigId: defaultSiteConfig.id,
-    });
+      siteConfigId,
+    } as LinkOrGeneratePublishSiteTaskEvent);
+    return publishSiteOrder;
+  }
+  async getUserDefaultSiteConfig(userId: number) {
+    return await this.siteConfigLogicService.getUserDefaultSiteConfig(userId);
   }
 
   @OnEvent(GENERATE_PUBLISH_SITE_ORDER_EVENT)
@@ -174,20 +201,32 @@ export class SiteOrdersLogicService {
     };
   }
 
+  async getFirstPendingDeploySiteOrder(): Promise<DeploySiteOrderEntity> {
+    return await this.deploySiteOrdersBaseService.getFirstByState(
+      PipelineOrderTaskCommonState.PENDING,
+    );
+  }
+  async getFirstPendingPublishSiteOrder(): Promise<PublishSiteOrderEntity> {
+    return await this.publishSiteOrdersBaseService.getFirstByState(
+      PipelineOrderTaskCommonState.PENDING,
+    );
+  }
+
   async updatePublishSiteTaskId(
     siteConfigId: number,
     userId: number,
     publishSiteTaskId: string,
   ) {
     // 本来有判断publishSiteTaskId为空，目前看来是不需要的。因为就算之前关联上了，那个任务如果失败了的话，后续有成功的publishTask，一样会全部带出去，也就是说关联关系就是会更新的。那么应该根据状态来判断
+    // 查询条件为避免混淆，顺序和索引一致
     await this.publishSiteOrdersBaseService.batchUpdate(
       {
-        siteConfigId,
-        userId,
         state: In([
           PipelineOrderTaskCommonState.PENDING,
           PipelineOrderTaskCommonState.FAILED,
         ]),
+        userId,
+        siteConfigId,
       },
       { publishSiteTaskId },
     );

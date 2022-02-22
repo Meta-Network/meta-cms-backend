@@ -18,6 +18,7 @@ import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity
 
 import { PostMetadataEntity } from '../../../entities/pipeline/post-metadata.entity';
 import { PostOrderEntity } from '../../../entities/pipeline/post-order.entity';
+import { PipelineOrderTaskCommonState } from '../../../types/enum';
 
 @Injectable()
 export class PostOrdersBaseService {
@@ -72,6 +73,16 @@ export class PostOrdersBaseService {
     options?: FindOneOptions<PostOrderEntity>,
   ): Promise<PostOrderEntity> {
     return await this.postOrdersRepository.findOne(id, options);
+  }
+  async getFirstBySubmitState(
+    submitState: PipelineOrderTaskCommonState,
+  ): Promise<PostOrderEntity> {
+    return await this.postOrdersRepository.findOne({
+      where: {
+        submitState,
+      },
+      order: { createdAt: 'ASC' },
+    });
   }
 
   count(userId: number) {

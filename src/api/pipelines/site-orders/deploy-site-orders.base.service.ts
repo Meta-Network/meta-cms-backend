@@ -2,8 +2,10 @@ import { Inject, Injectable, LoggerService } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { DeepPartial, Repository } from 'typeorm';
+import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 
 import { DeploySiteOrderEntity } from '../../../entities/pipeline/deploy-site-order.entity';
+import { PipelineOrderTaskCommonState } from '../../../types/enum';
 
 @Injectable()
 export class DeploySiteOrdersBaseService {
@@ -22,8 +24,18 @@ export class DeploySiteOrdersBaseService {
     userId: number,
   ): Promise<DeploySiteOrderEntity> {
     return this.deploySiteOrdersRepository.findOne({
-      siteConfigId,
       userId,
+      siteConfigId,
+    });
+  }
+  async getFirstByState(
+    state: PipelineOrderTaskCommonState,
+  ): Promise<DeploySiteOrderEntity> {
+    return await this.deploySiteOrdersRepository.findOne({
+      where: {
+        state,
+      },
+      order: { createdAt: 'ASC' },
     });
   }
 
@@ -31,5 +43,15 @@ export class DeploySiteOrdersBaseService {
     deploySiteOrderEntity: DeepPartial<DeploySiteOrderEntity>,
   ): Promise<DeploySiteOrderEntity> {
     return this.deploySiteOrdersRepository.save(deploySiteOrderEntity);
+  }
+
+  async updateByDeploySiteTaskId(
+    deploySiteTaskId: string,
+    partialEntity: QueryDeepPartialEntity<DeploySiteOrderEntity>,
+  ) {
+    return await this.deploySiteOrdersRepository.update(
+      { deploySiteTaskId },
+      partialEntity,
+    );
   }
 }

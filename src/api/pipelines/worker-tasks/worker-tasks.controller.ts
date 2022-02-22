@@ -63,6 +63,11 @@ export class WorkerTasksController {
       taskReport,
     );
   }
+  @Post('/next-task')
+  // @SkipUCenterAuth(true)
+  async nextTask() {
+    await this.workerTasksDispatcherService.nextTask();
+  }
 
   @Post(':siteConfigId/deploy-site')
   @UsePipes(new ValidationPipe(PostMethodValidation))
@@ -108,10 +113,10 @@ export class WorkerTasksController {
     if (await this.workerTasksDispatcherService.hasTaskInProgress(userId)) {
       throw new ConflictException('Having Task in progreses');
     }
-    await this.workerTasksDispatcherService.linkOrGeneratePublishSiteTask(
-      siteConfigId,
-      userId,
-    );
+    // await this.workerTasksDispatcherService.linkOrGeneratePublishSiteTask(
+    //   siteConfigId,
+    //   userId,
+    // );
     return await this.workerTasksDispatcherService.dispatchPublishSiteTask(
       siteConfigId,
       userId,

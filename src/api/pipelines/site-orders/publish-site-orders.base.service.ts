@@ -26,8 +26,29 @@ export class PublishSiteOrdersBaseService {
     state: PipelineOrderTaskCommonState,
   ): Promise<PublishSiteOrderEntity> {
     return await this.publishSiteOrdersRepository.findOne({
-      where: { userId, state },
+      where: { state, userId },
       order: { id: 'DESC' },
+    });
+  }
+
+  async getBySiteConfigUserIdAndState(
+    siteConfigId: number,
+    userId: number,
+    state: PipelineOrderTaskCommonState,
+  ): Promise<PublishSiteOrderEntity> {
+    return await this.publishSiteOrdersRepository.findOne({
+      where: { state, userId, siteConfigId },
+      order: { id: 'DESC' },
+    });
+  }
+  async getFirstByState(
+    state: PipelineOrderTaskCommonState,
+  ): Promise<PublishSiteOrderEntity> {
+    return await this.publishSiteOrdersRepository.findOne({
+      where: {
+        state,
+      },
+      order: { createdAt: 'ASC' },
     });
   }
 

@@ -15,7 +15,7 @@ export class BullConfigService implements SharedBullConfigurationFactory {
         username: this.configService.get<string>('redis.user'),
         password: this.configService.get<string>('redis.pass'),
       },
-      limiter: { max: 5, duration: 3000, bounceBack: true },
+      // limiter: { max: 5, duration: 3000, bounceBack: true },
     };
   }
 }

@@ -54,6 +54,12 @@ export class PostOrdersLogicService {
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
+  async getFirstPendingPostOrder(): Promise<PostOrderEntity> {
+    return await this.postOrdersBaseService.getFirstBySubmitState(
+      PipelineOrderTaskCommonState.PENDING,
+    );
+  }
+
   async pagiUserAllPostOrders(
     userId: number,
     options: IPaginationOptions<IPaginationMeta>,
@@ -184,6 +190,10 @@ export class PostOrdersLogicService {
   async savePostOrder(
     userId: number,
     postOrderRequestDto: PostOrderRequestDto,
+    states?: {
+      submitState: PipelineOrderTaskCommonState;
+      publishState: PipelineOrderTaskCommonState;
+    },
   ): Promise<PostOrderResponseDto> {
     const digest = postOrderRequestDto.authorPostDigest;
     const sign = postOrderRequestDto.authorPostSign;
@@ -231,6 +241,7 @@ export class PostOrdersLogicService {
       userId,
       postMetadata,
       serverVerificationId: serverVerification.signature,
+      ...states,
     });
     const serverVerificationPayload = JSON.stringify(serverVerification);
     await this.serverVerificationBaseService.save(
@@ -238,6 +249,7 @@ export class PostOrdersLogicService {
       serverVerificationPayload,
     );
     const postOrder = await this.postOrdersBaseService.save(createdPostOrder);
+
     this.eventEmitter.emit(
       InternalRealTimeEvent.POST_STATE_UPDATED,
       new InternalRealTimeMessage({
@@ -246,8 +258,14 @@ export class PostOrdersLogicService {
         data: [
           {
             id: sign.signature,
-            submit: RealTimeEventState.pending,
-            publish: RealTimeEventState.pending,
+            submit:
+              RealTimeEventState[
+                PipelineOrderTaskCommonState[postOrder.submitState]
+              ],
+            publish:
+              RealTimeEventState[
+                PipelineOrderTaskCommonState[postOrder.publishState]
+              ],
           },
         ],
       }),

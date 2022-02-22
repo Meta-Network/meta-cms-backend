@@ -4,6 +4,7 @@ import {
   OnQueueFailed,
   OnQueueProgress,
   Process,
+  ProcessOptions,
   Processor,
 } from '@nestjs/bull';
 import { Inject, LoggerService } from '@nestjs/common';
@@ -11,6 +12,7 @@ import { ConfigService } from '@nestjs/config';
 import { Job } from 'bull';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
+import { configBuilder } from '../../../configs';
 import { TaskWorkerJobProcessorType } from '../../../types/enum';
 import { DockerProcessorsService } from './processors/docker/docker-processors.service';
 import { MockProcessorsService } from './processors/mock/mock-processors.service';
@@ -21,6 +23,9 @@ import {
 } from './processors/worker-tasks.job-processor';
 import { WorkerTasksDispatcherService } from './worker-tasks.dispatcher.service';
 
+const config = configBuilder();
+const processConfig = config.pipeline.processor.consumer
+  .process as ProcessOptions;
 @Processor(WORKER_TASKS_JOB_PROCESSOR)
 export class WorkerTasksConsumerService implements WorkerTasksJobProcessor {
   constructor(
@@ -31,9 +36,14 @@ export class WorkerTasksConsumerService implements WorkerTasksJobProcessor {
     private readonly mockProcessorsService: MockProcessorsService,
     private readonly workerTasksDispatcherService: WorkerTasksDispatcherService,
   ) {}
-  @Process()
+  @Process(processConfig)
   async process(job: Job<WorkerTasksJobDetail>) {
-    return await this.getProcessor().process(job);
+    this.logger.verbose(
+      `Process worker task: ${job.data.workerName} job id${job.id}`,
+      this.constructor.name,
+    );
+    this.workerTasksDispatcherService.processTask(job?.data?.taskConfig);
+    await this.getProcessor().process(job);
   }
 
   getProcessor(): WorkerTasksJobProcessor {

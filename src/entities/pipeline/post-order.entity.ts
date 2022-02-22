@@ -21,7 +21,7 @@ import {
 import { PostMetadataEntity } from './post-metadata.entity';
 
 @Entity()
-@Index(['userId', 'publishState', 'submitState', 'certificateState'])
+@Index(['userId', 'submitState', 'publishState', 'certificateState'])
 export class PostOrderEntity {
   @PrimaryColumn({
     comment: 'Use author signature as post metadata id.',
@@ -61,6 +61,7 @@ export class PostOrderEntity {
   @ApiResponseProperty({
     example: PipelineOrderTaskCommonState.PENDING,
   })
+  @Index()
   @Column({
     comment: 'Submit state',
     nullable: false,

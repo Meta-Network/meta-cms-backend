@@ -44,7 +44,7 @@ export class PostTasksLogicService {
     postTaskEntity: PostTaskEntity;
     postOrderEntities: PostOrderEntity[];
   }> {
-    //TODO 会产生空任务，相当于在没有postOrder的情况下创建了任务，是否要处理？
+    // 会产生空任务，相当于在没有postOrder的情况下创建了任务，方便测试，也好
     const id = this.newCreatePostsTaskId();
     this.logger.verbose(`Generate post task id ${id}`, this.constructor.name);
     const postTaskEntity = await this.postTasksBaseService.save({

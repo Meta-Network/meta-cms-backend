@@ -167,8 +167,15 @@ metaSignature:
   serverDomain:
 pipeline:
   queue:
+  dispatcher:
+    autoDispatchWorkerTask: false
+    wipLimit: 10
+    number:1
   processor:
     type: DOCKER
+    consumer:
+      process:
+        concurrency: 6
     docker:
       image: meta-cms-worker-theme-bear:latest
       env:
