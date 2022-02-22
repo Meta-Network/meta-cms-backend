@@ -68,5 +68,6 @@ import { MatatakiSourceModule } from './sources/matataki/matataki.module';
       inject: [ConfigService],
     },
   ],
+  exports: [PostService],
 })
 export class PostModule {}
