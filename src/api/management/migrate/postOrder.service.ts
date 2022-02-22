@@ -1,16 +1,34 @@
-import { Injectable } from '@nestjs/common';
+import { MetaWorker } from '@metaio/worker-model2';
+import { Inject, Injectable, LoggerService } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { Repository } from 'typeorm';
 
 import { PostMetadataEntity } from '../../../entities/pipeline/post-metadata.entity';
 import { PostOrderEntity } from '../../../entities/pipeline/post-order.entity';
 import { SiteConfigEntity } from '../../../entities/siteConfig.entity';
 import { SiteInfoEntity } from '../../../entities/siteInfo.entity';
-import { SiteStatus } from '../../../types/enum';
+import { GetPostsFromStorageState, SiteStatus } from '../../../types/enum';
+import { PostService } from '../../post/post.service';
+
+type UnrecoredStoragePosts = {
+  configId: number;
+  userId: number;
+  posts: MetaWorker.Info.Post[];
+};
+
+type UnrecoredPosts = {
+  configId: number;
+  userId: number;
+  posted: MetaWorker.Info.Post[];
+  published: MetaWorker.Info.Post[];
+};
 
 @Injectable()
 export class MigratePostOrderService {
   constructor(
+    @Inject(WINSTON_MODULE_NEST_PROVIDER)
+    private readonly logger: LoggerService,
     @InjectRepository(PostOrderEntity)
     private readonly postOrdersRepository: Repository<PostOrderEntity>,
     @InjectRepository(PostMetadataEntity)
@@ -19,6 +37,7 @@ export class MigratePostOrderService {
     private readonly siteInfoRepository: Repository<SiteInfoEntity>,
     @InjectRepository(SiteConfigEntity)
     private readonly siteConfigRepository: Repository<SiteConfigEntity>,
+    private readonly postService: PostService,
   ) {}
 
   private async findRecordedUserIds(): Promise<number[]> {
@@ -32,8 +51,9 @@ export class MigratePostOrderService {
     return postOrderUserIds;
   }
 
-  private async findUnrecordedUserIds(): Promise<number[]> {
-    const recordedUserIds = await this.findRecordedUserIds();
+  private async findUnrecordedUserIds(
+    recordedUserIds: number[],
+  ): Promise<number[]> {
     const siteInfoQB = this.siteInfoRepository.createQueryBuilder('siteInfo');
     const siteInfos = await siteInfoQB
       .select('siteInfo.userId')
@@ -56,9 +76,10 @@ export class MigratePostOrderService {
     return siteConfigs;
   }
 
-  private async findLatestSiteConfigs(): Promise<SiteConfigEntity[]> {
-    const unrecordedUserIds = await this.findUnrecordedUserIds();
-    const publishedSiteConfigs = await this.findPublishedSiteConfigs();
+  private async findLatestSiteConfigs(
+    unrecordedUserIds: number[],
+    publishedSiteConfigs: SiteConfigEntity[],
+  ): Promise<SiteConfigEntity[]> {
     const finded = unrecordedUserIds.map((userId) =>
       publishedSiteConfigs.find((config) => config.siteInfo.userId === userId),
     );
@@ -68,8 +89,69 @@ export class MigratePostOrderService {
     return filtered;
   }
 
-  public async mgratePostOrder(): Promise<SiteConfigEntity[]> {
-    const latestSiteConfigs = await this.findLatestSiteConfigs();
-    return latestSiteConfigs;
+  private async getUnrecoredStoragePosts(
+    latestSiteConfigs: SiteConfigEntity[],
+    state: GetPostsFromStorageState,
+  ): Promise<UnrecoredStoragePosts[]> {
+    const promises = latestSiteConfigs.map(
+      async (config) =>
+        await this.postService.getAllPostsFromStorage(
+          config.siteInfo.userId,
+          config.id,
+          state,
+        ),
+    );
+    const promiseResult = await Promise.allSettled(promises);
+    const result = promiseResult.map((res, index) => {
+      const config = latestSiteConfigs[index];
+      const configId = config.id;
+      const userId = config.siteInfo.userId;
+      if (res.status === 'rejected') {
+        this.logger.warn(
+          `Get user ${userId} config ${configId} ${state} posts failed ${res.reason}`,
+          this.constructor.name,
+        );
+      }
+      return {
+        configId,
+        userId,
+        posts: res.status === 'fulfilled' ? res.value : [],
+      };
+    });
+    return result;
+  }
+
+  public async mgratePostOrder(): Promise<UnrecoredPosts[]> {
+    const recordedUserIds = await this.findRecordedUserIds();
+    const unrecordedUserIds = await this.findUnrecordedUserIds(recordedUserIds);
+    const publishedSiteConfigs = await this.findPublishedSiteConfigs();
+    const latestSiteConfigs = await this.findLatestSiteConfigs(
+      unrecordedUserIds,
+      publishedSiteConfigs,
+    );
+    const unrecoredPostedPosts = await this.getUnrecoredStoragePosts(
+      latestSiteConfigs,
+      GetPostsFromStorageState.Posted,
+    );
+    const unrecoredPublishedPosts = await this.getUnrecoredStoragePosts(
+      latestSiteConfigs,
+      GetPostsFromStorageState.Published,
+    );
+
+    const unrecoredPosts: UnrecoredPosts[] = unrecoredPostedPosts.map(
+      (posted) => {
+        const published = unrecoredPublishedPosts.find(
+          (published) => published.configId === posted.configId,
+        );
+        return {
+          configId: posted.configId,
+          userId: posted.userId,
+          posted: posted.posts,
+          published: published.posts,
+        };
+      },
+    );
+
+    return unrecoredPosts;
   }
 }
