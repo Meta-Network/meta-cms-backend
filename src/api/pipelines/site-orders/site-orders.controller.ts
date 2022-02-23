@@ -84,7 +84,6 @@ export class SiteOrdersController {
   async getUserPublishSiteOrdersInQueue(
     @User('id', ParseIntPipe) userId: number,
   ): Promise<PublishSiteOrderInQueueResponseDto> {
-    console.log(userId);
     return await this.siteOrdersLogicService.getUserPublishSiteOrdersInQueue(
       userId,
     );
