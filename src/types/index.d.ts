@@ -131,3 +131,7 @@ export type InvitationCountData = number;
 export interface VerifiedSocket extends Socket {
   userId: number;
 }
+
+export type Convert<T, K extends keyof T, NT> = {
+  [P in keyof T]: P extends K ? NT : T[P];
+};
