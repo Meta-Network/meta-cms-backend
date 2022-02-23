@@ -958,10 +958,10 @@
   resolved "https://registry.yarnpkg.com/@metaio/microservice-model/-/microservice-model-1.0.3.tgz#b25367192ec658b4b381198f7100ab74db81e84b"
   integrity sha512-4p94ncBCegEDwaBeg+8kSbrv1tEzao6g9DYpH/KeTpVhDzs4DwiZfGOmEg+lTv04jUxKsFV2wM0ZAsb5GTiSsQ==
 
-"@metaio/worker-model2@npm:@metaio/worker-model@2.3.0":
-  version "2.3.0"
-  resolved "https://registry.yarnpkg.com/@metaio/worker-model/-/worker-model-2.3.0.tgz#de4369211700057f7d3e0a1b7a94908e63864afc"
-  integrity sha512-OlIKBLO8SO4s1ohVz1LSNK8rXV8gvpZk1NYHL2S459GGItMduGaXN6USjInG++xiXrdUcGG2t8tOucjZeiGcmA==
+"@metaio/worker-model2@npm:@metaio/worker-model@2.3.2":
+  version "2.3.2"
+  resolved "https://registry.yarnpkg.com/@metaio/worker-model/-/worker-model-2.3.2.tgz#99cb33b41622e916bd92edef80282936d84fdb34"
+  integrity sha512-68EL5Qd4P6rh6fm6yxBQglm2yx8jmJkTDzf2Jwx9StCBIbNuWjdt/WoAY72b4QlIRKi42b+OceECSGUQXx1jCg==
   dependencies:
     type-fest "^2.9.0"
 
