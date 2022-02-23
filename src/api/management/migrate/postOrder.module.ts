@@ -6,6 +6,7 @@ import { PostOrderEntity } from '../../../entities/pipeline/post-order.entity';
 import { SiteConfigEntity } from '../../../entities/siteConfig.entity';
 import { SiteInfoEntity } from '../../../entities/siteInfo.entity';
 import { PostModule } from '../../post/post.module';
+import { MetadataStorageModule } from '../../provider/metadata-storage/metadata-storage.module';
 import { MigratePostOrderController } from './postOrder.controller';
 import { MigratePostOrderService } from './postOrder.service';
 
@@ -18,6 +19,7 @@ import { MigratePostOrderService } from './postOrder.service';
       SiteConfigEntity,
     ]),
     PostModule,
+    MetadataStorageModule,
   ],
   controllers: [MigratePostOrderController],
   providers: [MigratePostOrderService],
