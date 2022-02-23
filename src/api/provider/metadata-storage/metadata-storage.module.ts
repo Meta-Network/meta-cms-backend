@@ -1,3 +1,4 @@
+import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
 
 // import { ConfigService } from '@nestjs/config';
@@ -9,6 +10,7 @@ import { IpfsMetadataStorageProvider } from './ipfs/ipfs.metadata-storage.provid
 import { MetadataStorageService } from './metadata-storage.service';
 
 @Module({
+  imports: [HttpModule],
   providers: [
     IpfsMetadataStorageProvider,
     ArweaveMetadataStorageProvider,
