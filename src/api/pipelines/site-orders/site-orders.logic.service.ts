@@ -125,6 +125,35 @@ export class SiteOrdersLogicService {
       });
     }
   }
+
+  async getDeploySiteOrderBySiteConfigUserId(
+    siteConfigId: number,
+    userId: number,
+  ) {
+    return await this.deploySiteOrdersBaseService.getBySiteConfigUserId(
+      siteConfigId,
+      userId,
+    );
+  }
+
+  async updateDeploySiteOrderState(
+    deploySiteOrderId: string,
+    state: PipelineOrderTaskCommonState,
+  ) {
+    return await this.deploySiteOrdersBaseService.update(deploySiteOrderId, {
+      state,
+    });
+  }
+
+  async updateDeploySiteOrderTaskId(
+    deploySiteOrderId: string,
+    deploySiteTaskId: string,
+  ) {
+    return await this.deploySiteOrdersBaseService.update(deploySiteOrderId, {
+      deploySiteTaskId,
+    });
+  }
+
   async generatePublishSiteOrder(
     userId: number,
   ): Promise<PublishSiteOrderEntity> {

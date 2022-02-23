@@ -13,19 +13,31 @@ import { SiteOrdersModule } from '../site-orders/site-orders.module';
 import { SiteTasksModule } from '../site-tasks/site-tasks.module';
 import { DockerProcessorsModule } from './processors/docker/docker-processors.module';
 import { MockProcessorsModule } from './processors/mock/mock-processors.module';
-import { WORKER_TASKS_JOB_PROCESSOR } from './processors/worker-tasks.job-processor';
+import {
+  WORKER_TASKS_DISPATCH_NEXT_JOB_PROCESSOR,
+  WORKER_TASKS_JOB_PROCESSOR,
+} from './processors/worker-tasks.job-processor';
 import { WorkerTasksConsumerService } from './worker-tasks.consumer.service';
 import { WorkerTasksController } from './worker-tasks.controller';
+import { WorkerTasksDispatchNextConsumerService } from './worker-tasks.dispatch-next.consumer.service';
 import { WorkerTasksDispatcherService } from './worker-tasks.dispatcher.service';
 
 @Module({
   imports: [
-    BullModule.registerQueueAsync({
-      name: WORKER_TASKS_JOB_PROCESSOR,
-      useFactory: (configService: ConfigService) =>
-        configService.get<BullModuleOptions>('pipeline.queue'),
-      inject: [ConfigService],
-    }),
+    BullModule.registerQueueAsync(
+      {
+        name: WORKER_TASKS_JOB_PROCESSOR,
+        useFactory: (configService: ConfigService) =>
+          configService.get<BullModuleOptions>('pipeline.queue'),
+        inject: [ConfigService],
+      },
+      {
+        name: WORKER_TASKS_DISPATCH_NEXT_JOB_PROCESSOR,
+        useFactory: (configService: ConfigService) =>
+          configService.get<BullModuleOptions>('pipeline.queue'),
+        inject: [ConfigService],
+      },
+    ),
     PostOrdersModule,
     PostTasksModule,
     SiteOrdersModule,
@@ -39,7 +51,11 @@ import { WorkerTasksDispatcherService } from './worker-tasks.dispatcher.service'
     MetaUCenterModule,
   ],
   controllers: [WorkerTasksController],
-  providers: [WorkerTasksConsumerService, WorkerTasksDispatcherService],
+  providers: [
+    WorkerTasksConsumerService,
+    WorkerTasksDispatchNextConsumerService,
+    WorkerTasksDispatcherService,
+  ],
   exports: [WorkerTasksDispatcherService],
 })
 export class WorkerTasksModule {}

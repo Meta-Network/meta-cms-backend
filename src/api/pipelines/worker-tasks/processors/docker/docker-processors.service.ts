@@ -28,6 +28,20 @@ export class DockerProcessorsService implements WorkerTasksJobProcessor {
     private readonly logger: LoggerService,
     private readonly configService: ConfigService,
   ) {
+    [
+      'pipeline.processor.docker.image',
+      'pipeline.processor.docker.volumes.tmp',
+      'pipeline.processor.docker.env.logging.debug',
+      'pipeline.processor.docker.env.logging.level',
+      'pipeline.processor.docker.env.backend.url',
+      'pipeline.processor.docker.env.loki.url',
+    ].forEach((configKey) => {
+      const configValue = this.configService.get(configKey);
+      if (configValue === undefined || configValue === null) {
+        throw new Error(`No config: ${configKey}`);
+      }
+    });
+
     this.docker = new Docker();
   }
 

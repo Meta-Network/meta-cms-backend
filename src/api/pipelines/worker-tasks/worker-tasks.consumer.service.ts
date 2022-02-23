@@ -3,6 +3,7 @@ import {
   OnQueueError,
   OnQueueFailed,
   OnQueueProgress,
+  OnQueueWaiting,
   Process,
   ProcessOptions,
   Processor,
@@ -24,8 +25,15 @@ import {
 import { WorkerTasksDispatcherService } from './worker-tasks.dispatcher.service';
 
 const config = configBuilder();
-const processConfig = config.pipeline.processor.consumer
-  .process as ProcessOptions;
+const processConfig = config?.pipeline?.processor?.consumer
+  ?.process as ProcessOptions;
+
+if (!processConfig) {
+  throw new Error(`No config: pipeline.processor.consumer.process`);
+}
+if (!processConfig.concurrency) {
+  throw new Error(`No config: pipeline.processor.consumer.process.concurrency`);
+}
 @Processor(WORKER_TASKS_JOB_PROCESSOR)
 export class WorkerTasksConsumerService implements WorkerTasksJobProcessor {
   constructor(
@@ -35,11 +43,20 @@ export class WorkerTasksConsumerService implements WorkerTasksJobProcessor {
     private readonly dockerProcessorsService: DockerProcessorsService,
     private readonly mockProcessorsService: MockProcessorsService,
     private readonly workerTasksDispatcherService: WorkerTasksDispatcherService,
-  ) {}
+  ) {
+    ['pipeline.processor.type', 'pipeline.processor.consumer'].forEach(
+      (configKey) => {
+        const configValue = this.configService.get(configKey);
+        if (configValue === undefined || configValue === null) {
+          throw new Error(`No config: ${configKey}`);
+        }
+      },
+    );
+  }
   @Process(processConfig)
   async process(job: Job<WorkerTasksJobDetail>) {
     this.logger.verbose(
-      `Process worker task: ${job.data.workerName} job id${job.id}`,
+      `Process worker task: ${job.data.workerName} job id ${job.id}`,
       this.constructor.name,
     );
     this.workerTasksDispatcherService.processTask(job?.data?.taskConfig);
@@ -67,7 +84,7 @@ export class WorkerTasksConsumerService implements WorkerTasksJobProcessor {
       this.constructor.name,
     );
   }
-
+  @OnQueueWaiting()
   protected async onWaiting(jobId) {
     this.logger.verbose(`Job ${jobId} is waiting`, this.constructor.name);
   }

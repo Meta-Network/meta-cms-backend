@@ -13,3 +13,12 @@ export class WorkerTasksJobDetail {
 }
 
 export const WORKER_TASKS_JOB_PROCESSOR = 'WORKER_TASK_JOB_PROCESSOR';
+
+export interface WorkerTasksDispatchNextJobProcessor {
+  process(job: Bull.Job<WorkerTasksDispatchNextJobDetail>);
+}
+export class WorkerTasksDispatchNextJobDetail {
+  previousTaskId?: string;
+}
+export const WORKER_TASKS_DISPATCH_NEXT_JOB_PROCESSOR =
+  'WORKER_TASKS_DISPATCH_NEXT_JOB_PROCESSOR';

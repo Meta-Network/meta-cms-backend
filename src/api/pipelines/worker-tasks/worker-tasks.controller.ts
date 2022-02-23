@@ -66,7 +66,7 @@ export class WorkerTasksController {
   @Post('/next-task')
   // @SkipUCenterAuth(true)
   async nextTask() {
-    await this.workerTasksDispatcherService.nextTask();
+    await this.workerTasksDispatcherService.dispatchNextTask();
   }
 
   @Post(':siteConfigId/deploy-site')

@@ -45,6 +45,13 @@ export class DeploySiteOrdersBaseService {
     return this.deploySiteOrdersRepository.save(deploySiteOrderEntity);
   }
 
+  async update(
+    id: string,
+    partialEntity: QueryDeepPartialEntity<DeploySiteOrderEntity>,
+  ) {
+    return await this.deploySiteOrdersRepository.update(id, partialEntity);
+  }
+
   async updateByDeploySiteTaskId(
     deploySiteTaskId: string,
     partialEntity: QueryDeepPartialEntity<DeploySiteOrderEntity>,

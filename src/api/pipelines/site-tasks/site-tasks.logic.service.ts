@@ -58,85 +58,21 @@ export class SiteTasksLogicService {
     siteConfigId: number,
     userId: number,
   ): Promise<{
-    deploySiteOrderEntity: DeploySiteOrderEntity;
     deploySiteTaskEntity: DeploySiteTaskEntity;
-    siteConfig: SiteConfigEntity;
   }> {
-    const siteConfig =
-      await this.siteConfigLogicService.validateSiteConfigUserId(
-        siteConfigId,
-        userId,
-      );
+    const id = this.newDeploySiteTaskId(siteConfigId);
+    const deploySiteTaskEntity = await this.deploySiteTasksBaseService.save({
+      id,
+      userId,
+      siteConfigId,
+      state: PipelineOrderTaskCommonState.PENDING,
+      // createdAt: new Date(),
+      // updatedAt: new Date(),
+    });
 
-    const deploySiteOrderEntity =
-      await this.deploySiteOrderBaseService.getBySiteConfigUserId(
-        siteConfigId,
-        userId,
-      );
-    //如果这里获取不到，应该直接返回
-    if (!deploySiteOrderEntity?.id) {
-      throw new DataNotFoundException('Deploy site order not found');
-    }
-    // 如果是失败了，先更新状态
-    if (SiteStatus.DeployFailed === siteConfig.status) {
-      deploySiteOrderEntity.state = PipelineOrderTaskCommonState.PENDING;
-      siteConfig.status = SiteStatus.Configured;
-      await this.deploySiteOrderBaseService.save(deploySiteOrderEntity);
-      await this.siteConfigLogicService.updateSiteConfigStatus(
-        siteConfigId,
-        SiteStatus.Configured,
-      );
-    }
-    // 只有站点在Configured状态才可以创建建站任务,所以如果状态不对直接做其他处理
-
-    if (SiteStatus.Configured === siteConfig.status) {
-      await this.deploySiteOrderBaseService.save(deploySiteOrderEntity);
-      const id = this.newDeploySiteTaskId(siteConfigId);
-      const deploySiteTaskEntity = await this.deploySiteTasksBaseService.save({
-        id,
-        userId,
-        siteConfigId,
-        state: PipelineOrderTaskCommonState.PENDING,
-        // createdAt: new Date(),
-        // updatedAt: new Date(),
-      });
-      deploySiteOrderEntity.deploySiteTaskId = deploySiteTaskEntity.id;
-
-      return {
-        deploySiteOrderEntity,
-        deploySiteTaskEntity,
-        siteConfig,
-      };
-    }
-    // 如果是部署中->部署完成后的状态，说明已经建站成功了，
-    else if (
-      SiteStatus.Deploying === siteConfig.status ||
-      SiteStatus.Deployed === siteConfig.status ||
-      SiteStatus.Publishing === siteConfig.status ||
-      SiteStatus.Published === siteConfig.status ||
-      SiteStatus.PublishFailed === siteConfig.status
-    ) {
-      const deploySiteTaskEntity =
-        await this.deploySiteTasksBaseService.getBySiteConfigUserId(
-          siteConfigId,
-          userId,
-        );
-      if (
-        deploySiteTaskEntity &&
-        PipelineOrderTaskCommonState.FINISHED !== deploySiteOrderEntity.state
-      ) {
-        deploySiteTaskEntity.state = PipelineOrderTaskCommonState.FINISHED;
-        await this.deploySiteTasksBaseService.save(deploySiteTaskEntity);
-        deploySiteOrderEntity.state = PipelineOrderTaskCommonState.FINISHED;
-        await this.deploySiteOrderBaseService.save(deploySiteOrderEntity);
-      }
-
-      return {
-        deploySiteTaskEntity,
-        deploySiteOrderEntity,
-        siteConfig,
-      };
-    }
+    return {
+      deploySiteTaskEntity,
+    };
   }
   newDeploySiteTaskId(siteConfigId: number): string {
     return `wt4site-${siteConfigId}-deploy-site-${uuid()}`;
@@ -216,7 +152,7 @@ export class SiteTasksLogicService {
         userId,
       );
     if (PipelineOrderTaskCommonState.PENDING !== publishSiteTaskEntity?.state) {
-      //如果没有状态为pending的（无论是当前有task，状态非pending，还是无task），先生成
+      //如果没有状态为pending的，先生成
       const id = this.newPublishSiteTaskId(siteConfigId);
       publishSiteTaskEntity = await this.publishSiteTasksBaseService.save({
         id,
@@ -263,7 +199,6 @@ export class SiteTasksLogicService {
     userId: number,
   ): Promise<{
     publishSiteTaskEntity: PublishSiteTaskEntity;
-    siteConfigEntity: SiteConfigEntity;
   }> {
     const publishSiteTaskEntity =
       await this.publishSiteTasksBaseService.getBySiteConfigUserIdAndState(
@@ -271,14 +206,27 @@ export class SiteTasksLogicService {
         userId,
         PipelineOrderTaskCommonState.PENDING,
       );
-    const siteConfigEntity =
-      await this.siteConfigLogicService.validateSiteConfigUserId(
-        siteConfigId,
-        userId,
-      );
+
     return {
       publishSiteTaskEntity,
-      siteConfigEntity,
+    };
+  }
+
+  async getDoingPublishSiteTask(
+    siteConfigId: number,
+    userId: number,
+  ): Promise<{
+    publishSiteTaskEntity: PublishSiteTaskEntity;
+  }> {
+    const publishSiteTaskEntity =
+      await this.publishSiteTasksBaseService.getBySiteConfigUserIdAndState(
+        siteConfigId,
+        userId,
+        PipelineOrderTaskCommonState.DOING,
+      );
+
+    return {
+      publishSiteTaskEntity,
     };
   }
 

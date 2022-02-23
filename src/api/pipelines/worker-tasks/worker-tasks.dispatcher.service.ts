@@ -11,15 +11,24 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Interval } from '@nestjs/schedule';
 import { Queue } from 'bull';
 import { isEmpty } from 'class-validator';
+import moment from 'moment';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { v4 as uuid } from 'uuid';
 
+import { configBuilder } from '../../../configs';
+import { DeploySiteOrderEntity } from '../../../entities/pipeline/deploy-site-order.entity';
 import { DeploySiteTaskEntity } from '../../../entities/pipeline/deploy-site-task.entity';
+import { PostOrderEntity } from '../../../entities/pipeline/post-order.entity';
 import { PostTaskEntity } from '../../../entities/pipeline/post-task.entity';
+import { PublishSiteOrderEntity } from '../../../entities/pipeline/publish-site-order.entity';
 import { IWorkerTask } from '../../../entities/pipeline/worker-task.interface';
-import { InvalidStatusException } from '../../../exceptions';
+import {
+  DataNotFoundException,
+  InvalidStatusException,
+} from '../../../exceptions';
 import { UCenterUser } from '../../../types';
 import { PipelineOrderTaskCommonState, SiteStatus } from '../../../types/enum';
 import {
@@ -29,15 +38,24 @@ import {
 } from '../../../types/worker-model2';
 import { iso8601ToDate } from '../../../utils';
 import { MetaUCenterService } from '../../microservices/meta-ucenter/meta-ucenter.service';
+import { SiteConfigLogicService } from '../../site/config/logicService';
 import { PostOrdersLogicService } from '../post-orders/post-orders.logic.service';
 import { PostTasksLogicService } from '../post-tasks/post-tasks.logic.service';
 import { SiteOrdersLogicService } from '../site-orders/site-orders.logic.service';
 import { SiteTasksLogicService } from '../site-tasks/site-tasks.logic.service';
 import {
+  WORKER_TASKS_DISPATCH_NEXT_JOB_PROCESSOR,
   WORKER_TASKS_JOB_PROCESSOR,
+  WorkerTasksDispatchNextJobDetail,
   WorkerTasksJobDetail,
 } from './processors/worker-tasks.job-processor';
 
+const config = configBuilder();
+const requestNextTaskIntervalMs = config?.pipeline?.dispatcher
+  ?.requestNextTaskIntervalMs as number;
+if (!requestNextTaskIntervalMs) {
+  throw new Error(`No config: pipeline.dispatcher.requestNextTaskIntervalMs`);
+}
 @Injectable()
 export class WorkerTasksDispatcherService {
   constructor(
@@ -48,10 +66,25 @@ export class WorkerTasksDispatcherService {
     private readonly postTasksLogicService: PostTasksLogicService,
     private readonly siteOrdersLogicService: SiteOrdersLogicService,
     private readonly siteTasksLogicService: SiteTasksLogicService,
+    private readonly siteConfigLogicService: SiteConfigLogicService,
+
     @InjectQueue(WORKER_TASKS_JOB_PROCESSOR)
     private readonly workerTasksQueue: Queue<WorkerTasksJobDetail>,
+    @InjectQueue(WORKER_TASKS_DISPATCH_NEXT_JOB_PROCESSOR)
+    private readonly workerTasksDispatchNextQueue: Queue<WorkerTasksDispatchNextJobDetail>,
     private readonly ucenterService: MetaUCenterService,
-  ) {}
+  ) {
+    [
+      'pipeline.dispatcher.autoDispatchWorkerTask',
+      'pipeline.dispatcher.wipLimit',
+      'pipeline.dispatcher.number',
+    ].forEach((configKey) => {
+      const configValue = this.configService.get(configKey);
+      if (configValue === undefined || configValue === null) {
+        throw new Error(`No config: ${configKey}`);
+      }
+    });
+  }
 
   async hasTaskInProgress(userId: number): Promise<boolean> {
     return (
@@ -73,24 +106,54 @@ export class WorkerTasksDispatcherService {
       this.constructor.name,
     );
 
-    const { deploySiteTaskEntity, deploySiteOrderEntity, siteConfig } =
+    const siteConfigEntity =
+      await this.siteConfigLogicService.validateSiteConfigUserId(
+        siteConfigId,
+        userId,
+      );
+
+    const deploySiteOrderEntity =
+      await this.siteOrdersLogicService.getDeploySiteOrderBySiteConfigUserId(
+        siteConfigId,
+        userId,
+      );
+    //如果这里获取不到，应该直接返回 (说明派工有问题，应该在此之前就控制住)
+    if (!deploySiteOrderEntity?.id) {
+      throw new DataNotFoundException('Deploy site order not found');
+    }
+    // 如果站点是失败状态，直接重试，先更新状态
+    if (SiteStatus.DeployFailed === siteConfigEntity?.status) {
+      deploySiteOrderEntity.state = PipelineOrderTaskCommonState.PENDING;
+      siteConfigEntity.status = SiteStatus.Configured;
+      await this.siteOrdersLogicService.updateDeploySiteOrderState(
+        deploySiteOrderEntity.id,
+        deploySiteOrderEntity.state,
+      );
+      await this.siteConfigLogicService.updateSiteConfigStatus(
+        siteConfigId,
+        SiteStatus.Configured,
+      );
+    }
+    // 只有站点在Configured状态才可以创建建站任务,所以如果状态不对直接做其他处理
+    // 这里没有else，是为了承接上一步可能有的状态修改
+    if (SiteStatus.Configured !== siteConfigEntity?.status) {
+      this.logger.error(
+        `SiteConfigId ${siteConfigId} userId ${userId} SiteStatus ${siteConfigEntity.status}. `,
+      );
+      throw new InvalidStatusException(
+        `Invalid site status ${siteConfigEntity.status}`,
+      );
+    }
+    const { deploySiteTaskEntity } =
       await this.siteTasksLogicService.generateDeploySiteTask(
         siteConfigId,
         userId,
       );
-    //如果不需要新开任务来处理，直接返回
-    if (
-      SiteStatus.Deploying === siteConfig.status ||
-      SiteStatus.Deployed === siteConfig.status ||
-      SiteStatus.Publishing === siteConfig.status ||
-      SiteStatus.Published === siteConfig.status ||
-      SiteStatus.PublishFailed === siteConfig.status
-    ) {
-      this.logger.verbose(
-        `SiteConfigId ${siteConfigId} userId ${userId} SiteStatus ${siteConfig.status}. dispatch deploy site task finished`,
-      );
-      return deploySiteOrderEntity;
-    }
+    deploySiteOrderEntity.deploySiteTaskId = deploySiteTaskEntity.id;
+    await this.siteOrdersLogicService.updateDeploySiteOrderTaskId(
+      deploySiteOrderEntity.id,
+      deploySiteOrderEntity.deploySiteTaskId,
+    );
     deploySiteTaskEntity.workerName = this.getWorkerName();
     deploySiteTaskEntity.workerSecret = this.newWorkerSecret();
 
@@ -119,7 +182,9 @@ export class WorkerTasksDispatcherService {
       await this.siteTasksLogicService.failDeploySiteTask(
         deploySiteTaskEntity.id,
       );
-      // this.nextTask();
+      this.requestNextTask({
+        previousTaskId: deploySiteTaskEntity.id,
+      });
       // throw err;
     } finally {
       this.logger.verbose(`Dispatch deploy site task finished`);
@@ -135,6 +200,23 @@ export class WorkerTasksDispatcherService {
       `Dispatch create posts task siteConfigId ${siteConfigId} userId ${userId}`,
       this.constructor.name,
     );
+    const siteConfigEntity =
+      await this.siteConfigLogicService.validateSiteConfigUserId(
+        siteConfigId,
+        userId,
+      );
+    if (
+      !siteConfigEntity?.status ||
+      SiteStatus.Configured === siteConfigEntity.status ||
+      SiteStatus.Deploying === siteConfigEntity.status ||
+      SiteStatus.DeployFailed === siteConfigEntity.status ||
+      SiteStatus.Publishing === siteConfigEntity.status
+    ) {
+      throw new InvalidStatusException(
+        `Invalid site status ${siteConfigEntity.status}`,
+      );
+    }
+    // Deployed Published PublishFailed是可接受的状态
     const { postTaskEntity, postOrderEntities } =
       await this.postTasksLogicService.generateUserPostTaskForPendingPosts(
         userId,
@@ -198,7 +280,7 @@ export class WorkerTasksDispatcherService {
       //有可能因为获取不到GitHub OAuth token等原因导致失败。这种情况下直接标记任务为失败返回
       this.logger.error(err.message);
       await this.postTasksLogicService.failPostTask(postTaskEntity.id);
-      // this.nextTask();
+      this.requestNextTask({});
       // throw err;
     } finally {
       this.logger.verbose(`Dispatch create posts task finished`);
@@ -231,23 +313,51 @@ export class WorkerTasksDispatcherService {
       `Dispatch publish site task siteConfigId ${siteConfigId} userId ${userId}`,
       this.constructor.name,
     );
-    // 用于兜底
-    await this.linkOrGeneratePublishSiteTask(siteConfigId, userId);
-    const { publishSiteTaskEntity, siteConfigEntity } =
-      await this.siteTasksLogicService.getPendingPublishSiteTask(
+    const siteConfigEntity =
+      await this.siteConfigLogicService.validateSiteConfigUserId(
         siteConfigId,
         userId,
       );
-    //如果已经在发布中了，什么都不做，直接返回
-    if (SiteStatus.Publishing === siteConfigEntity?.status) {
-      return;
+    //如果已经在发布中了，而且就在10分钟内，确认一下
+    //在自动机制上会导致对应的order没得到更新？一直找到同一个？需要尝试是否会导致重复处理
+    const noResponse = moment(siteConfigEntity?.updatedAt).isBefore(
+      moment().subtract(10, 'minutes'),
+    );
+    if (SiteStatus.Publishing === siteConfigEntity?.status && !noResponse) {
+      this.logger.verbose(
+        `SiteConfigId ${siteConfigId} may be publishing `,
+        this.constructor.name,
+      );
+      const doingPublishSiteTask =
+        await this.siteTasksLogicService.getDoingPublishSiteTask(
+          siteConfigId,
+          userId,
+        );
+      //如果确实找得到正在执行的任务，算异常派工?
+      if (doingPublishSiteTask) {
+        this.logger.error(
+          `Dispatch publish site task siteConfigId ${siteConfigId} userId ${userId}: invalid site status ${siteConfigEntity?.status}`,
+        );
+        throw new InvalidStatusException(
+          `invalid site status ${siteConfigEntity.status}`,
+        );
+      }
+      //如果找不到，是站点状态不对，尝试修复
+      else {
+        siteConfigEntity.status = SiteStatus.PublishFailed;
+        await this.siteConfigLogicService.updateSiteConfigStatus(
+          siteConfigEntity.id,
+          siteConfigEntity.status,
+        );
+      }
     }
+
     // 正常情况不会发生的，还没初始化成功就来发布的
-    else if (
+    if (
+      !siteConfigEntity?.status ||
       SiteStatus.Configured === siteConfigEntity?.status ||
       SiteStatus.Deploying === siteConfigEntity?.status ||
-      SiteStatus.DeployFailed === siteConfigEntity?.status ||
-      !siteConfigEntity?.status
+      SiteStatus.DeployFailed === siteConfigEntity?.status
     ) {
       this.logger.error(
         `Dispatch publish site task siteConfigId ${siteConfigId} userId ${userId}: invalid site status ${siteConfigEntity?.status}`,
@@ -256,14 +366,14 @@ export class WorkerTasksDispatcherService {
         `invalid site status ${siteConfigEntity.status}`,
       );
     }
-    // 剩下的 Deployed Published PublishFailed是可以处理的
-    if (PipelineOrderTaskCommonState.PENDING !== publishSiteTaskEntity?.state) {
-      this.logger.error(
-        `Dispatch publish site task siteConfigId ${siteConfigId} userId ${userId}: invalid pubish site task state ${publishSiteTaskEntity?.state}`,
+    // 剩下的 Deployed Publishing Published PublishFailed是可以处理的
+    // 用于兜底，产生一个publishSiteTask
+    await this.linkOrGeneratePublishSiteTask(siteConfigId, userId);
+    const { publishSiteTaskEntity } =
+      await this.siteTasksLogicService.getPendingPublishSiteTask(
+        siteConfigId,
+        userId,
       );
-
-      throw new InvalidStatusException('invalid publish site task state');
-    }
 
     publishSiteTaskEntity.workerName = this.getWorkerName();
     publishSiteTaskEntity.workerSecret = this.newWorkerSecret();
@@ -293,12 +403,14 @@ export class WorkerTasksDispatcherService {
       // 处理完成不在这里，由worker来调用finishTask/failTask
       return publishSiteTaskEntity;
     } catch (err) {
-      //有可能因为获取不到GitHub OAuth token等原因导致失败。这种情况下直接标记任务为失败活返回
+      //有可能因为获取不到GitHub OAuth token等原因导致失败。这种情况下直接标记任务为失败后返回
       this.logger.error(err.message);
       await this.siteTasksLogicService.failPublishSiteTask(
         publishSiteTaskEntity.id,
       );
-      // this.nextTask();
+      this.requestNextTask({
+        previousTaskId: publishSiteTaskEntity.id,
+      });
       // throw err;
     } finally {
       this.logger.verbose(`Dispatch create publish site task finished`);
@@ -404,6 +516,9 @@ export class WorkerTasksDispatcherService {
       job?.data?.workerName === username &&
       job?.data?.taskConfig?.task?.taskId === workerTaskId
     ) {
+      this.logger.verbose(
+        `Get worker task config ${JSON.stringify(job?.data?.taskConfig)}`,
+      );
       return job?.data?.taskConfig;
     } else {
       throw new UnauthorizedException('Unauthorize');
@@ -500,8 +615,10 @@ export class WorkerTasksDispatcherService {
         taskConfig as MetaWorker.Configs.PublishTaskConfig,
       );
     }
-    // TODO 异步拉动下一个任务
-    // this.nextTask();
+    // 异步拉动下一个任务
+    this.requestNextTask({
+      previousTaskId: taskConfig.task.taskId,
+    } as WorkerTasksDispatchNextJobDetail);
   }
   async failTask(taskConfig: WorkerModel2TaskConfig) {
     this.logger.error(
@@ -528,8 +645,10 @@ export class WorkerTasksDispatcherService {
         taskConfig.task.taskId,
       );
     }
-    // TODO 异步拉动下一个任务
-    // this.nextTask();
+    // 异步拉动下一个任务
+    this.requestNextTask({
+      previousTaskId: taskConfig.task.taskId,
+    } as WorkerTasksDispatchNextJobDetail);
   }
 
   async processTask(taskConfig: WorkerModel2TaskConfig) {
@@ -539,22 +658,50 @@ export class WorkerTasksDispatcherService {
       `Process task taskMethod ${taskConfig.task.taskMethod} taskId ${taskConfig.task.taskId} siteConfigId ${taskConfig.site.configId} Queue active count: ${activeCount} waiting count: ${waitingCount} `,
       this.constructor.name,
     );
-    // TODO 异步拉动下一个任务
-    // this.nextTask();
+    // 异步拉动下一个任务
+    this.requestNextTask({
+      previousTaskId: taskConfig.task.taskId,
+    } as WorkerTasksDispatchNextJobDetail);
   }
 
-  async nextTask() {
+  @Interval(requestNextTaskIntervalMs)
+  async scheduleRequestNextTask() {
+    await this.requestNextTask({});
+  }
+
+  async requestNextTask(
+    workerTaskDispatchNextJobDetail: WorkerTasksDispatchNextJobDetail,
+  ) {
+    const activeCount =
+        await this.workerTasksDispatchNextQueue.getActiveCount(),
+      waitingCount = await this.workerTasksDispatchNextQueue.getWaitingCount();
+    this.logger.verbose(
+      `Next task request in queue: active count: ${activeCount} waiting count: ${waitingCount} `,
+    );
+
+    await this.workerTasksDispatchNextQueue.add(
+      workerTaskDispatchNextJobDetail,
+    );
+  }
+
+  isTaskCountLessThanWipLimit(activeCount: number, waitingCount: number) {
+    return (
+      this.configService.get<boolean>(
+        'pipeline.dispatcher.autoDispatchWorkerTask',
+      ) &&
+      activeCount + waitingCount <
+        this.configService.get<number>('pipeline.dispatcher.wipLimit')
+    );
+  }
+
+  async dispatchNextTask() {
     const activeCount = await this.workerTasksQueue.getActiveCount(),
       waitingCount = await this.workerTasksQueue.getWaitingCount();
-    this.logger.verbose('Dispatch next task');
-    try {
-      if (
-        this.configService.get<boolean>(
-          'pipeline.dispatcher.autoDispatchWorkerTask',
-        ) &&
-        activeCount + waitingCount <
-          this.configService.get<number>('pipeline.dispatcher.wipLimit')
-      ) {
+    this.logger.verbose(
+      `Dispatch next task. Queue activeCount ${activeCount} waitingCount ${waitingCount}`,
+    );
+    if (this.isTaskCountLessThanWipLimit(activeCount, waitingCount)) {
+      try {
         const pendingDeploySiteOrderEntity =
           await this.siteOrdersLogicService.getFirstPendingDeploySiteOrder();
 
@@ -563,74 +710,86 @@ export class WorkerTasksDispatcherService {
 
         const pendingPostOrderEntity =
           await this.postOrdersLogicService.getFirstPendingPostOrder();
-
-        // 算出最早的任务
-
-        const orderOptions = [
+        await this.dispatchOldestOrder(
           pendingDeploySiteOrderEntity,
           pendingPublishSiteOrderEntity,
           pendingPostOrderEntity,
-        ];
-        this.logger.verbose(`Order options ${JSON.stringify(orderOptions)}`);
-        const createdAtArray = orderOptions
-          .filter((item) => !isEmpty(item?.createdAt))
-          .map((item) => item.createdAt.getTime()) as number[];
-        const minCreatedAt = Math.min(...createdAtArray);
-        if (
-          pendingDeploySiteOrderEntity?.siteConfigId &&
-          pendingDeploySiteOrderEntity?.createdAt.getTime() === minCreatedAt
-        ) {
-          this.logger.verbose(
-            `Dispatch deploy site task based on ${JSON.stringify(
-              pendingDeploySiteOrderEntity,
-            )}`,
-            this.constructor.name,
-          );
-          await this.dispatchDeploySiteTask(
-            pendingDeploySiteOrderEntity?.siteConfigId,
-            pendingDeploySiteOrderEntity?.userId,
-          );
-
-          return;
-        }
-        if (
-          pendingPublishSiteOrderEntity?.siteConfigId &&
-          pendingPublishSiteOrderEntity?.createdAt.getTime() === minCreatedAt
-        ) {
-          this.logger.verbose(
-            `Dispatch publish site task based on ${JSON.stringify(
-              pendingPublishSiteOrderEntity,
-            )}`,
-            this.constructor.name,
-          );
-          await this.dispatchPublishSiteTask(
-            pendingPublishSiteOrderEntity?.siteConfigId,
-            pendingPublishSiteOrderEntity?.userId,
-          );
-          return;
-        }
-        if (
-          pendingPostOrderEntity?.userId &&
-          pendingPostOrderEntity?.createdAt.getTime() === minCreatedAt
-        ) {
-          this.logger.verbose(
-            `Dispatch post task based on ${JSON.stringify(
-              pendingPostOrderEntity,
-            )}`,
-            this.constructor.name,
-          );
-          const userDefaultSiteConfig =
-            await this.siteOrdersLogicService.getUserDefaultSiteConfig(
-              pendingPostOrderEntity.userId,
-            );
-          await this.dispatchCreatePostsTask(
-            userDefaultSiteConfig?.id,
-            pendingPostOrderEntity.userId,
-          );
-        }
+        );
+      } catch (err) {
+        this.logger.error(`Dispatch Next task err ${err.message}`, err);
+        //TODO 根据派工异常信息做不同的善后
       }
-    } catch (err) {
-      this.logger.error(`Next task err ${err.message}`, err);
+    } else {
+      this.logger.verbose(`WIP limit`);
+    }
+  }
+
+  async dispatchOldestOrder(
+    pendingDeploySiteOrderEntity: DeploySiteOrderEntity,
+
+    pendingPublishSiteOrderEntity: PublishSiteOrderEntity,
+    pendingPostOrderEntity: PostOrderEntity,
+  ) {
+    //如果同一个siteConfig连续多种类型的任务，可能并发
+    const orderOptions = [
+      pendingDeploySiteOrderEntity,
+      pendingPublishSiteOrderEntity,
+      pendingPostOrderEntity,
+    ];
+    this.logger.verbose(`Order options ${JSON.stringify(orderOptions)}`);
+    const createdAtArray = orderOptions
+      .filter((item) => !isEmpty(item?.createdAt))
+      .map((item) => item.createdAt.getTime()) as number[];
+    const minCreatedAt = Math.min(...createdAtArray);
+    if (
+      pendingDeploySiteOrderEntity?.siteConfigId &&
+      pendingDeploySiteOrderEntity?.createdAt.getTime() === minCreatedAt
+    ) {
+      this.logger.verbose(
+        `Dispatch deploy site task based on ${JSON.stringify(
+          pendingDeploySiteOrderEntity,
+        )}`,
+        this.constructor.name,
+      );
+      await this.dispatchDeploySiteTask(
+        pendingDeploySiteOrderEntity?.siteConfigId,
+        pendingDeploySiteOrderEntity?.userId,
+      );
+
+      return;
+    }
+    if (
+      pendingPublishSiteOrderEntity?.siteConfigId &&
+      pendingPublishSiteOrderEntity?.createdAt.getTime() === minCreatedAt
+    ) {
+      this.logger.verbose(
+        `Dispatch publish site task based on ${JSON.stringify(
+          pendingPublishSiteOrderEntity,
+        )}`,
+        this.constructor.name,
+      );
+      await this.dispatchPublishSiteTask(
+        pendingPublishSiteOrderEntity?.siteConfigId,
+        pendingPublishSiteOrderEntity?.userId,
+      );
+      return;
+    }
+    if (
+      pendingPostOrderEntity?.userId &&
+      pendingPostOrderEntity?.createdAt.getTime() === minCreatedAt
+    ) {
+      this.logger.verbose(
+        `Dispatch post task based on ${JSON.stringify(pendingPostOrderEntity)}`,
+        this.constructor.name,
+      );
+      const userDefaultSiteConfig =
+        await this.siteOrdersLogicService.getUserDefaultSiteConfig(
+          pendingPostOrderEntity.userId,
+        );
+      await this.dispatchCreatePostsTask(
+        userDefaultSiteConfig?.id,
+        pendingPostOrderEntity.userId,
+      );
     }
   }
 }
