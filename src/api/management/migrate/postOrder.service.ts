@@ -206,11 +206,13 @@ export class MigratePostOrderService {
   private async createPostOrderRequestDto(
     metadata: BaseSignatureMetadata,
   ): Promise<PostOrderRequestDto> {
-    const findAuthorPostDigest = metadata.reference.find(
-      (s) => s.body.type === 'author-digest',
+    const authorPostDigestRegExp = /^author(-post)?-digest$/;
+    const authorPostSignRegExp = /^author-digest-sign$/;
+    const findAuthorPostDigest = metadata.reference.find((s) =>
+      authorPostDigestRegExp.test(s.body.type || s.body['@type']),
     );
-    const findAuthorPostSign = metadata.reference.find(
-      (s) => s.body.type === 'author-digest-sign',
+    const findAuthorPostSign = metadata.reference.find((s) =>
+      authorPostSignRegExp.test(s.body.type || s.body['@type']),
     );
     assert(
       findAuthorPostDigest,
@@ -366,10 +368,7 @@ export class MigratePostOrderService {
     const entitiesPromise = filteredUnrecordedPosts.map(async (posts) => {
       const convertPromises = posts.posted.map(
         async (post) =>
-          await this.convertPostInfoToPostOrderEntity(
-            Number(post.userId),
-            post,
-          ),
+          await this.convertPostInfoToPostOrderEntity(posts.userId, post),
       );
       // TODO: use Promise.allSettled
       const converted = await Promise.all(convertPromises);
