@@ -13,7 +13,6 @@ import {
 import { SiteConfigMsController } from '../../../../src/api/site/config/ms.controller';
 import { SiteInfoBaseService } from '../../../../src/api/site/info/baseService';
 import { SiteInfoLogicService } from '../../../../src/api/site/info/logicService';
-import { configBuilder } from '../../../../src/configs';
 import { SiteConfigEntity } from '../../../../src/entities/siteConfig.entity';
 import { SiteStatus } from '../../../../src/types/enum';
 const mockConfig = () => ({
@@ -121,7 +120,7 @@ describe('SiteConfigMsController (e2e)', () => {
     });
     jest
       .spyOn(siteConfigLogicService, 'fetchSiteInfos')
-      .mockImplementationOnce(async (queries) => metaInternalResult);
+      .mockImplementationOnce(async () => metaInternalResult);
     const result = await firstValueFrom(
       appMsClient.send('syncSiteInfo', { modifiedAfiter: new Date() }),
     );
@@ -155,7 +154,7 @@ describe('SiteConfigMsController (e2e)', () => {
 
       jest
         .spyOn(siteConfigLogicService, 'getUserDefaultSiteConfig')
-        .mockImplementationOnce(async (userId) => {
+        .mockImplementationOnce(async () => {
           return mockSiteInfo;
         });
       const result = await firstValueFrom(
@@ -200,7 +199,7 @@ describe('SiteConfigMsController (e2e)', () => {
 
       jest
         .spyOn(siteConfigLogicService, 'getUserDefaultSiteConfig')
-        .mockImplementationOnce(async (userId) => {
+        .mockImplementationOnce(async () => {
           return mockSiteInfo;
         });
       const result = await firstValueFrom(
@@ -213,7 +212,7 @@ describe('SiteConfigMsController (e2e)', () => {
     it('result data should be null if site is not existed', async () => {
       jest
         .spyOn(siteConfigLogicService, 'getUserDefaultSiteConfig')
-        .mockImplementationOnce(async (userId) => {
+        .mockImplementationOnce(async () => {
           return null;
         });
       const result = await firstValueFrom(

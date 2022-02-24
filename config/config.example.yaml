@@ -29,6 +29,7 @@ jwt:
 swagger:
   enable: true
 
+# CMS BE logger settings
 logger:
   loki:
     enable: true
@@ -94,6 +95,7 @@ task:
         backend:
           #  'Meta-CMS-BE' server url
           url:
+        # Worker loki settings
         loki:
           # Loki server url
           url: host.docker.internal:3100
@@ -185,6 +187,7 @@ pipeline:
           debug:
         backend:
           url:
+        # Worker loki settings
         loki:
           url:
         7zip:

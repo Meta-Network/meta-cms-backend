@@ -1,3 +1,4 @@
+import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
@@ -15,6 +16,7 @@ import { GiteePublisherProvider } from './gitee.publisher.provider';
     TypeOrmModule.forFeature([GiteePublisherProviderEntity]),
     SiteConfigModule,
     MetaUCenterModule,
+    HttpModule,
   ],
   controllers: [GiteePublisherController],
   providers: [

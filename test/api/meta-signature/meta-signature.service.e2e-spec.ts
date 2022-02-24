@@ -1,7 +1,7 @@
 import {
-  authorDigest,
-  AuthorDigestMetadata,
-  authorDigestSign,
+  authorPostDigest,
+  AuthorPostDigestMetadata,
+  authorPostDigestSign,
   AuthorPostSignatureMetadata,
   authorPublishMetaSpaceRequest,
   generateKeys,
@@ -71,7 +71,7 @@ describe('MetaSignatureService (e2e)', () => {
     expect(keys.private).not.toBe(keys.public);
   });
   it('generatePostDigestRequestMetadata', () => {
-    const authorDigestRequestMetadata = authorDigest.generate({
+    const authorDigestRequestMetadata = authorPostDigest.generate({
       title: '测试标题',
       categories: '',
       content: '测试正文',
@@ -81,13 +81,13 @@ describe('MetaSignatureService (e2e)', () => {
       tags: '',
     });
     console.log(authorDigestRequestMetadata);
-    expect(authorDigest.verify(authorDigestRequestMetadata)).toBeTruthy();
+    expect(authorPostDigest.verify(authorDigestRequestMetadata)).toBeTruthy();
   });
   describe('verify author digest', () => {
     it('Should return true', async () => {
       const authorDigestRequestMetadata = {
         '@context': 'https://metanetwork.online/ns/cms',
-        '@type': 'author-digest',
+        '@type': 'author-post-digest',
         '@version': '1.0.0',
         algorithm: 'sha256',
         title: '测试标题',
@@ -101,12 +101,12 @@ describe('MetaSignatureService (e2e)', () => {
         digest:
           '0x97564fdec6d57525ea7de9db908fda5fb0ab4f94908cb02ddd843c2a531a6554',
         ts: 1636553657839,
-      } as AuthorDigestMetadata;
+      } as AuthorPostDigestMetadata;
 
-      expect(authorDigest.verify(authorDigestRequestMetadata)).toBeTruthy();
+      expect(authorPostDigest.verify(authorDigestRequestMetadata)).toBeTruthy();
       const authorDigestRequestMetadata2 = {
         '@context': 'https://metanetwork.online/ns/cms',
-        '@type': 'author-digest',
+        '@type': 'author-post-digest',
         '@version': '1.0.0',
         algorithm: 'sha256',
         title: '测试标题',
@@ -119,13 +119,15 @@ describe('MetaSignatureService (e2e)', () => {
         digest:
           '0xea38d768d163acc752b6140b91d2c8899a4bbba8814b5e6f7e6edc75852be480',
         ts: 1636553736703,
-      } as AuthorDigestMetadata;
-      expect(authorDigest.verify(authorDigestRequestMetadata2)).toBeTruthy();
+      } as AuthorPostDigestMetadata;
+      expect(
+        authorPostDigest.verify(authorDigestRequestMetadata2),
+      ).toBeTruthy();
     });
     it('Should return false when digest is not correct', async () => {
       const authorDigestRequestMetadata = {
         '@context': 'https://metanetwork.online/ns/cms',
-        '@type': 'author-digest',
+        '@type': 'author-post-digest',
         '@version': '1.0.0',
         algorithm: 'sha256',
         title: '测试标题',
@@ -139,13 +141,13 @@ describe('MetaSignatureService (e2e)', () => {
         digest:
           '0x2068f5e16c85b39e3b7848a4b7475291e491f64aef2baf33be92e0f182944b59',
         ts: 1636466942189,
-      } as AuthorDigestMetadata;
-      expect(authorDigest.verify(authorDigestRequestMetadata)).toBeFalsy();
+      } as AuthorPostDigestMetadata;
+      expect(authorPostDigest.verify(authorDigestRequestMetadata)).toBeFalsy();
     });
     it('test fe sample', async () => {
       const authorDigestRequestMetadata = {
         '@context': 'https://metanetwork.online/ns/cms',
-        '@type': 'author-digest',
+        '@type': 'author-post-digest',
         '@version': '1.0.0',
         algorithm: 'sha256',
         title: '2021111013',
@@ -158,9 +160,9 @@ describe('MetaSignatureService (e2e)', () => {
         digest:
           '0x854f8851aeb627e2e8791d271ca51cd72fb437b2ea51f79eacd10ad4a3762f9d',
         ts: 1636547944915,
-      } as AuthorDigestMetadata;
+      } as AuthorPostDigestMetadata;
 
-      expect(authorDigest.verify(authorDigestRequestMetadata)).toBeTruthy();
+      expect(authorPostDigest.verify(authorDigestRequestMetadata)).toBeTruthy();
 
       const cid = await metadataStorageService.upload(
         MetadataStorageType.IPFS,
@@ -173,7 +175,7 @@ describe('MetaSignatureService (e2e)', () => {
   it('generateAuthorDigestSign', async () => {
     const authorDigestRequestMetadata = {
       '@context': 'https://metanetwork.online/ns/cms',
-      '@type': 'author-digest',
+      '@type': 'author-post-digest',
       '@version': '1.0.0',
       algorithm: 'sha256',
       title: '2021111013',
@@ -186,8 +188,8 @@ describe('MetaSignatureService (e2e)', () => {
       digest:
         '0x854f8851aeb627e2e8791d271ca51cd72fb437b2ea51f79eacd10ad4a3762f9d',
       ts: 1636547944915,
-    } as AuthorDigestMetadata;
-    const AuthorPostSignatureMetadata = authorDigestSign.generate(
+    } as AuthorPostDigestMetadata;
+    const AuthorPostSignatureMetadata = authorPostDigestSign.generate(
       authorKeys,
       'meta-cms.vercel.mttk.net',
       authorDigestRequestMetadata.digest,
@@ -241,7 +243,7 @@ describe('MetaSignatureService (e2e)', () => {
           '0x4c7d9143356296296b26d44e0f344a931581e0e0fe97d76d60f6d6b8800df42b9ac62c9caac05e19f329e70ce38a5bc11f7a87ff74ebd192936138c542502d04',
         ts: 1636547944916,
       } as AuthorPostSignatureMetadata;
-      console.log(authorDigestSign.verify(authorDigestSignatureMetadata));
+      console.log(authorPostDigestSign.verify(authorDigestSignatureMetadata));
     });
   });
 

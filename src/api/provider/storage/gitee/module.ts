@@ -1,3 +1,4 @@
+import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
@@ -14,6 +15,7 @@ import { GiteeStorageLogicService } from './logicService';
     TypeOrmModule.forFeature([GiteeStorageProviderEntity]),
     SiteConfigModule,
     MetaUCenterModule,
+    HttpModule,
   ],
   controllers: [GiteeStorageController],
   providers: [GiteeStorageBaseService, GiteeStorageLogicService, GiteeService],

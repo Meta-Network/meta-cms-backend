@@ -1,5 +1,5 @@
 import { MetaWorker } from '@metaio/worker-model';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 
 import { GiteePublisherProviderEntity } from '../../../entities/provider/publisher/gitee.entity';
 import { GitHubPublisherProviderEntity } from '../../../entities/provider/publisher/github.entity';
@@ -18,7 +18,8 @@ export function registerSpecificPublisherService(
   publisherProvider: SpecificPublisherService,
 ) {
   publisherServiceMap[publisherType] = publisherProvider;
-  console.log(`Register publisher service: ${publisherType}`);
+  const logger = new Logger('SpecificPublisherService');
+  logger.log(`Register publisher service: ${publisherType}`);
 }
 
 export function getSpecificPublisherService(

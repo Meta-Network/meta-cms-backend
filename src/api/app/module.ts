@@ -18,6 +18,7 @@ import { TransformResponseInterceptor } from '../../interceptors/transform';
 import { AppCacheModule } from '../cache/module';
 import { DomainModule } from '../domain/module';
 import { ImageModule } from '../image/image.module';
+import { ManagementModule } from '../management/module';
 import { PostOrdersModule } from '../pipelines/post-orders/post-orders.module';
 import { PostTasksModule } from '../pipelines/post-tasks/post-tasks.module';
 import { SiteOrdersModule } from '../pipelines/site-orders/site-orders.module';
@@ -71,6 +72,7 @@ import { TokenModule } from '../token/token.module';
     SiteTasksModule,
     WorkerTasksModule,
     RealTimeEventModule,
+    ManagementModule,
   ],
   providers: [
     {

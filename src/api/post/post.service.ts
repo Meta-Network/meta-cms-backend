@@ -51,6 +51,13 @@ import { StoragePostDto } from './dto/post.dto';
 import { PublishStoragePostsDto } from './dto/publish-post.dto';
 import { PreProcessorService } from './preprocessor/preprocessor.service';
 
+type PublishedPostsFromStorageDirectlyResult = {
+  items: MetaWorker.Info.Post[];
+  total: number;
+  pageSize: number;
+  pageCount: number;
+};
+
 export type PostEntityLike = Omit<PostEntity, 'id'>;
 
 type HexoPostsAPIPathObject = {
@@ -457,16 +464,27 @@ export class PostService {
     }
   }
 
-  private async getDraftedPostsFromStorage(
+  private async getDraftedPostsFromStorageDirectly(
     userId: number,
     siteConfigId: number,
-  ): Promise<Pagination<MetaWorker.Info.Post>> {
+  ): Promise<MetaWorker.Info.Post[]> {
     const hexoList = await this.generateHexoFrontMatterParseList(
       userId,
       siteConfigId,
       'source/_drafts',
     );
     const items = await this.generatePostInfoHexoFrontMatterParseList(hexoList);
+    return items;
+  }
+
+  private async getDraftedPostsFromStorage(
+    userId: number,
+    siteConfigId: number,
+  ): Promise<Pagination<MetaWorker.Info.Post>> {
+    const items = await this.getDraftedPostsFromStorageDirectly(
+      userId,
+      siteConfigId,
+    );
     return {
       meta: {
         itemCount: items.length || 0,
@@ -479,16 +497,27 @@ export class PostService {
     };
   }
 
-  private async getPostedPostsFromStorage(
+  private async getPostedPostsFromStorageDirectly(
     userId: number,
     siteConfigId: number,
-  ): Promise<Pagination<MetaWorker.Info.Post>> {
+  ): Promise<MetaWorker.Info.Post[]> {
     const hexoList = await this.generateHexoFrontMatterParseList(
       userId,
       siteConfigId,
       'source/_posts',
     );
     const items = await this.generatePostInfoHexoFrontMatterParseList(hexoList);
+    return items;
+  }
+
+  private async getPostedPostsFromStorage(
+    userId: number,
+    siteConfigId: number,
+  ): Promise<Pagination<MetaWorker.Info.Post>> {
+    const items = await this.getPostedPostsFromStorageDirectly(
+      userId,
+      siteConfigId,
+    );
     return {
       meta: {
         itemCount: items.length || 0,
@@ -501,11 +530,11 @@ export class PostService {
     };
   }
 
-  private async getPublishedPostsFromStorage(
+  private async getPublishedPostsFromStorageDirectly(
     userId: number,
     siteConfigId: number,
     page: number,
-  ): Promise<Pagination<MetaWorker.Info.Post>> {
+  ): Promise<PublishedPostsFromStorageDirectlyResult> {
     const baseUrl = await this.generatePublisherTargetRESTfulURL(
       userId,
       siteConfigId,
@@ -520,8 +549,27 @@ export class PostService {
     const { total, pageSize, pageCount } = data;
     const items = await this.generatePostInfoFromHexoPostsAPIData(data.data);
     return {
+      items,
+      total,
+      pageSize,
+      pageCount,
+    };
+  }
+
+  private async getPublishedPostsFromStorage(
+    userId: number,
+    siteConfigId: number,
+    page: number,
+  ): Promise<Pagination<MetaWorker.Info.Post>> {
+    const { items, total, pageSize, pageCount } =
+      await this.getPublishedPostsFromStorageDirectly(
+        userId,
+        siteConfigId,
+        page,
+      );
+    return {
       meta: {
-        itemCount: data?.data?.length || 0,
+        itemCount: items.length || 0,
         totalItems: total || 0,
         itemsPerPage: pageSize || 0,
         totalPages: pageCount || page,
@@ -529,6 +577,28 @@ export class PostService {
       },
       items,
     };
+  }
+
+  private async getAllPublishedPostsFromStorage(
+    userId: number,
+    siteConfigId: number,
+  ): Promise<MetaWorker.Info.Post[]> {
+    const { items, pageCount } =
+      await this.getPublishedPostsFromStorageDirectly(userId, siteConfigId, 1);
+    const result: MetaWorker.Info.Post[] = Array.from(items);
+    for (let current = 2; pageCount >= current; current++) {
+      try {
+        const { items } = await this.getPublishedPostsFromStorageDirectly(
+          userId,
+          siteConfigId,
+          current,
+        );
+        result.push(...items);
+      } catch {
+        continue;
+      }
+    }
+    return result;
   }
 
   public async getPostsFromStorage(
@@ -569,6 +639,27 @@ export class PostService {
         this.constructor.name,
       );
       return wrongData;
+    }
+  }
+
+  public async getAllPostsFromStorage(
+    userId: number,
+    siteConfigId: number,
+    state: GetPostsFromStorageState = GetPostsFromStorageState.Published,
+  ): Promise<MetaWorker.Info.Post[]> {
+    switch (state) {
+      case GetPostsFromStorageState.Drafted:
+        return await this.getDraftedPostsFromStorageDirectly(
+          userId,
+          siteConfigId,
+        );
+      case GetPostsFromStorageState.Posted:
+        return await this.getPostedPostsFromStorageDirectly(
+          userId,
+          siteConfigId,
+        );
+      case GetPostsFromStorageState.Published:
+        return await this.getAllPublishedPostsFromStorage(userId, siteConfigId);
     }
   }
 

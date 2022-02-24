@@ -1,8 +1,8 @@
 import { MetaWorker } from '@metaio/worker-model';
+import { HttpService } from '@nestjs/axios';
 import { Inject, Injectable, LoggerService } from '@nestjs/common';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
-import superagent from 'superagent';
-import { isString } from 'util';
+import { lastValueFrom } from 'rxjs';
 
 import { DnsProvider, registerDnsProvider } from '../dns.provider';
 
@@ -11,6 +11,7 @@ export class CloudFlareDnsProvider implements DnsProvider {
   constructor(
     @Inject(WINSTON_MODULE_NEST_PROVIDER)
     private readonly logger: LoggerService,
+    private readonly httpService: HttpService,
   ) {
     registerDnsProvider(MetaWorker.Enums.DnsProviderType.CLOUDFLARE, this);
   }
@@ -24,72 +25,80 @@ export class CloudFlareDnsProvider implements DnsProvider {
     ) {
       dns.record.content = dns.record.content.toLowerCase();
     }
-    const res = await superagent
-      .get(
-        `https://api.cloudflare.com/client/v4/zones/${dns.env.zoneId}/dns_records`,
-      )
-      .query({
-        type: dns.record.type,
-        content: dns.record.content,
-      })
-      .set('Authorization', `Bearer ${dns.env.token}`);
+    const res = this.httpService.get(
+      `https://api.cloudflare.com/client/v4/zones/${dns.env.zoneId}/dns_records`,
+      {
+        params: {
+          type: dns.record.type,
+          content: dns.record.content,
+        },
+        headers: {
+          Authorization: `Bearer ${dns.env.token}`,
+        },
+      },
+    );
+    const { data } = await lastValueFrom(res);
     this.logger.verbose(
-      `List dns records: ${JSON.stringify(res.body)}`,
+      `List dns records: ${JSON.stringify(data)}`,
       this.constructor.name,
     );
-    if (res.body.success) {
-      const existingDnsRecords: any[] = res.body.result;
+    if (data.success) {
+      const existingDnsRecords: any[] = data.result;
       //put
       if (existingDnsRecords && existingDnsRecords.length > 0) {
-        const dnsRecordId = existingDnsRecords[0].id;
-        const patchRes = await superagent
-          .patch(
+        try {
+          const dnsRecordId = existingDnsRecords[0].id;
+          const patchRes = this.httpService.patch(
             `https://api.cloudflare.com/client/v4/zones/${dns.env.zoneId}/dns_records/${dnsRecordId}`,
-          )
-          .send({
-            name: dnsRecord.name,
-          })
-          .set('Authorization', `Bearer ${dns.env.token}`)
-          .catch((reason) =>
-            this.logger.error(
-              `Superagent PATCH ${reason}`,
-              reason,
-              this.constructor.name,
-            ),
+            {
+              name: dnsRecord.name,
+            },
+            {
+              headers: { Authorization: `Bearer ${dns.env.token}` },
+            },
           );
-        this.logger.verbose(
-          `Patch dns record: ${JSON.stringify(patchRes.body)}`,
-          this.constructor.name,
-        );
-        if (!patchRes?.body?.success) {
-          new Error(patchRes.body.messages.join(';'));
+          const { data } = await lastValueFrom(patchRes);
+          this.logger.verbose(
+            `Patch dns record: ${JSON.stringify(data)}`,
+            this.constructor.name,
+          );
+          if (!data?.success) {
+            new Error(data.messages.join(';'));
+          }
+        } catch (reason) {
+          this.logger.error(
+            `Http service PATCH ${reason}`,
+            reason,
+            this.constructor.name,
+          );
         }
       }
       //post
       else {
-        const postRes = await superagent
-          .post(
+        try {
+          const postRes = this.httpService.post(
             `https://api.cloudflare.com/client/v4/zones/${dns.env.zoneId}/dns_records`,
-          )
-          .send({ ...dnsRecord, proxied: true })
-          .set('Authorization', `Bearer ${dns.env.token}`)
-          .catch((reason) =>
-            this.logger.error(
-              `Superagent POST ${reason}`,
-              reason,
-              this.constructor.name,
-            ),
+            { ...dnsRecord, proxied: true },
+            { headers: { Authorization: `Bearer ${dns.env.token}` } },
           );
-        this.logger.verbose(
-          `Post dns record: ${JSON.stringify(postRes.body)}`,
-          this.constructor.name,
-        );
-        if (!postRes?.body?.success) {
-          new Error(postRes.body.messages.join(';'));
+          const { data } = await lastValueFrom(postRes);
+          this.logger.verbose(
+            `Post dns record: ${JSON.stringify(data)}`,
+            this.constructor.name,
+          );
+          if (!data?.success) {
+            new Error(data.messages.join(';'));
+          }
+        } catch (reason) {
+          this.logger.error(
+            `Http service POST ${reason}`,
+            reason,
+            this.constructor.name,
+          );
         }
       }
     } else {
-      throw new Error(res.body.messages.join(';'));
+      throw new Error(data.messages.join(';'));
     }
   }
 }

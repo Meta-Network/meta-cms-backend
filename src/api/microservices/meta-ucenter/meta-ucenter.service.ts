@@ -34,7 +34,7 @@ export class MetaUCenterService implements OnApplicationBootstrap {
   ): Promise<string> {
     try {
       this.logger.verbose(
-        `Get user ${platform} social token from UCenter microservice`,
+        `Get user ${userId} ${platform} social token from UCenter microservice`,
         this.constructor.name,
       );
       const gitTokenFromUCenter = this.ucenterClient.send(
@@ -47,22 +47,18 @@ export class MetaUCenterService implements OnApplicationBootstrap {
       const result = await firstValueFrom(gitTokenFromUCenter);
       const token = new MetaInternalResult<string>(result);
       if (!token.isSuccess()) {
-        this.logger.error(
-          `User  ${platform} social token not found: ${token.message}, code: ${token.code}`,
-          this.constructor.name,
-        );
         throw new DataNotFoundException(
-          `user ${platform} social token not found`,
+          `${token.message} code: ${token.code}, user id ${userId}.`,
         );
       }
       return token.data;
     } catch (err) {
       this.logger.error(
+        `Get user ${userId} ${platform} OAuth token error:`,
         err,
-        `Get user GitHub OAuth token error:`,
         this.constructor.name,
       );
-      throw new DataNotFoundException('user GitHub OAuth token not found');
+      throw err;
     }
   }
 

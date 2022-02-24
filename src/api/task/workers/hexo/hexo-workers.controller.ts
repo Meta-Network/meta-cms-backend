@@ -1,14 +1,4 @@
-import { MetaWorker } from '@metaio/worker-model';
-import {
-  Body,
-  Controller,
-  Get,
-  Inject,
-  LoggerService,
-  Param,
-  ParseUUIDPipe,
-  Patch,
-} from '@nestjs/common';
+import { Controller } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
 import { TaskWorkersBaseController } from '../task-workers.base-controller';

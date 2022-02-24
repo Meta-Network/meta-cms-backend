@@ -1,4 +1,5 @@
 import { MetaWorker } from '@metaio/worker-model';
+import { HttpModule, HttpService } from '@nestjs/axios';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
 import { WinstonModule } from 'nest-winston';
@@ -11,6 +12,7 @@ import { WinstonConfigService } from '../../../../src/configs/winston';
 describe('DnsService (e2e)', () => {
   let configService: ConfigService;
   let dnsWorkersService: DnsService;
+  let httpService: HttpService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -23,16 +25,19 @@ describe('DnsService (e2e)', () => {
           inject: [ConfigService],
           useClass: WinstonConfigService,
         }),
+        HttpModule,
       ],
       providers: [DnsService, CloudFlareDnsProvider],
     }).compile();
 
     configService = module.get<ConfigService>(ConfigService);
     dnsWorkersService = module.get<DnsService>(DnsService);
+    httpService = module.get<HttpService>(HttpService);
   });
 
   it('should be defined', () => {
     expect(dnsWorkersService).toBeDefined();
+    expect(httpService).toBeDefined();
   });
 
   describe('updateDnsRecord', () => {

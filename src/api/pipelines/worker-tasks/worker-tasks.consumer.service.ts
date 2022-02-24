@@ -90,7 +90,7 @@ export class WorkerTasksConsumerService implements WorkerTasksJobProcessor {
   }
 
   @OnQueueCompleted()
-  async onComplete(job: Job<WorkerTasksJobDetail>, result) {
+  async onComplete(job: Job<WorkerTasksJobDetail>) {
     this.logger.verbose(
       `Job task ${job.data.taskConfig.task.taskId} method ${job.data.taskConfig.task.taskMethod} ${job.data.workerName}:${job.id} of type ${job.name} is completed`,
 

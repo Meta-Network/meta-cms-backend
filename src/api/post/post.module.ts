@@ -1,3 +1,4 @@
+/* eslint-disable import/no-named-as-default */
 import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -68,5 +69,6 @@ import { MatatakiSourceModule } from './sources/matataki/matataki.module';
       inject: [ConfigService],
     },
   ],
+  exports: [PostService],
 })
 export class PostModule {}

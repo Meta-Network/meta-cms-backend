@@ -1,15 +1,10 @@
-import {
-  authorPostDigest,
-  authorPostDigestSign,
-  KeyPair,
-} from '@metaio/meta-signature-util-v2';
-import { LoggerService } from '@nestjs/common';
+import { authorPostDigestSign } from '@metaio/meta-signature-util-v2';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
-import yaml from 'js-yaml';
 import { WINSTON_MODULE_NEST_PROVIDER, WinstonModule } from 'nest-winston';
 
 import { WinstonConfigService } from '../../../configs/winston';
+import { DeploySiteOrderEntity } from '../../../entities/pipeline/deploy-site-order.entity';
 import { SiteConfigEntity } from '../../../entities/siteConfig.entity';
 import { PipelineOrderTaskCommonState } from '../../../types/enum';
 import { SiteConfigLogicService } from '../../site/config/logicService';
@@ -22,21 +17,21 @@ import { PublishSiteOrdersBaseService } from './publish-site-orders.base.service
 import { SiteOrdersLogicService } from './site-orders.logic.service';
 
 describe('SiteOrdersLogicService', () => {
-  let logger: LoggerService;
+  // let logger: LoggerService;
   let configService: ConfigService;
-  let deploySiteOrdersBaseService;
+  let deploySiteOrdersBaseService: DeploySiteOrdersBaseService;
   //  = new DeploySiteOrdersBaseService(
   //   logger,
   //   undefined,
   // );
-  let publishSiteOrdersBaseService;
+  let publishSiteOrdersBaseService: PublishSiteOrdersBaseService;
   //  = new PublishSiteOrdersBaseService(
   //   logger,
   //   undefined,
   // );
-  let siteConfigLogicService;
-  let postOrdersLogicService;
-  let postTasksLogicService;
+  let siteConfigLogicService: SiteConfigLogicService;
+  let postOrdersLogicService: PostOrdersLogicService;
+  let postTasksLogicService: PostTasksLogicService;
   //  = new PostOrdersLogicService(
   //   logger,
   //   configService,
@@ -46,19 +41,19 @@ describe('SiteOrdersLogicService', () => {
   //   undefined,
   //   undefined,
   // );
-  let serverVerificationBaseService;
+  let serverVerificationBaseService: ServerVerificationBaseService;
   //  = new ServerVerificationBaseService(
   //   logger,
   //   undefined,
   // );
   let service: SiteOrdersLogicService;
 
-  const authorKeys = {
-    private:
-      '0x90b2110acb0a981f4b6748fd67372c11daaa5f8c2cb8db42beadfd5bfb3b3a4c',
-    public:
-      '0x54f329c1651d2281eb6dca96a0bdb70e2cc3821905bcb853db935f0180aa8a4e',
-  } as KeyPair;
+  // const authorKeys = {
+  //   private:
+  //     '0x90b2110acb0a981f4b6748fd67372c11daaa5f8c2cb8db42beadfd5bfb3b3a4c',
+  //   public:
+  //     '0x54f329c1651d2281eb6dca96a0bdb70e2cc3821905bcb853db935f0180aa8a4e',
+  // } as KeyPair;
   const serverKeys = {
     private:
       '0x20db0762690fa66a1534de672822c65c71b9be027b2962e3560cb0238d89a073',
@@ -339,6 +334,12 @@ Our products are future-proof and passionately moving towards the "creator econo
   });
 
   it('should be defined', () => {
+    expect(deploySiteOrdersBaseService).toBeDefined();
+    expect(publishSiteOrdersBaseService).toBeDefined();
+    expect(postOrdersLogicService).toBeDefined();
+    expect(postTasksLogicService).toBeDefined();
+    expect(siteConfigLogicService).toBeDefined();
+    expect(serverVerificationBaseService).toBeDefined();
     expect(service).toBeDefined();
   });
 
@@ -362,18 +363,16 @@ Our products are future-proof and passionately moving towards the "creator econo
 
       jest
         .spyOn(siteConfigLogicService, 'validateSiteConfigUserId')
-        .mockImplementation(
-          async (siteConfigId: number, userId: number, options) => {
-            const siteConfigEntity = {
-              id: siteConfigId,
-              siteInfo: { userId },
-            } as SiteConfigEntity;
-            return siteConfigEntity;
-          },
-        );
+        .mockImplementation(async (siteConfigId: number, userId: number) => {
+          const siteConfigEntity = {
+            id: siteConfigId,
+            siteInfo: { userId },
+          } as SiteConfigEntity;
+          return siteConfigEntity;
+        });
       jest
         .spyOn(postOrdersLogicService, 'savePostOrder')
-        .mockImplementation(async (userId: number, postOrderRequestDto) => {
+        .mockImplementation(async () => {
           return {
             postOrder: {
               id: '0x7b0cd3a068527a29037e331b4baa4238807b24defe6ae4d8f880d075adb99fd8b4a65321cd904b107a0d4008229bd902dbdea1b4c10fae349142c71029898e8b',
@@ -424,12 +423,14 @@ Our products are future-proof and passionately moving towards the "creator econo
         });
       jest
         .spyOn(deploySiteOrdersBaseService, 'save')
-        .mockImplementation(async (deploySiteOrderEntity) => {
-          return deploySiteOrderEntity;
-        });
+        .mockImplementation(
+          async (deploySiteOrderEntity: DeploySiteOrderEntity) => {
+            return deploySiteOrderEntity;
+          },
+        );
       jest
         .spyOn(deploySiteOrdersBaseService, 'getBySiteConfigUserId')
-        .mockImplementation(async (siteConfigId: number, userId: number) => {
+        .mockImplementation(async () => {
           return undefined;
         });
       const userId = 1;

@@ -1,12 +1,5 @@
 import { HttpService } from '@nestjs/axios';
-import {
-  Body,
-  Controller,
-  Post,
-  Req,
-  UploadedFile,
-  UseInterceptors,
-} from '@nestjs/common';
+import { Body, Controller, Post } from '@nestjs/common';
 import { ApiCookieAuth, ApiProperty, ApiTags } from '@nestjs/swagger';
 import { lastValueFrom } from 'rxjs';
 
