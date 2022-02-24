@@ -672,25 +672,30 @@ export class WorkerTasksDispatcherService {
   async requestNextTask(
     workerTaskDispatchNextJobDetail: WorkerTasksDispatchNextJobDetail,
   ) {
-    const activeCount =
-        await this.workerTasksDispatchNextQueue.getActiveCount(),
-      waitingCount = await this.workerTasksDispatchNextQueue.getWaitingCount();
-    this.logger.verbose(
-      `Next task request in queue: active count: ${activeCount} waiting count: ${waitingCount} `,
-    );
+    if (this.isAutoDispatchWorkerTaskEnabled()) {
+      const activeCount =
+          await this.workerTasksDispatchNextQueue.getActiveCount(),
+        waitingCount =
+          await this.workerTasksDispatchNextQueue.getWaitingCount();
+      this.logger.verbose(
+        `Next task request in queue: active count: ${activeCount} waiting count: ${waitingCount} `,
+      );
 
-    await this.workerTasksDispatchNextQueue.add(
-      workerTaskDispatchNextJobDetail,
+      await this.workerTasksDispatchNextQueue.add(
+        workerTaskDispatchNextJobDetail,
+      );
+    }
+  }
+  isAutoDispatchWorkerTaskEnabled() {
+    return this.configService.get<boolean>(
+      'pipeline.dispatcher.autoDispatchWorkerTask',
     );
   }
 
   isTaskCountLessThanWipLimit(activeCount: number, waitingCount: number) {
     return (
-      this.configService.get<boolean>(
-        'pipeline.dispatcher.autoDispatchWorkerTask',
-      ) &&
       activeCount + waitingCount <
-        this.configService.get<number>('pipeline.dispatcher.wipLimit')
+      this.configService.get<number>('pipeline.dispatcher.wipLimit')
     );
   }
 
