@@ -30,7 +30,7 @@ export class IpfsMetadataStorageProvider implements MetadataStorageProvider {
     );
     const gateway = gateways[Math.floor(Math.random() * gateways.length)];
     this.logger.debug(
-      `Get metadata from IPFS Gateway: ${gateway}`,
+      `Get metadata ${refer} from IPFS Gateway ${gateway}`,
       this.constructor.name,
     );
     const res = this.httpService.get<BaseSignatureMetadata | string>(

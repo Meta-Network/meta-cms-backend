@@ -61,11 +61,11 @@ export class ArweaveMetadataStorageProvider implements MetadataStorageProvider {
   private readonly walletKey: JWKInterface;
 
   public async get(refer: string): Promise<string> {
-    this.logger.debug(
-      `Get metadata from Arweave, refer ${refer}`,
-      this.constructor.name,
-    );
     try {
+      this.logger.debug(
+        `Get metadata ${refer} from Arweave SDK`,
+        this.constructor.name,
+      );
       const data = await this.arweave.transactions.getData(refer, {
         decode: true,
         string: true,
@@ -73,7 +73,11 @@ export class ArweaveMetadataStorageProvider implements MetadataStorageProvider {
       return data.toString();
     } catch (error) {
       this.logger.warn(
-        `Get metadata ${refer} from arweave failed, ${error}`,
+        `Get metadata ${refer} from Arweave SDK failed, ${error}`,
+        this.constructor.name,
+      );
+      this.logger.debug(
+        `Get metadata ${refer} from Arweave Gateway https://arweave.net`,
         this.constructor.name,
       );
       // https://arweave.net/P5TcYTsdNw6Qs42xhgtFgE0SaVdOUhlVnDBy3T7kFwY
