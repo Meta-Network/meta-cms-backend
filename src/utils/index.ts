@@ -29,3 +29,7 @@ export function decodeData(
 export function processTitleWithHan(title: string): string {
   return han.letter(title, '-');
 }
+
+export function stringSlice(str: string, start: number, end: number): string {
+  return `${str.slice(0, start)}...${str.slice(~end)}`;
+}
