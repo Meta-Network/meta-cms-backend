@@ -171,6 +171,7 @@ pipeline:
     autoDispatchWorkerTask: false
     wipLimit: 10
     number:1
+    requestNextTaskIntervalMs: 20000
   processor:
     type: DOCKER
     consumer:

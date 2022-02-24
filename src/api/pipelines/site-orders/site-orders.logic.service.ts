@@ -91,12 +91,16 @@ export class SiteOrdersLogicService {
           siteConfigId,
           SiteStatus.Configured,
         );
+        // 把deploySiteOrder的state更新为pending，就能被任务重试了
+        deploySiteOrder.state = PipelineOrderTaskCommonState.PENDING;
+        await this.deploySiteOrdersBaseService.save(deploySiteOrder);
       }
       // 关于其他状态为何不需要特别做什么的解析。
       // Configured 刚点击过建站就会在这个状态。站点是配置好的，还没开启建站而已，只要等待就行了
       // Deploying 正在建站中，等待结果就行了
       // Deployed 已经建好了，不需要再建了，直接返回
       // Publishing Published PublishFailed 都是要在上一步之后才能做的，道理是一样的，不需要再建了
+
       return deploySiteOrder;
     } else {
       // 这里是第一次创建用户的deploy site order
