@@ -1,7 +1,7 @@
 import {
-  authorDigest,
-  AuthorDigestMetadata,
-  authorDigestSign,
+  authorPostDigest,
+  AuthorPostDigestMetadata,
+  authorPostDigestSign,
   AuthorPostSignatureMetadata,
   authorPublishMetaSpaceRequest,
   authorPublishMetaSpaceServerVerificationSign,
@@ -29,8 +29,8 @@ export class MetaSignatureService {
   async validateAuthorDigestRequestMetadata(
     authorDigestRequestMetadataStorageType: MetadataStorageType,
     authorDigestRequestMetadataRefer: string,
-  ): Promise<AuthorDigestMetadata> {
-    let authorDigestRequestMetadata: AuthorDigestMetadata;
+  ): Promise<AuthorPostDigestMetadata> {
+    let authorDigestRequestMetadata: AuthorPostDigestMetadata;
 
     this.logger.debug(
       `Get ${authorDigestRequestMetadataStorageType} ${authorDigestRequestMetadataRefer}`,
@@ -50,7 +50,7 @@ export class MetaSignatureService {
     try {
       authorDigestRequestMetadata = JSON.parse(
         authorDigestRequestMetadataText,
-      ) as AuthorDigestMetadata;
+      ) as AuthorPostDigestMetadata;
     } catch (err) {
       throw new ValidationException(
         `Invalid digest: ${authorDigestRequestMetadata}`,
@@ -60,7 +60,7 @@ export class MetaSignatureService {
       `Verify digest: ${authorDigestRequestMetadataText}`,
       this.constructor.name,
     );
-    if (!authorDigest.verify(authorDigestRequestMetadata)) {
+    if (!authorPostDigest.verify(authorDigestRequestMetadata)) {
       throw new ValidationException(
         `Invalid digest: ${authorDigestRequestMetadataText}`,
       );
@@ -102,7 +102,7 @@ export class MetaSignatureService {
       `Verify signature: ${authorDigestSignatureMetadataText}`,
       this.constructor.name,
     );
-    if (!authorDigestSign.verify(authorDigestSignatureMetadata)) {
+    if (!authorPostDigestSign.verify(authorDigestSignatureMetadata)) {
       throw new ValidationException(
         `Invalid authorDigestSignatureMetadata: ${authorDigestSignatureMetadataText}`,
       );
@@ -116,7 +116,7 @@ export class MetaSignatureService {
     authorDigestSignatureMetadataStorageType: MetadataStorageType,
     authorDigestSignatureMetadataRefer: string,
   ): Promise<{
-    authorDigestRequestMetadata: AuthorDigestMetadata;
+    authorDigestRequestMetadata: AuthorPostDigestMetadata;
     authorDigestSignatureMetadata: AuthorPostSignatureMetadata;
     authorDigestSignWithContentServerVerificationMetadata: BaseSignatureMetadata;
   }> {
@@ -159,7 +159,7 @@ export class MetaSignatureService {
   ): Promise<{
     authorDigestSignWithContentServerVerificationMetadataRefer: string;
     authorDigestSignWithContentServerVerificationMetadata: BaseSignatureMetadata;
-    authorDigestRequestMetadata: AuthorDigestMetadata;
+    authorDigestRequestMetadata: AuthorPostDigestMetadata;
     authorDigestSignatureMetadata: AuthorPostSignatureMetadata;
   }> {
     if (
