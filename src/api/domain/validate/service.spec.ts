@@ -4,7 +4,6 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { DomainvalidateStatus } from '../../../types/enum';
 import { SiteConfigBaseService } from '../../site/config/baseService';
 import { SiteConfigLogicService } from '../../site/config/logicService';
-import { SiteConfigModule } from '../../site/config/module';
 import { SiteInfoLogicService } from '../../site/info/logicService';
 import { DomainvalidateResult } from './dto';
 import { DomainValidateService } from './service';
@@ -89,10 +88,10 @@ describe('DomainValidateService', () => {
     const prefix = 'prefix';
     jest
       .spyOn(siteConfigLogicService, 'checkPrefixIsExists')
-      .mockImplementationOnce(async (prefix) => true);
+      .mockImplementationOnce(async () => true);
     jest
       .spyOn(siteConfigLogicService, 'getUserDefaultSiteConfig')
-      .mockImplementationOnce(async (userId: number) => undefined);
+      .mockImplementationOnce(async () => undefined);
 
     const data = await service.validateMetaSpacePrefix(prefix, 1);
     expect(data).toMatchObject<DomainvalidateResult>({

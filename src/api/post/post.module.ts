@@ -1,3 +1,4 @@
+/* eslint-disable import/no-named-as-default */
 import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';

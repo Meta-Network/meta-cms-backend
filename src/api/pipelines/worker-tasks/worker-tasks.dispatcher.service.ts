@@ -72,7 +72,7 @@ export class WorkerTasksDispatcherService {
       this.constructor.name,
     );
 
-    const { deploySiteTaskEntity, deploySiteOrderEntity } =
+    const { deploySiteTaskEntity } =
       await this.siteTasksLogicService.generateDeploySiteTask(
         siteConfigId,
         userId,

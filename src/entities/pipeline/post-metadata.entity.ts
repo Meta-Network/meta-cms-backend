@@ -1,6 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
-  IsArray,
   IsHexadecimal,
   IsNotEmpty,
   IsOptional,
@@ -11,12 +10,8 @@ import {
   CreateDateColumn,
   Entity,
   Index,
-  JoinColumn,
-  OneToOne,
   PrimaryColumn,
 } from 'typeorm';
-
-import { PostOrderEntity } from './post-order.entity';
 
 @Entity()
 export class PostMetadataEntity {

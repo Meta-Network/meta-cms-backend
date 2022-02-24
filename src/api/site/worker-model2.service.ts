@@ -1,7 +1,7 @@
 import { MetaWorker } from '@metaio/worker-model2';
 import { Injectable } from '@nestjs/common';
 
-import { UCenterJWTPayload, UCenterUser } from '../../types';
+import { UCenterUser } from '../../types';
 import { SiteStatus } from '../../types/enum';
 import { SiteService } from './service';
 

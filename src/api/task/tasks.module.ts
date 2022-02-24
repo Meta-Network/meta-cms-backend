@@ -12,11 +12,8 @@ import { SiteInfoModule } from '../site/info/module';
 import { SiteModule } from '../site/module';
 import { BaseTasksService } from './base.tasks.service';
 import { PostTasksService } from './post.tasks.service';
-import { DockerProcessorsModule } from './processors/docker/docker-processors.module';
 import { SiteTasksService } from './site.tasks.service';
 import { TasksController } from './tasks.controller';
-import { GitWorkersModule } from './workers/git/git-workers.module';
-import { HexoWorkersModule } from './workers/hexo/hexo-workers.module';
 import { TaskWorkersModule } from './workers/task-workers.module';
 
 @Module({

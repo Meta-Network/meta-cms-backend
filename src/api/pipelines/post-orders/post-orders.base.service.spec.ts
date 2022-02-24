@@ -34,12 +34,12 @@ describe('PostOrdersBaseService', () => {
     public:
       '0x54f329c1651d2281eb6dca96a0bdb70e2cc3821905bcb853db935f0180aa8a4e',
   } as KeyPair;
-  const serverKeys = {
-    private:
-      '0x20db0762690fa66a1534de672822c65c71b9be027b2962e3560cb0238d89a073',
-    public:
-      '0x7660c1fc42a2d9aa3f0a4551db9e63f169ecfd56571add56622a6e4824162f1f',
-  };
+  // const serverKeys = {
+  //   private:
+  //     '0x20db0762690fa66a1534de672822c65c71b9be027b2962e3560cb0238d89a073',
+  //   public:
+  //     '0x7660c1fc42a2d9aa3f0a4551db9e63f169ecfd56571add56622a6e4824162f1f',
+  // };
   beforeEach(async () => {
     const connection = await createConnection({
       type: 'sqlite',
