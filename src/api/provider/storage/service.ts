@@ -1,5 +1,5 @@
 import { MetaWorker } from '@metaio/worker-model';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 
 import { ValidationException } from '../../../exceptions';
 import {
@@ -15,7 +15,8 @@ export function registerSpecificStorageService(
   provider: SpecificStorageService,
 ) {
   storageServiceMap[type] = provider;
-  console.log(`Register storage service: ${type}`);
+  const logger = new Logger('SpecificStorageService');
+  logger.log(`Register storage service: ${type}`);
 }
 
 export function getSpecificStorageService(

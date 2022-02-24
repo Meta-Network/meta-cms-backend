@@ -1,3 +1,5 @@
+import { Logger } from '@nestjs/common';
+
 import { ValidationException } from '../../../exceptions';
 import { MetadataStorageType } from '../../../types/enum';
 
@@ -7,7 +9,8 @@ export function registerMetadataStorageProvider(
   metadataStorageProvider: MetadataStorageProvider,
 ) {
   metadataStorageProviderMap[metadataStorageType] = metadataStorageProvider;
-  console.log(`Register metadata storage provider: ${metadataStorageType}`);
+  const logger = new Logger('MetadataStorageProvider');
+  logger.log(`Register metadata storage provider: ${metadataStorageType}`);
 }
 
 export function getMetadataStorageProvider(

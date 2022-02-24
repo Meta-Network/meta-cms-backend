@@ -1,4 +1,5 @@
 import { MetaWorker } from '@metaio/worker-model';
+import { Logger } from '@nestjs/common';
 
 import { GitPublisherProviderEntity } from '../../../entities/provider/publisher/git.entity';
 import { ValidationException } from '../../../exceptions';
@@ -9,7 +10,8 @@ export function registerPublisherProvider(
   publisherProvider: PublisherProvider,
 ) {
   publisherProviderMap[publisherType] = publisherProvider;
-  console.log(`Register publisher provider: ${publisherType}`);
+  const logger = new Logger('PublisherProvider');
+  logger.log(`Register publisher provider: ${publisherType}`);
 }
 
 export function getPublisherProvider(
