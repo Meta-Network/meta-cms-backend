@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-namespace */
+import { HttpService } from '@nestjs/axios';
 import { Inject, Injectable, LoggerService } from '@nestjs/common';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
-import Req from 'superagent';
+import { lastValueFrom } from 'rxjs';
 
 import { AccessDeniedException } from '../../exceptions';
 import {
@@ -153,6 +154,7 @@ export class GiteeService extends AbstractGitService {
   public constructor(
     @Inject(WINSTON_MODULE_NEST_PROVIDER)
     private readonly logger: LoggerService,
+    private readonly httpService: HttpService,
   ) {
     super();
     this.baseUrl = 'https://gitee.com/api/v5';
@@ -161,10 +163,13 @@ export class GiteeService extends AbstractGitService {
   private readonly baseUrl: string;
 
   private async getAuthenticatedUser(token: string): Promise<Gitee.Users.Info> {
-    const res = await Req.get(`${this.baseUrl}/user`).query({
-      access_token: token,
+    const res = this.httpService.get<Gitee.Users.Info>(`${this.baseUrl}/user`, {
+      params: {
+        access_token: token,
+      },
     });
-    return res.body;
+    const { data } = await lastValueFrom(res);
+    return data;
   }
 
   private async getOneRepo(
@@ -172,10 +177,16 @@ export class GiteeService extends AbstractGitService {
     owner: string,
     repo: string,
   ): Promise<Gitee.Repositories.Info> {
-    const res = await Req.get(`${this.baseUrl}/repos/${owner}/${repo}`).query({
-      access_token: token,
-    });
-    return res.body;
+    const res = this.httpService.get<Gitee.Repositories.Info>(
+      `${this.baseUrl}/repos/${owner}/${repo}`,
+      {
+        params: {
+          access_token: token,
+        },
+      },
+    );
+    const { data } = await lastValueFrom(res);
+    return data;
   }
 
   private async createForAuthenticatedUser(
@@ -194,8 +205,12 @@ export class GiteeService extends AbstractGitService {
       ...defaultOptions,
       ...options,
     };
-    const res = await Req.post(`${this.baseUrl}/user/repos`).send(postData);
-    return res.body;
+    const res = this.httpService.post<Gitee.Repositories.Info>(
+      `${this.baseUrl}/user/repos`,
+      postData,
+    );
+    const { data } = await lastValueFrom(res);
+    return data;
   }
 
   public async createGitRepo(
@@ -275,13 +290,17 @@ export class GiteeService extends AbstractGitService {
     branchOrSHA: string,
     recursive = false,
   ): Promise<GetGitTreeResult> {
-    const res = await Req.get(
+    const res = this.httpService.get<GetGitTreeResult>(
       `${this.baseUrl}/repos/${userName}/${repoName}/git/trees/${branchOrSHA}`,
-    ).query({
-      access_token: token,
-      recursive: Number(recursive).toString(),
-    });
-    return res.body;
+      {
+        params: {
+          access_token: token,
+          recursive: Number(recursive).toString(),
+        },
+      },
+    );
+    const { data } = await lastValueFrom(res);
+    return data;
   }
 
   public async getGitBlob(
@@ -290,11 +309,15 @@ export class GiteeService extends AbstractGitService {
     repoName: string,
     blobSHA: string,
   ): Promise<GitBlobInfo> {
-    const res = await Req.get(
+    const res = this.httpService.get<GitBlobInfo>(
       `${this.baseUrl}/repos/${userName}/${repoName}/git/blobs/${blobSHA}`,
-    ).query({
-      access_token: token,
-    });
-    return res.body;
+      {
+        params: {
+          access_token: token,
+        },
+      },
+    );
+    const { data } = await lastValueFrom(res);
+    return data;
   }
 }

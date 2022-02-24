@@ -1,3 +1,4 @@
+import { BaseSignatureMetadata } from '@metaio/meta-signature-util-v2';
 import { HttpService } from '@nestjs/axios';
 import { Inject, LoggerService } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -76,7 +77,9 @@ export class ArweaveMetadataStorageProvider implements MetadataStorageProvider {
         this.constructor.name,
       );
       // https://arweave.net/P5TcYTsdNw6Qs42xhgtFgE0SaVdOUhlVnDBy3T7kFwY
-      const res = this.httpService.get(`https://arweave.net/${refer}`);
+      const res = this.httpService.get<BaseSignatureMetadata | string>(
+        `https://arweave.net/${refer}`,
+      );
       const { data } = await lastValueFrom(res);
       if (typeof data === 'object') return JSON.stringify(data);
       return data;
