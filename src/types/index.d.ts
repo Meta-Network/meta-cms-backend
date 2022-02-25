@@ -128,6 +128,11 @@ export interface StateData {
 
 export type InvitationCountData = number;
 
+export type UserInvitationCountPayload = {
+  userId: number;
+  count: number;
+};
+
 export interface VerifiedSocket extends Socket {
   userId: number;
 }
