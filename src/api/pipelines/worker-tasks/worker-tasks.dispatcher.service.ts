@@ -702,7 +702,7 @@ export class WorkerTasksDispatcherService {
   async dispatchNextTask() {
     const activeCount = await this.workerTasksQueue.getActiveCount(),
       waitingCount = await this.workerTasksQueue.getWaitingCount();
-    this.logger.verbose(
+    this.logger.debug(
       `Dispatch next task. Queue activeCount ${activeCount} waitingCount ${waitingCount}`,
     );
     if (this.isTaskCountLessThanWipLimit(activeCount, waitingCount)) {
@@ -741,7 +741,7 @@ export class WorkerTasksDispatcherService {
       pendingPublishSiteOrderEntity,
       pendingPostOrderEntity,
     ];
-    this.logger.verbose(`Order options ${JSON.stringify(orderOptions)}`);
+    this.logger.debug(`Order options ${JSON.stringify(orderOptions)}`);
     const createdAtArray = orderOptions
       .filter((item) => !isEmpty(item?.createdAt))
       .map((item) => item.createdAt.getTime()) as number[];
