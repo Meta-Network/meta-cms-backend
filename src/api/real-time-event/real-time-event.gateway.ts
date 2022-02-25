@@ -6,11 +6,7 @@ import { parse as cookieParse } from 'cookie';
 
 import { UCenterAuthService } from '../../auth/ucenter/service';
 import { configBuilder } from '../../configs';
-import type {
-  InvitationCountData,
-  StateData,
-  VerifiedSocket,
-} from '../../types';
+import type { StateData, VerifiedSocket } from '../../types';
 import {
   InternalRealTimeEvent,
   RealTimeNotificationEvent,
@@ -126,7 +122,10 @@ export class RealTimeEventGateway {
     userClients.forEach((client) => {
       client.emit(
         RealTimeNotificationEvent.INVITATION_COUNT_UPDATED,
-        internalMessage.data as InvitationCountData,
+        new RealTimeNotification({
+          message: RealTimeNotificationEvent.INVITATION_COUNT_UPDATED, // 'post.count.updated'
+          data: internalMessage.data,
+        }),
       );
     });
   }

@@ -22,12 +22,14 @@ describe('RealTimeEventGateway (e2e)', () => {
 
   // Mock auth service, so we're not validating the real token
   // but the cookies are required to be passed to the server
+  // noinspection JSUnusedGlobalSymbols
   const MockAuthService = {
     validateJWT: (req: Request) => ({
       sub: req.cookies.user_id,
     }),
   };
 
+  // noinspection JSUnusedGlobalSymbols
   const MockPostOrdersLogicService = {
     countUserPostOrdersAsNotification: async () => ({
       allPostCount: 21,
@@ -112,6 +114,27 @@ describe('RealTimeEventGateway (e2e)', () => {
             publish: RealTimeEventState.pending,
           },
         ],
+      }),
+    );
+  });
+
+  it('should handle the event of user invitation count updated', (done) => {
+    socket.on(RealTimeNotificationEvent.INVITATION_COUNT_UPDATED, (data) => {
+      expect(data).toEqual({
+        statusCode: 200,
+        retryable: false,
+        data: 5,
+        message: 'invitation.count.updated',
+      });
+      done();
+    });
+
+    eventEmitter.emit(
+      InternalRealTimeEvent.INVITATION_COUNT_UPDATED,
+      new InternalRealTimeMessage({
+        userId: 1,
+        message: InternalRealTimeEvent.INVITATION_COUNT_UPDATED,
+        data: 5,
       }),
     );
   });

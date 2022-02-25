@@ -99,7 +99,8 @@ export class WinstonConfigService implements WinstonModuleOptionsFactory {
         runtime: {
           pid: process.pid,
           platform: process.platform,
-          versions: process.versions,
+          node: process.versions.node,
+          v8: process.versions.v8,
         },
         version: process.env.npm_package_version,
       },
