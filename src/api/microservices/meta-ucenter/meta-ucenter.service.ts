@@ -16,8 +16,32 @@ export class MetaUCenterService implements OnApplicationBootstrap {
     private readonly ucenterClient: ClientProxy,
   ) {}
 
-  async getUserInfo(userId: number): Promise<MetaInternalResult<UCenterUser>> {
-    return firstValueFrom(await this.ucenterClient.send('getUserInfo', userId));
+  async getUserInfo(userId: number): Promise<UCenterUser> {
+    try {
+      this.logger.verbose(
+        `Get user ${userId} info from UCenter microservice`,
+        this.constructor.name,
+      );
+      const getUserInfo = this.ucenterClient.send<
+        MetaInternalResult<UCenterUser>,
+        number
+      >('getUserInfo', userId);
+      const result = await firstValueFrom(getUserInfo);
+      const token = new MetaInternalResult<UCenterUser>(result);
+      if (!token.isSuccess()) {
+        throw new DataNotFoundException(
+          `${token.message} code: ${token.code}, user id ${userId}.`,
+        );
+      }
+      return token.data;
+    } catch (error) {
+      this.logger.error(
+        `Get user ${userId} info failed.`,
+        error,
+        this.constructor.name,
+      );
+      throw error;
+    }
   }
 
   async getGitHubAuthTokenByUserId(userId: number): Promise<string> {
@@ -37,13 +61,13 @@ export class MetaUCenterService implements OnApplicationBootstrap {
         `Get user ${userId} ${platform} social token from UCenter microservice`,
         this.constructor.name,
       );
-      const gitTokenFromUCenter = this.ucenterClient.send(
-        'getSocialAuthTokenByUserId',
-        {
-          userId,
-          platform,
-        },
-      );
+      const gitTokenFromUCenter = this.ucenterClient.send<
+        MetaInternalResult<string>,
+        { userId: number; platform: string }
+      >('getSocialAuthTokenByUserId', {
+        userId,
+        platform,
+      });
       const result = await firstValueFrom(gitTokenFromUCenter);
       const token = new MetaInternalResult<string>(result);
       if (!token.isSuccess()) {
@@ -54,7 +78,7 @@ export class MetaUCenterService implements OnApplicationBootstrap {
       return token.data;
     } catch (err) {
       this.logger.error(
-        `Get user ${userId} ${platform} OAuth token error:`,
+        `Get user ${userId} ${platform} OAuth token failed.`,
         err,
         this.constructor.name,
       );

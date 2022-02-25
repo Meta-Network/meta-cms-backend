@@ -419,9 +419,7 @@ export class WorkerTasksDispatcherService {
 
   async getUserInfo(userId: number): Promise<UCenterUser> {
     //TODO retry
-    return await (
-      await this.ucenterService.getUserInfo(userId)
-    ).data;
+    return await this.ucenterService.getUserInfo(userId);
   }
 
   async dispatchTask(
