@@ -389,6 +389,7 @@ export class SiteTasksLogicService {
         publisher: publisherGitInfo,
       },
       publish: publishInfo,
+      gateway: this.configService.get('metaSpace.gateway'),
     };
 
     return {
