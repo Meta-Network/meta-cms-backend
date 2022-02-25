@@ -155,7 +155,7 @@ export class PostTasksLogicService {
     await this.postTasksBaseService.batchUpdate(
       {
         publishSiteOrderId: In(publishSiteOrderIds),
-        publishSiteTaskId: '',
+        // publishSiteTaskId: '',
       },
       { publishSiteTaskId },
     );

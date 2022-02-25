@@ -611,10 +611,15 @@ export class PostOrdersLogicService {
       `Update post publishSiteTaskId to ${publishSiteTaskId} with publishSiteOrderId ${publishSiteOrderIds} `,
       this.constructor.name,
     );
+    //测试中发现如果真的有新的publishSiteTaskId覆盖到，那么实际执行的任务也会是那个。当时用publishSiteTaskId为空是想不要更新到正在发布的产生冲突的话，考虑用state
     await this.postOrdersBaseService.batchUpdate(
       {
         publishSiteOrderId: In(publishSiteOrderIds),
-        publishSiteTaskId: '',
+        publishState: In([
+          PipelineOrderTaskCommonState.PENDING,
+          PipelineOrderTaskCommonState.FAILED,
+        ]),
+        // publishSiteTaskId: '',
       },
       { publishSiteTaskId },
     );
