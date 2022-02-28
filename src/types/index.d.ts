@@ -34,6 +34,11 @@ export interface RequestWithUser extends Request {
   user: UCenterJWTPayload;
 }
 
+export type RequestCookies = {
+  [key: string]: string | undefined;
+  redirect_to?: string;
+};
+
 export interface TransformResponse<T = any> {
   data: T;
   statusCode: number;
