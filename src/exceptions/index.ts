@@ -273,3 +273,14 @@ export class PublishFailedException extends InternalServerErrorException {
   @ApiProperty({ example: 'Error: publish failed' })
   readonly message: string;
 }
+
+export class ConfigKeyNotFoundException extends InternalServerErrorException {
+  constructor(keyPath: string) {
+    super(`Config key ${keyPath} not found.`);
+  }
+
+  @ApiProperty({ example: HttpStatus.INTERNAL_SERVER_ERROR })
+  readonly statusCode: string;
+  @ApiProperty({ example: 'Error: Config key <name> not found.' })
+  readonly message: string;
+}
