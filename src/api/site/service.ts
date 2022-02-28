@@ -1,9 +1,13 @@
 import { MetaWorker } from '@metaio/worker-model';
 import { Inject, Injectable, LoggerService } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import assert from 'assert';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
-import { InvalidStatusException } from '../../exceptions';
+import {
+  ConfigKeyNotFoundException,
+  InvalidStatusException,
+} from '../../exceptions';
 import { UCenterJWTPayload } from '../../types';
 import { SiteStatus } from '../../types/enum';
 import { TemplateLogicService } from '../theme/template/logicService';
@@ -44,9 +48,10 @@ export class SiteService {
   ): Promise<GenerateMetaWorkerSiteInfo> {
     this.logger.verbose(`Generate meta worker site info`, SiteService.name);
     const metaSpaceBase = this.config.get<string>('metaSpace.baseDomain');
-    if (!metaSpaceBase) {
-      throw new Error('Config key metaSpace.baseDomain: no value');
-    }
+    assert(
+      metaSpaceBase,
+      new ConfigKeyNotFoundException('metaSpace.baseDomain'),
+    );
     this.logger.verbose(
       `Get site config from SiteConfigLogicService`,
       SiteService.name,

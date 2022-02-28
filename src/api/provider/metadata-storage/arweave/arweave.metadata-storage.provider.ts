@@ -4,10 +4,12 @@ import { Inject, LoggerService } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
+import assert from 'assert';
 import fs from 'fs';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { lastValueFrom } from 'rxjs';
 
+import { ConfigKeyNotFoundException } from '../../../../exceptions';
 import { MetadataStorageType } from '../../../../types/enum';
 import {
   MetadataStorageProvider,
@@ -38,11 +40,12 @@ export class ArweaveMetadataStorageProvider implements MetadataStorageProvider {
     const walletKeyPath = this.configService.get<string>(
       'provider.metadataStorage.arweave.walletKeyPath',
     );
-    if (!walletKeyPath) {
-      throw new Error(
-        'Config key provider.metadataStorage.arweave.walletKeyPath: no value',
-      );
-    }
+    assert(
+      walletKeyPath,
+      new ConfigKeyNotFoundException(
+        'provider.metadataStorage.arweave.walletKeyPath',
+      ),
+    );
     const walletKeyData = fs.readFileSync(walletKeyPath, { encoding: 'utf-8' });
     const walletKey = JSON.parse(walletKeyData);
 

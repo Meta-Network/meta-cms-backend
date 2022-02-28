@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import assert from 'assert';
 import {
   WinstonModuleOptions,
   WinstonModuleOptionsFactory,
@@ -7,6 +8,8 @@ import {
 import { config, format, transports } from 'winston';
 import LokiTransport from 'winston-loki';
 import TransportStream from 'winston-transport';
+
+import { ConfigKeyNotFoundException } from '../exceptions';
 
 const defaultLogFormat = (appName: string) =>
   format.combine(
@@ -72,7 +75,7 @@ export class WinstonConfigService implements WinstonModuleOptionsFactory {
 
     if (enableLoki) {
       const lokiUrl = this.configService.get<string>('logger.loki.url');
-      if (!lokiUrl) throw new Error('Config key logger.loki.url no value.');
+      assert(lokiUrl, new ConfigKeyNotFoundException('logger.loki.url'));
       const lokiTransport: TransportStream = new LokiTransport({
         level: 'silly',
         json: true,

@@ -1,12 +1,14 @@
 import { MetaInternalResult, ServiceCode } from '@metaio/microservice-model';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import assert from 'assert';
 import { IPaginationOptions, Pagination } from 'nestjs-typeorm-paginate';
 import { DeleteResult, Equal, FindOneOptions, In, IsNull, Not } from 'typeorm';
 
 import { SiteConfigEntity } from '../../../entities/siteConfig.entity';
 import {
   AccessDeniedException,
+  ConfigKeyNotFoundException,
   DataAlreadyExistsException,
   DataNotFoundException,
   RelationNotFoundException,
@@ -35,9 +37,10 @@ export class SiteConfigLogicService {
     private readonly config: ConfigService,
   ) {
     const metaSpaceBase = this.config.get<string>('metaSpace.baseDomain');
-    if (!metaSpaceBase) {
-      throw new Error('Config key metaSpace.baseDomain: no value');
-    }
+    assert(
+      metaSpaceBase,
+      new ConfigKeyNotFoundException('metaSpace.baseDomain'),
+    );
     this.metaSpaceBase = metaSpaceBase;
   }
 

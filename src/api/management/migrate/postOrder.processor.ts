@@ -17,6 +17,7 @@ import { Repository } from 'typeorm';
 
 import { PostMetadataEntity } from '../../../entities/pipeline/post-metadata.entity';
 import { PostOrderEntity } from '../../../entities/pipeline/post-order.entity';
+import { ConfigKeyNotFoundException } from '../../../exceptions';
 import {
   GetPostsFromStorageState,
   MetadataStorageType,
@@ -74,10 +75,13 @@ export class MigratePostOrderProcessor {
     this.serverDomain = this.configService.get<string>(
       'metaSignature.serverDomain',
     );
-    assert(this.serverKeys, 'Config key metaSignature.serverKeys not found.');
+    assert(
+      this.serverKeys,
+      new ConfigKeyNotFoundException('metaSignature.serverKeys'),
+    );
     assert(
       this.serverDomain,
-      'Config key metaSignature.serverDomain not found.',
+      new ConfigKeyNotFoundException('metaSignature.serverDomain'),
     );
   }
 
