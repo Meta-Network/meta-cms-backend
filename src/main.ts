@@ -2,6 +2,7 @@ import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { MicroserviceOptions, NatsOptions } from '@nestjs/microservices';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import formCors from 'form-cors';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
@@ -44,7 +45,12 @@ async function bootstrap() {
     );
     next();
   });
-
+  let limit = configService.get<string>('app.bodyParser.limit');
+  if (!limit) {
+    limit = '50mb';
+  }
+  app.use(bodyParser.json({ limit }));
+  app.use(bodyParser.urlencoded({ limit, extended: true }));
   app.use(cookieParser());
   app.use(
     formCors({

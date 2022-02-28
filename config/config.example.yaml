@@ -1,6 +1,8 @@
 app:
   name:
   port:
+  bodyParser:
+    limit: 50mb  
 
 db:
   host:
