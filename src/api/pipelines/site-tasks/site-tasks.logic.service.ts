@@ -267,8 +267,11 @@ export class SiteTasksLogicService {
       publishSiteTaskEntity.userId,
       id,
     );
-
-    const config = await this.siteConfigLogicService.setPublished(
+    const stieConfigEntity =
+      await this.siteConfigLogicService.getSiteConfigById(
+        publishSiteTaskEntity.siteConfigId,
+      );
+    await this.siteConfigLogicService.setPublished(
       publishSiteTaskEntity.siteConfigId,
     );
     this.logger.verbose(
@@ -276,7 +279,7 @@ export class SiteTasksLogicService {
       this.constructor.name,
     );
 
-    if (Number.isNaN(config.lastPublishedAt.getTime())) {
+    if (Number.isNaN(stieConfigEntity.lastPublishedAt.getTime())) {
       this.metaNetworkService.notifyMetaSpaceSiteCreated({
         ...publishTaskConfig.site,
         userId: publishSiteTaskEntity.userId,
