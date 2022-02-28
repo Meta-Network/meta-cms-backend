@@ -41,5 +41,11 @@ export const BasicAuth = createParamDecorator<
   return Buffer.from(secret, 'base64').toString();
 });
 
+export const SkipAllAuth = (skip: boolean) =>
+  SetMetadata(NestMetadataType.SkipAllAuth, skip);
+
 export const SkipUCenterAuth = (skip: boolean) =>
   SetMetadata(NestMetadataType.SkipUCenterAuth, skip);
+
+export const SkipCMSAuth = (skip: boolean) =>
+  SetMetadata(NestMetadataType.SkipCMSAuth, skip);

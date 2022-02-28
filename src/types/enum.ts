@@ -93,7 +93,9 @@ export enum PostAction {
 }
 
 export enum NestMetadataType {
+  SkipAllAuth = 'SKIP_ALL_AUTH',
   SkipUCenterAuth = 'SKIP_U_CENTER_AUTH',
+  SkipCMSAuth = 'SKIP_CMS_AUTH',
 }
 
 export enum MetaMicroserviceClient {
