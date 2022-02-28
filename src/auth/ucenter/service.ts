@@ -13,7 +13,7 @@ import {
 import { UCenterJWTPayload } from '../../types';
 
 @Injectable()
-export class UCenterAuthService {
+export class UCenterAuthorizeService {
   constructor(
     private readonly configService: ConfigService,
     private readonly jwtService: JwtService,
@@ -21,7 +21,7 @@ export class UCenterAuthService {
 
   validateJWT(req: Request): Promise<Partial<UCenterJWTPayload>> {
     const cookie = req.cookies;
-    const cookieName = this.configService.get<string>('jwt.cookieName');
+    const cookieName = this.configService.get<string>('jwt.ucenter.cookieName');
     if (!cookie || !cookie[cookieName]) {
       throw new RequirdHttpHeadersNotFoundException();
     }

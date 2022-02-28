@@ -17,7 +17,7 @@ async function bootstrap() {
   const appPort = +configService.get<number>('app.port', 3000);
   const enableSwagger = configService.get<boolean>('swagger.enable');
   const msServerConfig = configService.get<NatsOptions>('microservice.server');
-  const cookieName = configService.get<string>('jwt.cookieName');
+  const cookieName = configService.get<string>('jwt.ucenter.cookieName');
 
   if (enableSwagger) {
     const swaggerConfig = new DocumentBuilder()

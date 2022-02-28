@@ -16,7 +16,7 @@ export class UCenterJwtStrategy extends PassportStrategy(Strategy) {
       ignoreExpiration: process.env.NODE_ENV !== 'production',
     });
 
-    const cookieName = configService.get<string>('jwt.cookieName');
+    const cookieName = this.configService.get<string>('jwt.ucenter.cookieName');
   }
 
   async validate(payload: UCenterJWTPayload) {
