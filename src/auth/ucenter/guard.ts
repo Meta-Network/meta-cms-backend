@@ -1,28 +1,39 @@
 import { ExecutionContext, Injectable } from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
+import { ConfigService } from '@nestjs/config';
 import { AuthGuard } from '@nestjs/passport';
+import assert from 'assert';
 import { Request } from 'express';
 
-import { NestMetadataType } from '../../types/enum';
-import { UCenterAuthService } from './service';
+import {
+  ConfigKeyNotFoundException,
+  RequirdHttpHeadersNotFoundException,
+} from '../../exceptions';
+import { RequestCookies } from '../../types';
+import { UCenterAuthorizeService } from './service';
 
 @Injectable()
-export class UCenterJWTAuthGuard extends AuthGuard('jwt') {
+export class UCenterAuthorizeGuard extends AuthGuard('jwt') {
   constructor(
-    private readonly reflector: Reflector,
-    private readonly authService: UCenterAuthService,
+    private readonly configService: ConfigService,
+    private readonly authService: UCenterAuthorizeService,
   ) {
     super();
+    this.cookieName = this.configService.get<string>('jwt.ucenter.cookieName');
+    assert(
+      this.cookieName,
+      new ConfigKeyNotFoundException('jwt.ucenter.cookieName'),
+    );
   }
 
-  canActivate(context: ExecutionContext) {
-    const skip = this.reflector.get<boolean>(
-      NestMetadataType.SkipUCenterAuth,
-      context.getHandler(),
-    );
-    if (skip) return true;
+  private readonly cookieName: string;
 
+  canActivate(context: ExecutionContext) {
     const request: Request = context.switchToHttp().getRequest();
+    const cookies: RequestCookies = request.cookies;
+    const hasCookie = cookies[this.cookieName];
+    if (!hasCookie) {
+      throw new RequirdHttpHeadersNotFoundException();
+    }
     this.authService.validateJWT(request);
     return super.canActivate(context);
   }
