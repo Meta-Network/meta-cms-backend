@@ -9,6 +9,7 @@ import {
   IsString,
   Length,
   Matches,
+  MaxLength,
 } from 'class-validator';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import moment from 'moment';
@@ -61,6 +62,7 @@ export class SiteConfigEntity extends BaseEntity {
    * @example 'www.example.com'
    */
   @Column({ comment: 'Site domain', nullable: true })
+  @MaxLength(200)
   @IsString()
   @IsOptional()
   domain?: string | null = null;

@@ -4,12 +4,16 @@ import {
   ApiResponseProperty,
 } from '@nestjs/swagger';
 import {
+  ArrayMaxSize,
   IsArray,
   IsInt,
   IsNotEmpty,
   IsOptional,
   IsString,
   IsUrl,
+  Length,
+  MaxLength,
+  MinLength,
 } from 'class-validator';
 import { Column, Entity, OneToMany } from 'typeorm';
 
@@ -32,6 +36,7 @@ export class SiteInfoEntity extends BaseEntity {
    * @example 'Example'
    */
   @Column({ comment: 'Site title' })
+  @Length(1, 50)
   @IsString()
   @IsNotEmpty()
   title: string;
@@ -43,6 +48,7 @@ export class SiteInfoEntity extends BaseEntity {
    * @example 'My awesome site'
    */
   @Column({ comment: 'Site subtitle', default: '' })
+  @Length(1, 80)
   @IsString()
   @IsOptional()
   subtitle?: string = '';
@@ -54,6 +60,7 @@ export class SiteInfoEntity extends BaseEntity {
    * @example 'Much respect. So noble.'
    */
   @Column({ comment: 'Site description', type: 'text' })
+  @Length(1, 200)
   @IsString()
   @IsOptional()
   description?: string = '';
@@ -65,6 +72,7 @@ export class SiteInfoEntity extends BaseEntity {
    * @example 'John Doe'
    */
   @Column({ comment: 'Site author', default: '' })
+  @Length(1, 50)
   @IsString()
   @IsOptional()
   author?: string = '';
@@ -83,6 +91,8 @@ export class SiteInfoEntity extends BaseEntity {
   })
   @IsArray()
   @IsOptional()
+  @MaxLength(60, { each: true })
+  @ArrayMaxSize(6)
   @IsString({ each: true })
   @ApiProperty({
     description: 'Site keywords',
@@ -100,6 +110,7 @@ export class SiteInfoEntity extends BaseEntity {
    * @example 'https://example.com/favicon.ico'
    */
   @Column({ comment: 'Site favicon link', nullable: true, default: null })
+  @Length(8, 120)
   @IsUrl()
   @IsOptional()
   favicon?: string | null = null;

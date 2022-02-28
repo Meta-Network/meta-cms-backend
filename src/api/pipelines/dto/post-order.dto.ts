@@ -20,6 +20,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 
+import { IsCommaSeperatedString } from '../../../decorators/validator';
 import { PostOrderEntity } from '../../../entities/pipeline/post-order.entity';
 import { MetadataStorageType } from '../../../types/enum';
 import { PaginationResponse } from '../../../utils/responseClass';
@@ -70,6 +71,7 @@ export class AuthorPostDigestDto implements AuthorPostDigestMetadata {
   @IsString()
   @IsOptional()
   @MaxLength(200)
+  @IsCommaSeperatedString(4, 50)
   categories: string;
   @ApiProperty({
     description: '文章正文内容',
@@ -89,7 +91,7 @@ export class AuthorPostDigestDto implements AuthorPostDigestMetadata {
   @Matches(
     /^$|((([A-Za-z]{3,9}:(?:\/\/)?)(?:[\-;:&=\+\$,\w]+@)?[A-Za-z0-9\.\-]+|(?:www\.|[\-;:&=\+\$,\w]+@)[A-Za-z0-9\.\-]+)((?:\/[\+~%\/\.\w\-_]*)?\??(?:[\-\+=&;%@\.\w_]*)#?(?:[\.\!\/\\\w]*))?)/,
     {
-      message: 'must be an URL address',
+      message: '$property must be an URL address',
     },
   )
   @IsOptional()
@@ -117,6 +119,7 @@ export class AuthorPostDigestDto implements AuthorPostDigestMetadata {
   })
   @IsString()
   @MaxLength(200)
+  @IsCommaSeperatedString(10, 50)
   @IsOptional()
   tags: string;
   @ApiProperty({
