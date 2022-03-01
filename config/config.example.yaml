@@ -30,7 +30,9 @@ jwt:
       audience:
   cms:
     cookieName:
-    verify:
+    symmetricKey:
+    sign:
+      expiresIn: '1d'
       issuer:
       audience:
 
