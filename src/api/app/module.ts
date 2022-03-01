@@ -8,8 +8,8 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { WinstonModule } from 'nest-winston';
 
-import { UCenterAuthorizeGuard } from '../../auth/ucenter/guard';
-import { UCenterAuthorizeModule } from '../../auth/ucenter/module';
+import { MultipleAuthorizeGuard } from '../../auth/multiple/guard';
+import { MultipleAuthorizeModule } from '../../auth/multiple/module';
 import { configBuilder } from '../../configs';
 import { BullConfigService } from '../../configs/bull';
 import { TypeORMConfigService } from '../../configs/typeorm';
@@ -54,7 +54,7 @@ import { TokenModule } from '../token/token.module';
     }),
     EventEmitterModule.forRoot(),
     ScheduleModule.forRoot(),
-    UCenterAuthorizeModule,
+    MultipleAuthorizeModule,
     AppCacheModule,
     ThemeTemplateModule,
     SiteModule,
@@ -78,7 +78,7 @@ import { TokenModule } from '../token/token.module';
     {
       provide: APP_GUARD,
       inject: [JwtService],
-      useClass: UCenterAuthorizeGuard,
+      useClass: MultipleAuthorizeGuard,
     },
     {
       provide: APP_INTERCEPTOR,
