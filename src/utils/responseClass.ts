@@ -3,10 +3,7 @@ import { IPaginationLinks, IPaginationMeta } from 'nestjs-typeorm-paginate';
 
 export abstract class TransformResponse<T> {
   abstract get data(): T | T[];
-  @ApiProperty({
-    description: 'Response status code',
-    example: '不要纠结这个 code 以实际为准',
-  })
+  @ApiProperty({ description: 'Response status code', example: 200 })
   readonly statusCode: number;
   @ApiProperty({
     description: 'Response message',
