@@ -30,6 +30,15 @@ export const User = createParamDecorator<
   return data ? user[data] : user;
 });
 
+export const ManagementUser = createParamDecorator<
+  undefined,
+  ExecutionContext,
+  string
+>((_, ctx) => {
+  const { user } = ctx.switchToHttp().getRequest();
+  return user.sub;
+});
+
 export const BasicAuth = createParamDecorator<
   unknown,
   ExecutionContext,
