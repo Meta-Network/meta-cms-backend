@@ -70,7 +70,7 @@ export class AuthorPostDigestDto implements AuthorPostDigestMetadata {
   })
   @IsString()
   @IsOptional()
-  @MaxLength(200)
+  @MaxLength(203)
   @IsCommaSeperatedString(4, 50)
   categories: string;
   @ApiProperty({
@@ -118,7 +118,7 @@ export class AuthorPostDigestDto implements AuthorPostDigestMetadata {
     required: true,
   })
   @IsString()
-  @MaxLength(200)
+  @MaxLength(509)
   @IsCommaSeperatedString(10, 50)
   @IsOptional()
   tags: string;
