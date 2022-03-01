@@ -5,6 +5,7 @@
 .env.*
 config.*
 !config.example.*
+!config.d.ts
 
 # Caches
 .eslintcache

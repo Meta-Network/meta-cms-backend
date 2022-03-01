@@ -1,3 +1,4 @@
+import { ConfigGetOptions } from '@nestjs/config';
 import { isISO8601 } from 'class-validator';
 import han from 'han';
 import process from 'process';
@@ -38,3 +39,5 @@ export function stringSlice(str: string, start: number, end: number): string {
 export function isDevelopment(): boolean {
   return process.env.NODE_ENV !== 'production';
 }
+
+export const InferOn: ConfigGetOptions = { infer: true };
