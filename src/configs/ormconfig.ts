@@ -22,6 +22,7 @@ import { SiteInfoEntity } from '../entities/siteInfo.entity';
 import { SynchronizerEntity } from '../entities/synchromizer.entity';
 import { ThemeEntity } from '../entities/theme.entity';
 import { ThemeTemplateEntity } from '../entities/themeTemplate.entity';
+import { isDevelopment } from '../utils';
 import { configBuilder } from './index';
 
 interface Config {
@@ -73,7 +74,7 @@ const options: ConnectionOptions = {
   ],
   synchronize: false,
   timezone: config.db.timezone || 'Z',
-  logging: process.env.NODE_ENV !== 'production',
+  logging: isDevelopment(),
   migrationsTableName: 'be_migrations',
   migrations: [
     process.env.NODE_ENV === 'migration'

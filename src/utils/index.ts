@@ -1,5 +1,6 @@
 import { isISO8601 } from 'class-validator';
 import han from 'han';
+import process from 'process';
 
 export function iso8601ToDate(date: string | Date): Date {
   if (date instanceof Date) {
@@ -32,4 +33,8 @@ export function processTitleWithHan(title: string): string {
 
 export function stringSlice(str: string, start: number, end: number): string {
   return `${str.slice(0, start)}...${str.slice(~end)}`;
+}
+
+export function isDevelopment(): boolean {
+  return process.env.NODE_ENV !== 'production';
 }

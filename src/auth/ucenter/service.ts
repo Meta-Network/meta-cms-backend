@@ -11,6 +11,7 @@ import {
   RequirdHttpHeadersNotFoundException,
 } from '../../exceptions';
 import { UCenterJWTPayload } from '../../types';
+import { isDevelopment } from '../../utils';
 
 @Injectable()
 export class UCenterAuthorizeService {
@@ -29,7 +30,7 @@ export class UCenterAuthorizeService {
 
     try {
       return this.jwtService.verify(token, {
-        ignoreExpiration: process.env.NODE_ENV !== 'production',
+        ignoreExpiration: isDevelopment(),
       });
     } catch (error) {
       if (error instanceof TokenExpiredError) {
