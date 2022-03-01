@@ -214,3 +214,20 @@ pipeline:
       # Success rate of completing task steps
       successRate: 1.0
       timeout: 2500
+
+management:
+  # EIP712Domain
+  domain:
+    chainId: 31337
+    name: 'Meta Space Management'
+    version: '1'
+    verifyingContract: '0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC'
+  serverSign:
+    network:
+      name: 'bsctest'
+      chainId: 97
+      url: 'https://data-seed-prebsc-1-s1.binance.org:8545/'
+    # A Ethereum wallet private key string
+    privateKey:
+  authorization:
+    expiresInMinutes: 5
