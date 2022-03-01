@@ -1,5 +1,6 @@
 import {
   Body,
+  ConflictException,
   Controller,
   Get,
   Param,
@@ -9,6 +10,7 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import {
+  ApiConflictResponse,
   ApiCreatedResponse,
   ApiOkResponse,
   ApiOperation,
@@ -18,7 +20,10 @@ import {
 
 import { User } from '../../../decorators';
 import { PublishSiteOrderEntity } from '../../../entities/pipeline/publish-site-order.entity';
-import { TransformResponse } from '../../../utils/responseClass';
+import {
+  TransformCreatedResponse,
+  TransformResponse,
+} from '../../../utils/responseClass';
 import { PostMethodValidation } from '../../../utils/validation';
 import {
   DeploySiteOrderRequestDto,
@@ -27,6 +32,10 @@ import {
 import { SiteOrdersLogicService } from './site-orders.logic.service';
 
 class PublishSiteOrderResponse extends TransformResponse<PublishSiteOrderEntity> {
+  @ApiProperty({ type: PublishSiteOrderEntity })
+  readonly data: PublishSiteOrderEntity;
+}
+class PublishSiteOrderCreatedResponse extends TransformCreatedResponse<PublishSiteOrderEntity> {
   @ApiProperty({ type: PublishSiteOrderEntity })
   readonly data: PublishSiteOrderEntity;
 }
@@ -49,7 +58,11 @@ export class SiteOrdersController {
   @ApiOperation({
     summary: '用户请求创建Meta Space',
   })
-  @ApiCreatedResponse({ type: TransformResponse })
+  @ApiCreatedResponse({ type: TransformCreatedResponse })
+  @ApiConflictResponse({
+    type: ConflictException,
+    description: 'can not deploy',
+  })
   @Post('deploy')
   @UsePipes(new ValidationPipe(PostMethodValidation))
   async deploy(
@@ -91,7 +104,11 @@ export class SiteOrdersController {
   @ApiOperation({
     summary: '用户请求发布Meta Space',
   })
-  @ApiCreatedResponse({ type: PublishSiteOrderResponse })
+  @ApiCreatedResponse({ type: PublishSiteOrderCreatedResponse })
+  @ApiConflictResponse({
+    type: ConflictException,
+    description: 'can not publish',
+  })
   @Post('publish')
   @UsePipes(new ValidationPipe(PostMethodValidation))
   async publish(

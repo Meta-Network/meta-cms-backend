@@ -13,6 +13,18 @@ export abstract class TransformResponse<T> {
   readonly message: string;
 }
 
+export abstract class TransformCreatedResponse<T> {
+  abstract get data(): T | T[];
+  @ApiProperty({ description: 'Response status code', example: 201 })
+  readonly statusCode: number;
+  @ApiProperty({
+    description: 'Response message',
+    default: 'Created',
+    example: 'Created',
+  })
+  readonly message: string;
+}
+
 abstract class PaginationMeta implements IPaginationMeta {
   @ApiProperty({
     description: 'Amount of items on this specific page',

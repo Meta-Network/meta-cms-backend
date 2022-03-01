@@ -1,5 +1,6 @@
 import {
   Body,
+  ConflictException,
   Controller,
   DefaultValuePipe,
   Get,
@@ -24,7 +25,10 @@ import { IPaginationOptions } from 'nestjs-typeorm-paginate';
 
 import { User } from '../../../decorators';
 import { DataNotFoundException } from '../../../exceptions';
-import { TransformResponse } from '../../../utils/responseClass';
+import {
+  TransformCreatedResponse,
+  TransformResponse,
+} from '../../../utils/responseClass';
 import { PostMethodValidation } from '../../../utils/validation';
 import {
   PostOrderPaginationResponse,
@@ -34,7 +38,7 @@ import {
 } from '../dto/post-order.dto';
 import { PostOrdersLogicService } from './post-orders.logic.service';
 
-class SavePostOrderResponse extends TransformResponse<PostOrderResponseDto> {
+class SavePostOrderResponse extends TransformCreatedResponse<PostOrderResponseDto> {
   @ApiProperty({ type: PostOrderResponseDto })
   readonly data: PostOrderResponseDto;
 }
@@ -143,10 +147,14 @@ export class PostOrdersController {
   @ApiOperation({
     summary: '用户请求重新发布失败文章',
   })
-  @ApiCreatedResponse({ type: TransformResponse })
+  @ApiCreatedResponse({ type: TransformCreatedResponse })
   @ApiNotFoundResponse({
     type: DataNotFoundException,
     description: 'When request post order not found',
+  })
+  @ApiConflictResponse({
+    type: ConflictException,
+    description: 'can not deploy',
   })
   @Post(':id/retry')
   async retryPostOrder(
