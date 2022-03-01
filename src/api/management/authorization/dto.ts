@@ -28,3 +28,11 @@ export class ManagementAuthorizationDto {
   @Matches(/^0x/, { message: 'signature must be an hex string' })
   signature: string;
 }
+
+export class ManagementAuthorizationWithToken {
+  @ApiProperty({ description: 'Management authorization request info' })
+  authInfo: ManagementAuthorizationDto;
+
+  @ApiProperty({ description: 'Management authorization JWT token' })
+  token: string;
+}
