@@ -92,6 +92,11 @@ export enum PostAction {
   DELETE = 'DELETE',
 }
 
+export enum AuthGuardType {
+  UCenter = 'UCENTER',
+  CMS = 'CMS',
+}
+
 export enum NestMetadataType {
   SkipAllAuth = 'SKIP_ALL_AUTH',
   SkipUCenterAuth = 'SKIP_U_CENTER_AUTH',

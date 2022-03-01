@@ -9,14 +9,11 @@ import {
   RequirdHttpHeadersNotFoundException,
 } from '../../exceptions';
 import { RequestCookies } from '../../types';
-import { UCenterAuthorizeService } from './service';
+import { AuthGuardType } from '../../types/enum';
 
 @Injectable()
-export class UCenterAuthorizeGuard extends AuthGuard('jwt') {
-  constructor(
-    private readonly configService: ConfigService,
-    private readonly authService: UCenterAuthorizeService,
-  ) {
+export class UCenterAuthorizeGuard extends AuthGuard(AuthGuardType.UCenter) {
+  constructor(private readonly configService: ConfigService) {
     super();
     this.cookieName = this.configService.get<string>('jwt.ucenter.cookieName');
     assert(
@@ -34,7 +31,6 @@ export class UCenterAuthorizeGuard extends AuthGuard('jwt') {
     if (!hasCookie) {
       throw new RequirdHttpHeadersNotFoundException();
     }
-    this.authService.validateJWT(request);
     return super.canActivate(context);
   }
 }
