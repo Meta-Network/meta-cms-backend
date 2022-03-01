@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 
+import { CMSManagementJWTPayload } from '../../types';
 import { AuthGuardType } from '../../types/enum';
 import { isDevelopment } from '../../utils';
 
@@ -22,7 +23,9 @@ export class CMSJwtStrategy extends PassportStrategy(
     });
   }
 
-  async validate(payload: any) {
+  async validate(
+    payload: CMSManagementJWTPayload,
+  ): Promise<CMSManagementJWTPayload> {
     return payload;
   }
 }

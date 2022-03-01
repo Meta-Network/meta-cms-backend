@@ -30,6 +30,13 @@ export interface UCenterJWTPayload extends JwtPayload, UCenterUser {
   account: UCenterAccount;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+export interface CMSManagementUser {} // Extend after has database entity
+
+export interface CMSManagementJWTPayload
+  extends JwtPayload,
+    CMSManagementUser {}
+
 export interface RequestWithUser extends Request {
   user: UCenterJWTPayload;
 }
