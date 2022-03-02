@@ -1,7 +1,7 @@
 import { InjectQueue } from '@nestjs/bull';
 import { Inject, Injectable, LoggerService } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Queue } from 'bull';
+import { JobCounts, Queue } from 'bull';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { Repository } from 'typeorm';
 
@@ -14,6 +14,10 @@ import {
   MigratePostOrderProcess,
 } from './postOrder.constants';
 import { MigratePostOrderQueueConfig } from './postOrder.processor';
+
+export interface MgratePostOrderReturn extends JobCounts {
+  new: number;
+}
 
 @Injectable()
 export class MigratePostOrderService {
@@ -79,7 +83,11 @@ export class MigratePostOrderService {
     return filtered;
   }
 
-  public async mgratePostOrder(): Promise<void> {
+  public async mgratePostOrder(user: string): Promise<MgratePostOrderReturn> {
+    this.logger.log(
+      `Administrator ${user} start mgrate v1 post order`,
+      this.constructor.name,
+    );
     const recordedUserIds = await this.findRecordedUserIds();
     const unrecordedUserIds = await this.findUnrecordedUserIds(recordedUserIds);
     const publishedSiteConfigs = await this.findPublishedSiteConfigs();
@@ -99,5 +107,7 @@ export class MigratePostOrderService {
         { configId, userId },
       );
     }
+    const jobCounts = await this.postOrderQueue.getJobCounts();
+    return { ...jobCounts, new: latestSiteConfigs.length };
   }
 }
