@@ -1,7 +1,7 @@
 import { MetaWorker } from '@metaio/worker-model';
 import { Body, Get, Param, ParseUUIDPipe, Patch } from '@nestjs/common';
 
-import { BasicAuth, SkipUCenterAuth } from '../../../decorators';
+import { BasicAuth, SkipAllAuth } from '../../../decorators';
 import { QueueTaskConfig } from '../../../types';
 import { TaskWorkersService } from './task-workers.service';
 
@@ -9,7 +9,7 @@ export class TaskWorkersBaseController {
   constructor(protected readonly taskWorkersService: TaskWorkersService) {}
 
   @Get(':name')
-  @SkipUCenterAuth(true)
+  @SkipAllAuth(true)
   async findOneTaskForWorker(
     @BasicAuth(ParseUUIDPipe) auth: string,
     @Param('name') name: string,
@@ -18,7 +18,7 @@ export class TaskWorkersBaseController {
   }
 
   @Patch(':name')
-  @SkipUCenterAuth(true)
+  @SkipAllAuth(true)
   async updateTaskForWorker(
     @BasicAuth() auth: string,
     @Param('name') name: string,

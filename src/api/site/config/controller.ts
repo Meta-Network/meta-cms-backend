@@ -27,7 +27,7 @@ import {
 import { isFQDN } from 'class-validator';
 import { DeleteResult } from 'typeorm';
 
-import { SkipUCenterAuth, User } from '../../../decorators';
+import { SkipAllAuth, User } from '../../../decorators';
 import { SiteConfigEntity } from '../../../entities/siteConfig.entity';
 import {
   AccessDeniedException,
@@ -211,7 +211,7 @@ export class SiteConfigController {
 
   @ApiOkResponse({ type: SiteConfigResponse })
   @Get('random')
-  @SkipUCenterAuth(true)
+  @SkipAllAuth(true)
   async getRandomSiteConfig() {
     return await this.service.findRandomSiteConfig();
   }

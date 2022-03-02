@@ -14,7 +14,7 @@ import {
 import { ApiProperty, ApiTags } from '@nestjs/swagger';
 import { IsBoolean, IsOptional } from 'class-validator';
 
-import { BasicAuth, SkipUCenterAuth, User } from '../../../decorators';
+import { BasicAuth, SkipAllAuth, User } from '../../../decorators';
 import { WorkerModel2TaskConfig } from '../../../types/worker-model2';
 import { PostMethodValidation } from '../../../utils/validation';
 import { WorkerTasksDispatcherService } from './worker-tasks.dispatcher.service';
@@ -37,7 +37,7 @@ export class WorkerTasksController {
     private readonly workerTasksDispatcherService: WorkerTasksDispatcherService,
   ) {}
   @Get(':workerTaskId')
-  @SkipUCenterAuth(true)
+  @SkipAllAuth(true)
   async getWorkerTaskById(
     @BasicAuth() auth: string,
     @Param('workerTaskId') workerTaskId: string,
@@ -51,7 +51,7 @@ export class WorkerTasksController {
   @Patch(':workerTaskId/reports')
   @Post(':workerTaskId/reports')
   @UsePipes(new ValidationPipe(PostMethodValidation))
-  @SkipUCenterAuth(true)
+  @SkipAllAuth(true)
   async report(
     @BasicAuth() auth: string,
     @Param('workerTaskId') workerTaskId: string,
@@ -64,7 +64,7 @@ export class WorkerTasksController {
     );
   }
   @Post('/next-task')
-  // @SkipUCenterAuth(true)
+  // @SkipAllAuth(true)
   async nextTask() {
     await this.workerTasksDispatcherService.dispatchNextTask();
   }
