@@ -7,21 +7,24 @@ import cookieParser from 'cookie-parser';
 import formCors from 'form-cors';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
-import { AppModule } from './api/app/module';
+import { AppModule } from './app/module';
 import { RequestNotAcceptableException } from './exceptions';
+import { assertConfig, isEmptyObj } from './utils';
 // import { EntityNotFoundExceptionFilter } from './filters/entity-not-found-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get<ConfigService>(ConfigService);
   const appPort = +configService.get<number>('app.port', 3000);
-  const enableSwagger = configService.get<boolean>('swagger.enable');
+  const enableSwagger = configService.get<boolean>('swagger.enable', false);
   const msServerConfig = configService.get<NatsOptions>('microservice.server');
+  assertConfig(!isEmptyObj(msServerConfig), 'microservice.server');
   const cookieName = configService.get<string>('jwt.ucenter.cookieName');
+  assertConfig(cookieName, 'jwt.ucenter.cookieName');
 
   if (enableSwagger) {
     const swaggerConfig = new DocumentBuilder()
-      .setTitle(configService.get<string>('app.name'))
+      .setTitle(configService.get<string>('app.name', 'MetaCMS'))
       .setDescription('Meta CMS API')
       .setVersion(process.env.npm_package_version || '0.0.1')
       .addCookieAuth(cookieName)
@@ -45,10 +48,7 @@ async function bootstrap() {
     );
     next();
   });
-  let limit = configService.get<string>('app.bodyParser.limit');
-  if (!limit) {
-    limit = '50mb';
-  }
+  const limit = configService.get<string>('app.bodyParser.limit', '50mb');
   app.use(bodyParser.json({ limit }));
   app.use(bodyParser.urlencoded({ limit, extended: true }));
   app.use(cookieParser());
