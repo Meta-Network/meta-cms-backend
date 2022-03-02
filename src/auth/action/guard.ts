@@ -4,15 +4,37 @@ import {
   Inject,
   Injectable,
   LoggerService,
+  mixin,
+  Type,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
+import { ParamsDictionary } from 'express-serve-static-core';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
-import { CMSManagementJWTPayload } from '../../types';
 import { NestMetadataType, SkipAuthType } from '../../types/enum';
 import { isDevelopment } from '../../utils';
 import { ActionAuthorizationService } from './service';
+
+type ActionBody = { initiator: string; name: string; signature: string };
+
+type ActionRequest = Request<ParamsDictionary, any, ActionBody>;
+
+export const ActionGuard = (
+  roles: string[],
+): Type<ActionAuthorizationGuard> => {
+  class ActionGuardMixin
+    extends ActionAuthorizationGuard
+    implements CanActivate
+  {
+    async canActivate(context: ExecutionContext): Promise<boolean> {
+      super.roles = roles;
+      return super.canActivate(context);
+    }
+  }
+  const guard = mixin(ActionGuardMixin);
+  return guard;
+};
 
 @Injectable()
 export class ActionAuthorizationGuard implements CanActivate {
@@ -27,6 +49,7 @@ export class ActionAuthorizationGuard implements CanActivate {
     SkipAuthType.All,
     SkipAuthType.Action,
   ];
+  protected roles: string[] = [];
 
   private devDebug(msg: string): void {
     const isDev = isDevelopment();
@@ -50,19 +73,16 @@ export class ActionAuthorizationGuard implements CanActivate {
       this.devDebug(`Skip Action authorize`);
       return true;
     }
-    const request: Request = context.switchToHttp().getRequest();
-    const {
-      user,
-      body,
-    }: {
-      user?: CMSManagementJWTPayload;
-      body?: { initiator: string; name: string; signature: string };
-    } = request;
+    const request: ActionRequest = context.switchToHttp().getRequest();
+    const { user, body } = request;
     const address = await this.service.verifyAddressMatch(
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore // Fuck @types/passport
       user?.sub,
       body?.initiator,
     );
     const action = await this.service.verifyAction(body);
-    return address && action;
+    const hasRole = await this.service.verifyRole(this.roles, body.name);
+    return address && action && hasRole;
   }
 }

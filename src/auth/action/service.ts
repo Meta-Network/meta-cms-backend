@@ -53,4 +53,13 @@ export class ActionAuthorizationService {
       throw new InternalServerErrorException(error.message);
     }
   }
+
+  public async verifyRole(roles: string[], request: string): Promise<boolean> {
+    const hasRole = roles.includes(request);
+    assert(
+      hasRole,
+      new AccessDeniedException(`action name ${request} not allowed`),
+    );
+    return hasRole;
+  }
 }

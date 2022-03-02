@@ -148,7 +148,7 @@ export class ManagementEthereumService {
     ](verify, signature);
   }
 
-  public async verifyAddress(address: string): Promise<string> {
+  public verifyAddress(address: string): string {
     return ethers.utils.getAddress(address);
   }
 
