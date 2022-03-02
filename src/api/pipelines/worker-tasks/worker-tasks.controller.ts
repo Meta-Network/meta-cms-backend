@@ -8,13 +8,21 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  UseGuards,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { ApiProperty, ApiTags } from '@nestjs/swagger';
 import { IsBoolean, IsOptional } from 'class-validator';
 
-import { BasicAuth, SkipAllAuth, User } from '../../../decorators';
+import {
+  BasicAuth,
+  SkipAllAuth,
+  SkipUCenterAuth,
+  User,
+} from '../../../decorators';
+import { AuthGuardType } from '../../../types/enum';
 import { WorkerModel2TaskConfig } from '../../../types/worker-model2';
 import { PostMethodValidation } from '../../../utils/validation';
 import { WorkerTasksDispatcherService } from './worker-tasks.dispatcher.service';
@@ -63,8 +71,10 @@ export class WorkerTasksController {
       taskReport,
     );
   }
+
   @Post('/next-task')
-  // @SkipAllAuth()
+  @SkipUCenterAuth()
+  @UseGuards(AuthGuard(AuthGuardType.CMS))
   async nextTask() {
     await this.workerTasksDispatcherService.dispatchNextTask();
   }
