@@ -4,7 +4,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 
 import { CMSJwtConfigService } from '../../configs/jwt/cms';
-import { CMSAuthorizeService } from './service';
+import { CMSAuthenticationService } from './service';
 import { CMSJwtStrategy } from './strategy';
 
 @Module({
@@ -15,7 +15,7 @@ import { CMSJwtStrategy } from './strategy';
       useClass: CMSJwtConfigService,
     }),
   ],
-  providers: [CMSAuthorizeService, CMSJwtStrategy],
-  exports: [CMSAuthorizeService],
+  providers: [CMSAuthenticationService, CMSJwtStrategy],
+  exports: [CMSAuthenticationService],
 })
-export class CMSAuthorizeModule {}
+export class CMSAuthenticationModule {}

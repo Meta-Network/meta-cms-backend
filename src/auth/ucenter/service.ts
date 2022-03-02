@@ -14,7 +14,7 @@ import { UCenterJWTPayload } from '../../types';
 import { isDevelopment } from '../../utils';
 
 @Injectable()
-export class UCenterAuthorizeService {
+export class UCenterAuthenticationService {
   constructor(
     private readonly configService: ConfigService,
     private readonly jwtService: JwtService,

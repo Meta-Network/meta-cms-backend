@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
-export class CMSAuthorizeService {
+export class CMSAuthenticationService {
   constructor(private readonly jwtService: JwtService) {}
 
   public async managementJWTSign(user: string): Promise<{ token: string }> {

@@ -4,7 +4,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 
 import { UCenterJwtConfigService } from '../../configs/jwt/ucenter';
-import { UCenterAuthorizeService } from './service';
+import { UCenterAuthenticationService } from './service';
 import { UCenterJwtStrategy } from './strategy';
 
 @Module({
@@ -15,7 +15,7 @@ import { UCenterJwtStrategy } from './strategy';
       useClass: UCenterJwtConfigService,
     }),
   ],
-  providers: [UCenterAuthorizeService, UCenterJwtStrategy],
-  exports: [UCenterAuthorizeService],
+  providers: [UCenterAuthenticationService, UCenterJwtStrategy],
+  exports: [UCenterAuthenticationService],
 })
-export class UCenterAuthorizeModule {}
+export class UCenterAuthenticationModule {}

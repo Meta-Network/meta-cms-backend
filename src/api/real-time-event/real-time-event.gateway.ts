@@ -4,7 +4,7 @@ import { Server } from '@nestjs/microservices';
 import { WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 import { parse as cookieParse } from 'cookie';
 
-import { UCenterAuthorizeService } from '../../auth/ucenter/service';
+import { UCenterAuthenticationService } from '../../auth/ucenter/service';
 import { configBuilder } from '../../configs';
 import type { StateData, VerifiedSocket } from '../../types';
 import {
@@ -34,7 +34,7 @@ export class RealTimeEventGateway {
   private clients = new Map<number, VerifiedSocket[]>();
 
   constructor(
-    private readonly ucenterAuthService: UCenterAuthorizeService,
+    private readonly ucenterAuthService: UCenterAuthenticationService,
     private readonly postOrdersLogicService: PostOrdersLogicService,
   ) {}
 

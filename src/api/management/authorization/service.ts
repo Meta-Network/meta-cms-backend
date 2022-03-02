@@ -7,7 +7,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
-import { CMSAuthorizeService } from '../../../auth/cms/service';
+import { CMSAuthenticationService } from '../../../auth/cms/service';
 import {
   AccessDeniedException,
   ValidationException,
@@ -26,7 +26,7 @@ export class ManagementAuthorizationService {
     private readonly logger: LoggerService,
     private readonly configService: ConfigService,
     private readonly ethereumService: ManagementEthereumService,
-    private readonly cmsAuthService: CMSAuthorizeService,
+    private readonly cmsAuthService: CMSAuthenticationService,
   ) {
     const expiresInMinutes = this.configService.get<number>(
       'management.authorization.expiresInMinutes',

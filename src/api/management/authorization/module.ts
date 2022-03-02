@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
 
-import { CMSAuthorizeModule } from '../../../auth/cms/module';
+import { CMSAuthenticationModule } from '../../../auth/cms/module';
 import { ManagementEthereumService } from '../ethereum/service';
 import { ManagementAuthorizationController } from './controller';
 import { ManagementAuthorizationService } from './service';
 
 @Module({
-  imports: [CMSAuthorizeModule],
+  imports: [CMSAuthenticationModule],
   controllers: [ManagementAuthorizationController],
   providers: [ManagementEthereumService, ManagementAuthorizationService],
 })
