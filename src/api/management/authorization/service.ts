@@ -8,12 +8,12 @@ import { ConfigService } from '@nestjs/config';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
 import { CMSAuthenticationService } from '../../../auth/cms/service';
+import { ManagementEthereumService } from '../../../ethereum/management/service';
 import {
   AccessDeniedException,
   ValidationException,
 } from '../../../exceptions';
 import { isDevelopment } from '../../../utils';
-import { ManagementEthereumService } from '../ethereum/service';
 import {
   ManagementAuthorizationDto,
   ManagementAuthorizationWithToken,

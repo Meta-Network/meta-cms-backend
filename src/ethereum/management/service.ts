@@ -14,9 +14,9 @@ import assert from 'assert';
 import { ethers } from 'ethers';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
-import { ConfigKeyNotFoundException } from '../../../exceptions';
-import { stringSlice } from '../../../utils';
-import { ManagementAuthorizationDto } from '../authorization/dto';
+import { ConfigKeyNotFoundException } from '../../exceptions';
+import { stringSlice } from '../../utils';
+import { ManagementAction, ManagementAuthorization } from './dto';
 
 type JsonRpcNetwork = Network & { url: string };
 
@@ -103,7 +103,7 @@ export class ManagementEthereumService {
     ],
   };
 
-  public async signVerificationTypedData(
+  private async signVerificationTypedData(
     message: MetaSpaceManagement.VerificationStruct,
   ): Promise<string> {
     this.logger.verbose(
@@ -119,7 +119,22 @@ export class ManagementEthereumService {
     );
   }
 
-  public async verifyVerificationSignature(
+  private async verifyActionSignature(
+    verify: MetaSpaceManagement.ActionStruct,
+    signature: string,
+  ): Promise<boolean> {
+    const sign = stringSlice(signature, 18, 16);
+    this.logger.verbose(
+      `Verify action signature ${sign}`,
+      this.constructor.name,
+    );
+    return await this.contract['verifySignature((address,string),bytes)'](
+      verify,
+      signature,
+    );
+  }
+
+  private async verifyVerificationSignature(
     verify: MetaSpaceManagement.VerificationStruct,
     signature: string,
   ): Promise<boolean> {
@@ -133,8 +148,21 @@ export class ManagementEthereumService {
     ](verify, signature);
   }
 
+  public async verifyAddress(address: string): Promise<string> {
+    return ethers.utils.getAddress(address);
+  }
+
+  public async verifyAction(action: ManagementAction): Promise<boolean> {
+    const { initiator, name, signature } = action;
+    const message: MetaSpaceManagement.ActionStruct = {
+      initiator,
+      name,
+    };
+    return await this.verifyActionSignature(message, signature);
+  }
+
   public async verifyAuthorization(
-    auth: ManagementAuthorizationDto,
+    auth: ManagementAuthorization,
   ): Promise<boolean> {
     const { user, timestamp, signature } = auth;
     const sign = splitSignature(signature);
