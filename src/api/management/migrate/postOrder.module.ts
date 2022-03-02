@@ -2,6 +2,7 @@ import { BullModule } from '@nestjs/bull';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
+import { ActionAuthorizationModule } from '../../../auth/action/module';
 import { PostMetadataEntity } from '../../../entities/pipeline/post-metadata.entity';
 import { PostOrderEntity } from '../../../entities/pipeline/post-order.entity';
 import { SiteConfigEntity } from '../../../entities/siteConfig.entity';
@@ -26,6 +27,7 @@ import { MigratePostOrderService } from './postOrder.service';
     }),
     PostModule,
     MetadataStorageModule,
+    ActionAuthorizationModule,
   ],
   controllers: [MigratePostOrderController],
   providers: [MigratePostOrderService, MigratePostOrderProcessor],
