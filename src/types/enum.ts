@@ -97,10 +97,16 @@ export enum AuthGuardType {
   CMS = 'CMS',
 }
 
+export enum SkipAuthType {
+  All = 'ALL',
+  Action = 'ActionAuthorizationGuard',
+  /** SkipAuthType.CMS may not function because jwt strategy need a valid token */
+  CMS = 'CMSAuthenticationGuard',
+  UCenter = 'UCenterAuthenticationGuard',
+}
+
 export enum NestMetadataType {
-  SkipAllAuth = 'SKIP_ALL_AUTH',
-  SkipUCenterAuth = 'SKIP_U_CENTER_AUTH',
-  SkipCMSAuth = 'SKIP_CMS_AUTH',
+  SkipAuth = 'SKIP_AUTH',
 }
 
 export enum MetaMicroserviceClient {

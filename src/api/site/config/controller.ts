@@ -211,7 +211,7 @@ export class SiteConfigController {
 
   @ApiOkResponse({ type: SiteConfigResponse })
   @Get('random')
-  @SkipAllAuth(true)
+  @SkipAllAuth()
   async getRandomSiteConfig() {
     return await this.service.findRandomSiteConfig();
   }

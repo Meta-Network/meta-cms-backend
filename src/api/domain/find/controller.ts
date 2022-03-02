@@ -26,7 +26,7 @@ export class DomainFindController {
   @ApiQuery({ name: 'prefix', type: String, example: 'test' })
   @ApiQuery({ name: 'limit', type: Number, example: 20 })
   @Get()
-  @SkipAllAuth(true)
+  @SkipAllAuth()
   async findMetaSpacePrefix(
     @Query('prefix') prefix: string,
     @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit: number,

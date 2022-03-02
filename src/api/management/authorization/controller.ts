@@ -39,7 +39,7 @@ export class ManagementAuthorizationController {
       'When the fields in the request body does not pass type validation',
   })
   @Post('login')
-  @SkipAllAuth(true)
+  @SkipAllAuth()
   @UsePipes(new ValidationPipe(PostMethodValidation))
   public async login(@Body() authDto: ManagementAuthorizationDto) {
     return this.service.login(authDto);

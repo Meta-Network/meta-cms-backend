@@ -37,7 +37,7 @@ export class WorkerTasksController {
     private readonly workerTasksDispatcherService: WorkerTasksDispatcherService,
   ) {}
   @Get(':workerTaskId')
-  @SkipAllAuth(true)
+  @SkipAllAuth()
   async getWorkerTaskById(
     @BasicAuth() auth: string,
     @Param('workerTaskId') workerTaskId: string,
@@ -51,7 +51,7 @@ export class WorkerTasksController {
   @Patch(':workerTaskId/reports')
   @Post(':workerTaskId/reports')
   @UsePipes(new ValidationPipe(PostMethodValidation))
-  @SkipAllAuth(true)
+  @SkipAllAuth()
   async report(
     @BasicAuth() auth: string,
     @Param('workerTaskId') workerTaskId: string,
@@ -64,7 +64,7 @@ export class WorkerTasksController {
     );
   }
   @Post('/next-task')
-  // @SkipAllAuth(true)
+  // @SkipAllAuth()
   async nextTask() {
     await this.workerTasksDispatcherService.dispatchNextTask();
   }

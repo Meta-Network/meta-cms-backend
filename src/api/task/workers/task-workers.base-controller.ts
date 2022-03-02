@@ -9,7 +9,7 @@ export class TaskWorkersBaseController {
   constructor(protected readonly taskWorkersService: TaskWorkersService) {}
 
   @Get(':name')
-  @SkipAllAuth(true)
+  @SkipAllAuth()
   async findOneTaskForWorker(
     @BasicAuth(ParseUUIDPipe) auth: string,
     @Param('name') name: string,
@@ -18,7 +18,7 @@ export class TaskWorkersBaseController {
   }
 
   @Patch(':name')
-  @SkipAllAuth(true)
+  @SkipAllAuth()
   async updateTaskForWorker(
     @BasicAuth() auth: string,
     @Param('name') name: string,

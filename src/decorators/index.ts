@@ -11,7 +11,7 @@ import {
   UCenterAccount,
   UCenterJWTPayload,
 } from '../types';
-import { NestMetadataType } from '../types/enum';
+import { NestMetadataType, SkipAuthType } from '../types/enum';
 
 type UserParamDecoratorReturnType =
   | UCenterJWTPayload
@@ -50,11 +50,7 @@ export const BasicAuth = createParamDecorator<
   return Buffer.from(secret, 'base64').toString();
 });
 
-export const SkipAllAuth = (skip: boolean) =>
-  SetMetadata(NestMetadataType.SkipAllAuth, skip);
-
-export const SkipUCenterAuth = (skip: boolean) =>
-  SetMetadata(NestMetadataType.SkipUCenterAuth, skip);
-
-export const SkipCMSAuth = (skip: boolean) =>
-  SetMetadata(NestMetadataType.SkipCMSAuth, skip);
+export const SkipAuths = (...types: SkipAuthType[]) =>
+  SetMetadata(NestMetadataType.SkipAuth, types);
+export const SkipAllAuth = () => SkipAuths(SkipAuthType.All);
+export const SkipUCenterAuth = () => SkipAuths(SkipAuthType.UCenter);
