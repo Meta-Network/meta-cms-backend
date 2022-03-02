@@ -6,13 +6,13 @@ import { ClientsModule } from '@nestjs/microservices';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import Redis from 'ioredis';
 
+import { AppCacheModule } from '../../cache/module';
 import { UCenterMicroserviceConfigService } from '../../configs/microservices/ucenter';
 import { AccessTokenEntity } from '../../entities/accessToken.entity';
 import { DraftEntity } from '../../entities/draft.entity';
 import { PostEntity } from '../../entities/post.entity';
 import { PostSiteConfigRelaEntity } from '../../entities/postSiteConfigRela.entity';
 import { MetaMicroserviceClient } from '../../types/enum';
-import { AppCacheModule } from '../cache/module';
 import { MetaSignatureModule } from '../meta-signature/meta-signature.module';
 import { MetadataStorageModule } from '../provider/metadata-storage/metadata-storage.module';
 import { PublisherModule } from '../provider/publisher/publisher.module';

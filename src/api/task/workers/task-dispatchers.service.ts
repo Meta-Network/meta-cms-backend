@@ -11,8 +11,8 @@ import crypto from 'crypto';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { v4 as uuid } from 'uuid';
 
+import { AppCacheService } from '../../../cache/service';
 import { QueueTaskConfig } from '../../../types';
-import { AppCacheService } from '../../cache/service';
 import { TaskWorkersService } from './task-workers.service';
 
 @Injectable()

@@ -3,8 +3,8 @@ import { LoggerService, Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
+import { AppCacheModule } from '../../../../cache/module';
 import { TaskWorkerType } from '../../../../types/enum';
-import { AppCacheModule } from '../../../cache/module';
 import { DockerProcessorsModule } from '../../processors/docker/docker-processors.module';
 import { DockerProcessorsService } from '../../processors/docker/docker-processors.service';
 import { buildProcessor } from '../../processors/task-steps.job-processor.factory';
