@@ -3,6 +3,7 @@ import {
   ExecutionContext,
   SetMetadata,
 } from '@nestjs/common';
+import { isEmpty } from 'class-validator';
 import { Request } from 'express';
 
 import {
@@ -46,6 +47,9 @@ export const BasicAuth = createParamDecorator<
 >((_, ctx) => {
   const req: Request = ctx.switchToHttp().getRequest();
   const header = req.get('Authorization');
+  if (isEmpty(header)) {
+    return '';
+  }
   const secret = header.replace('Basic ', '');
   return Buffer.from(secret, 'base64').toString();
 });
