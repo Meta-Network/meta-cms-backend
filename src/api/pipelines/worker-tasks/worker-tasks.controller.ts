@@ -13,8 +13,8 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { ApiProperty, ApiTags } from '@nestjs/swagger';
-import { IsBoolean, IsOptional } from 'class-validator';
+import { ApiBasicAuth, ApiProperty, ApiTags } from '@nestjs/swagger';
+import { IsBoolean, IsNumber, IsOptional } from 'class-validator';
 
 import {
   BasicAuth,
@@ -29,6 +29,13 @@ import { WorkerTasksDispatcherService } from './worker-tasks.dispatcher.service'
 
 export class WorkerTaskDispatchDto {
   @ApiProperty({
+    description: '要操作的用户ID',
+    required: false,
+    default: false,
+  })
+  @IsNumber()
+  userId: number;
+  @ApiProperty({
     description: '是否自动失败',
     required: false,
     default: false,
@@ -36,6 +43,30 @@ export class WorkerTaskDispatchDto {
   @IsOptional()
   @IsBoolean()
   autoFailed?: boolean;
+}
+
+export class WorkerTaskReportDto implements MetaWorker.Info.TaskReport {
+  @ApiProperty({
+    description: '任务ID',
+    required: true,
+  })
+  taskId: string;
+  @ApiProperty({
+    description: '上报原因',
+    required: true,
+    enum: MetaWorker.Enums.TaskReportReason,
+  })
+  reason: MetaWorker.Enums.TaskReportReason;
+  @ApiProperty({
+    description: '上报时间戳',
+    required: true,
+  })
+  timestamp: number;
+  @ApiProperty({
+    description: '上报内容',
+    required: false,
+  })
+  data?: unknown;
 }
 
 @ApiTags('pipeline')
@@ -56,6 +87,7 @@ export class WorkerTasksController {
     );
   }
 
+  @ApiBasicAuth('workerTaskAuth')
   @Patch(':workerTaskId/reports')
   @Post(':workerTaskId/reports')
   @UsePipes(new ValidationPipe(PostMethodValidation))
@@ -63,7 +95,7 @@ export class WorkerTasksController {
   async report(
     @BasicAuth() auth: string,
     @Param('workerTaskId') workerTaskId: string,
-    @Body() taskReport: MetaWorker.Info.TaskReport,
+    @Body() taskReport: WorkerTaskReportDto,
   ): Promise<void> {
     await this.workerTasksDispatcherService.report(
       auth,
@@ -80,12 +112,14 @@ export class WorkerTasksController {
   }
 
   @Post(':siteConfigId/deploy-site')
+  @SkipUCenterAuth()
+  @UseGuards(AuthGuard(AuthGuardType.CMS))
   @UsePipes(new ValidationPipe(PostMethodValidation))
   async deploySite(
-    @User('id', ParseIntPipe) userId: number,
     @Param('siteConfigId', ParseIntPipe) siteConfigId: number,
     @Body() workerTaskDispatchDto: WorkerTaskDispatchDto,
   ) {
+    const { userId } = workerTaskDispatchDto;
     if (await this.workerTasksDispatcherService.hasTaskInProgress(userId)) {
       throw new ConflictException('Having Task in progreses');
     }
@@ -97,12 +131,15 @@ export class WorkerTasksController {
   }
 
   @Post(':siteConfigId/create-posts')
+  @SkipUCenterAuth()
+  @UseGuards(AuthGuard(AuthGuardType.CMS))
   @UsePipes(new ValidationPipe(PostMethodValidation))
   async createPosts(
-    @User('id', ParseIntPipe) userId: number,
     @Param('siteConfigId', ParseIntPipe) siteConfigId: number,
     @Body() workerTaskDispatchDto: WorkerTaskDispatchDto,
   ) {
+    const { userId } = workerTaskDispatchDto;
+
     if (await this.workerTasksDispatcherService.hasTaskInProgress(userId)) {
       throw new ConflictException('Having Task in progreses');
     }
@@ -114,12 +151,15 @@ export class WorkerTasksController {
   }
 
   @Post(':siteConfigId/publish-site')
+  @SkipUCenterAuth()
+  @UseGuards(AuthGuard(AuthGuardType.CMS))
   @UsePipes(new ValidationPipe(PostMethodValidation))
   async publishSite(
-    @User('id', ParseIntPipe) userId: number,
     @Param('siteConfigId', ParseIntPipe) siteConfigId: number,
     @Body() workerTaskDispatchDto: WorkerTaskDispatchDto,
   ) {
+    const { userId } = workerTaskDispatchDto;
+
     if (await this.workerTasksDispatcherService.hasTaskInProgress(userId)) {
       throw new ConflictException('Having Task in progreses');
     }
