@@ -45,7 +45,7 @@ export class WorkerTaskDispatchDto {
   autoFailed?: boolean;
 }
 
-export class WorkerTaskReportDto implements MetaWorker.Info.TaskReport {
+export class WorkerTaskReportDto<T> implements MetaWorker.Info.TaskReport<T> {
   @ApiProperty({
     description: '任务ID',
     required: true,
@@ -66,7 +66,7 @@ export class WorkerTaskReportDto implements MetaWorker.Info.TaskReport {
     description: '上报内容',
     required: false,
   })
-  data?: unknown;
+  data?: T;
 }
 
 @ApiTags('pipeline')
@@ -95,7 +95,7 @@ export class WorkerTasksController {
   async report(
     @BasicAuth() auth: string,
     @Param('workerTaskId') workerTaskId: string,
-    @Body() taskReport: WorkerTaskReportDto,
+    @Body() taskReport: MetaWorker.Info.TaskReport,
   ): Promise<void> {
     await this.workerTasksDispatcherService.report(
       auth,
