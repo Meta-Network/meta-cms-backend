@@ -557,7 +557,8 @@ export class WorkerTasksDispatcherService {
       ) {
         const internalResult =
           taskReport.data as MetaInternalResult<WorkModel2PostTaskResult>;
-        this.postOrdersLogicService.failSubmitPost(
+        // finish after report
+        await this.postOrdersLogicService.failSubmitPost(
           internalResult.data.id as string,
         );
       }
