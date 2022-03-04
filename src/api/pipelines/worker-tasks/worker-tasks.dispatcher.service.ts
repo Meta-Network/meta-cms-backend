@@ -537,6 +537,7 @@ export class WorkerTasksDispatcherService {
     if (MetaWorker.Enums.TaskReportReason.HEALTH_CHECK === taskReport.reason) {
       // 不需要做什么，有上面的输出日志就可以
     } else if (
+      MetaWorker.Enums.TaskReportReason.STARTED === taskReport.reason ||
       MetaWorker.Enums.TaskReportReason.FINISHED === taskReport.reason
     ) {
       // 无论是成功结束还是失败结束都会进入这里，并不需要特别做什么
