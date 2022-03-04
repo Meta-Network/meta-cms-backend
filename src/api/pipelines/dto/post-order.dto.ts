@@ -16,7 +16,6 @@ import {
   IsString,
   Matches,
   MaxLength,
-  MinLength,
   ValidateNested,
 } from 'class-validator';
 
@@ -79,7 +78,6 @@ export class AuthorPostDigestDto implements AuthorPostDigestMetadata {
   })
   @IsString()
   @IsNotEmpty()
-  @MinLength(3)
   @MaxLength(10000)
   content: string;
   @ApiProperty({
@@ -110,7 +108,6 @@ export class AuthorPostDigestDto implements AuthorPostDigestMetadata {
   })
   @IsString()
   @IsNotEmpty()
-  @MinLength(3)
   @MaxLength(100)
   summary: string;
   @ApiProperty({
