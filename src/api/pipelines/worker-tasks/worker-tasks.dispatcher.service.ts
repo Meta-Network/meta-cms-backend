@@ -563,6 +563,14 @@ export class WorkerTasksDispatcherService {
         );
       }
     }
+    // undefined ,null, etc
+    else {
+      this.logger.error(
+        `Worker ${workerTaskId} report invalid reason ${
+          taskReport.reason
+        }. TaskReport : ${JSON.stringify(taskReport)} `,
+      );
+    }
   }
 
   async finishTask(taskConfig: WorkerModel2TaskConfig) {
