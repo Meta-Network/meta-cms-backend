@@ -258,14 +258,8 @@ export class PostOrdersLogicService {
         data: [
           {
             id: sign.signature,
-            submit:
-              RealTimeEventState[
-                PipelineOrderTaskCommonState[postOrder.submitState]
-              ],
-            publish:
-              RealTimeEventState[
-                PipelineOrderTaskCommonState[postOrder.publishState]
-              ],
+            submit: RealTimeEventState[postOrder.submitState],
+            publish: RealTimeEventState[postOrder.publishState],
           },
         ],
       }),
