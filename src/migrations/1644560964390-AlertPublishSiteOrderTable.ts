@@ -15,9 +15,7 @@ export class AlertPublishSiteOrderTable1644560964390
     await queryRunner.query(
       `ALTER TABLE \`post_metadata_entity\` CHANGE \`content\` \`content\` text NOT NULL COMMENT 'Post content' DEFAULT ''`,
     );
-    await queryRunner.query(
-      `ALTER TABLE \`server_verification_entity\` CHANGE \`payload\` \`payload\` text NOT NULL COMMENT 'server verification payload' DEFAULT ''`,
-    );
+
     await queryRunner.query(
       `CREATE INDEX \`IDX_8d09d83d44096171cd241d2c54\` ON \`post_order_entity\` (\`postTaskId\`)`,
     );
@@ -39,9 +37,7 @@ export class AlertPublishSiteOrderTable1644560964390
     await queryRunner.query(
       `DROP INDEX \`IDX_8d09d83d44096171cd241d2c54\` ON \`post_order_entity\``,
     );
-    await queryRunner.query(
-      `ALTER TABLE \`server_verification_entity\` CHANGE \`payload\` \`payload\` text NOT NULL COMMENT 'server verification payload'`,
-    );
+
     await queryRunner.query(
       `ALTER TABLE \`post_metadata_entity\` CHANGE \`content\` \`content\` text NOT NULL COMMENT 'Post content'`,
     );

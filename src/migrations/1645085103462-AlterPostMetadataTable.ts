@@ -28,15 +28,9 @@ export class AlterPostMetadataTable1645085103462 implements MigrationInterface {
     await queryRunner.query(
       `ALTER TABLE \`post_metadata_entity\` ADD \`tags\` varchar(1000) NULL COMMENT 'Post tags'`,
     );
-    await queryRunner.query(
-      `ALTER TABLE \`server_verification_entity\` CHANGE \`payload\` \`payload\` text NOT NULL COMMENT 'server verification payload' DEFAULT ''`,
-    );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(
-      `ALTER TABLE \`server_verification_entity\` CHANGE \`payload\` \`payload\` text NOT NULL COMMENT 'server verification payload'`,
-    );
     await queryRunner.query(
       `ALTER TABLE \`post_metadata_entity\` DROP COLUMN \`tags\``,
     );

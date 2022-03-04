@@ -10,7 +10,7 @@ export class AlterServerVerificationTable1643375976740
       `ALTER TABLE \`server_verification_entity\` DROP COLUMN \`payload\``,
     );
     await queryRunner.query(
-      `ALTER TABLE \`server_verification_entity\` ADD \`payload\` text NOT NULL COMMENT 'server verification payload' DEFAULT ''`,
+      `ALTER TABLE \`server_verification_entity\` ADD \`payload\` text NOT NULL COMMENT 'server verification payload'`,
     );
   }
 
