@@ -42,7 +42,7 @@ export class MigratePostOrderService {
       .distinct()
       .getRawMany<{ postOrder_userId: number }>();
     const postOrderUserIds = postOrders.map((order) => order.postOrder_userId);
-    return postOrderUserIds;
+    return [0, ...postOrderUserIds];
   }
 
   private async findUnrecordedUserIds(
