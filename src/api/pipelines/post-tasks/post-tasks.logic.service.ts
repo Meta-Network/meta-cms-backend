@@ -45,7 +45,7 @@ export class PostTasksLogicService {
     postOrderEntities: PostOrderEntity[];
   }> {
     // 会产生空任务，相当于在没有postOrder的情况下创建了任务，方便测试，也好
-    const id = this.newCreatePostsTaskId();
+    const id = this.newCreatePostsTaskId(userId);
     this.logger.verbose(`Generate post task id ${id}`, this.constructor.name);
     const postTaskEntity = await this.postTasksBaseService.save({
       id,
@@ -75,9 +75,8 @@ export class PostTasksLogicService {
       postOrderEntities,
     };
   }
-  newCreatePostsTaskId(): string {
-    // post 目前没指定site的
-    return `wt4site-create-posts-${uuid()}`;
+  newCreatePostsTaskId(userId: number): string {
+    return `wt4site-${userId}create-posts-${uuid()}`;
   }
 
   async doingPostTask(
