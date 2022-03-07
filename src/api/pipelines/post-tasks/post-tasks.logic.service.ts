@@ -76,7 +76,7 @@ export class PostTasksLogicService {
     };
   }
   newCreatePostsTaskId(userId: number): string {
-    return `wt4site-${userId}create-posts-${uuid()}`;
+    return `wt4user-${userId}-create-posts-${uuid()}`;
   }
 
   async doingPostTask(
