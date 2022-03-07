@@ -88,7 +88,7 @@ export class WorkerTasksController {
   }
 
   @ApiBasicAuth('workerTaskAuth')
-  @Patch(':workerTaskId/reports')
+  // @Patch(':workerTaskId/reports')
   @Post(':workerTaskId/reports')
   @UsePipes(new ValidationPipe(PostMethodValidation))
   @SkipAllAuth()
