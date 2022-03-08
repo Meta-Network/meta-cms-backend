@@ -13,7 +13,6 @@ import {
   IsUrl,
   Length,
   MaxLength,
-  MinLength,
 } from 'class-validator';
 import { Column, Entity, OneToMany } from 'typeorm';
 
