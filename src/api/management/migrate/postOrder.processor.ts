@@ -233,7 +233,9 @@ export class MigratePostOrderProcessor {
       userId,
       postMetadata,
       submitState: PipelineOrderTaskCommonState.FINISHED,
-      publishState: published && PipelineOrderTaskCommonState.FINISHED,
+      publishState: published
+        ? PipelineOrderTaskCommonState.FINISHED
+        : PipelineOrderTaskCommonState.NONE,
       serverVerificationId:
         serverVerificationMetadata && serverVerificationMetadata.signature,
       certificateId,
