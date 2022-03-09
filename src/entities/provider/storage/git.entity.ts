@@ -1,7 +1,14 @@
 import { MetaWorker } from '@metaio/worker-model';
-import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import {
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  Matches,
+} from 'class-validator';
 import { Column, Entity } from 'typeorm';
 
+import { NotMatches } from '../../../utils/classValidator';
 import { BaseEntity } from '../../base.entity';
 
 @Entity()
@@ -22,6 +29,11 @@ export class GitStorageProviderEntity extends BaseEntity {
   @Column({ comment: 'Git repo name' })
   @IsString()
   @IsNotEmpty()
+  @NotMatches(/^\.{1,2}$/, { message: 'repoName is reserved.' })
+  @Matches(/^[.\-\w]{1,100}$/, {
+    message:
+      'repoName all code points must be either a hyphen (-), an underscore (_), a period (.), or an ASCII alphanumeric code point, max length 100 code points.',
+  })
   repoName: string;
 
   /**
@@ -31,6 +43,13 @@ export class GitStorageProviderEntity extends BaseEntity {
   @Column({ comment: 'Git branch name' })
   @IsString()
   @IsNotEmpty()
+  @NotMatches(/^\/+/, {
+    message: 'branchName must not leading with slash (/).',
+  })
+  @Matches(/^[\/\-\w]{1,250}$/, {
+    message:
+      'branchName all code points must be either a hyphen (-), an underscore (_), a slash (/), or an ASCII alphanumeric code point, max length 250 code points.',
+  })
   branchName: string;
 
   /**
