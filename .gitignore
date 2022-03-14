@@ -56,3 +56,12 @@ test/api/provider/publisher/publisher.service.e2e-spec.ts
 # Others
 /*.txt
 config/arweave.json
+
+# Yarn
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
