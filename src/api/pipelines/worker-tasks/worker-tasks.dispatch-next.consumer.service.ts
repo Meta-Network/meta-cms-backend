@@ -34,7 +34,6 @@ export class WorkerTasksDispatchNextConsumerService
   @Process({
     concurrency: 1,
   })
-  @Process()
   async process(job: Job<WorkerTasksDispatchNextJobDetail>) {
     this.logger.verbose(
       `Process dispatch next task job id ${job.id} previousTaskId: ${job.data.previousTaskId}`,
