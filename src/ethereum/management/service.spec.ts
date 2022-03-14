@@ -2,12 +2,11 @@ import {
   TypedDataDomain,
   TypedDataField,
 } from '@ethersproject/abstract-signer';
-import { splitSignature } from '@ethersproject/bytes';
 import { Network } from '@ethersproject/providers';
 import { MetaSpaceManagement } from '@metaio/meta-cms-contracts';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
-import { BigNumber, ethers } from 'ethers';
+import { ethers } from 'ethers';
 import { WinstonModule } from 'nest-winston';
 
 import { configBuilder } from '../../configs';
@@ -20,10 +19,16 @@ describe('EthereumManagementService', () => {
   let domain;
   let service: ManagementEthereumService;
   let configService: ConfigService;
-  const authorizationTypedDataFieldFieled: Record<string, TypedDataField[]> = {
+  const authorizationTypedDataField: Record<string, TypedDataField[]> = {
     Authorization: [
       { name: 'user', type: 'address' },
       { name: 'timestamp', type: 'uint256' },
+    ],
+  };
+  const actionTypedDataField: Record<string, TypedDataField[]> = {
+    Action: [
+      { name: 'initiator', type: 'address' },
+      { name: 'name', type: 'string' },
     ],
   };
 
@@ -80,7 +85,7 @@ describe('EthereumManagementService', () => {
       };
       const signature = await wallet._signTypedData(
         domain,
-        authorizationTypedDataFieldFieled,
+        authorizationTypedDataField,
         authMessage,
       );
       const auth = {
@@ -91,6 +96,36 @@ describe('EthereumManagementService', () => {
       console.log(JSON.stringify(auth));
       const result = await service.verifyAuthorization(auth);
       expect(result).toBe(true);
+    });
+  });
+
+  describe('verifyAction', () => {
+    it('should return true', async () => {
+      const user = configService.get<string>('testUser.address');
+      const privateKey = configService.get<string>('testUser.privateKey');
+      const provider = new ethers.providers.JsonRpcProvider(
+        network.url,
+        network,
+      );
+      const wallet = new ethers.Wallet(
+        Buffer.from(privateKey, 'hex'),
+        provider,
+      );
+
+      const actionMessage: MetaSpaceManagement.ActionStruct = {
+        initiator: user,
+        name: 'MIGRATE_V1_POST_ORDER_DATA',
+      };
+      const actionSignatrue = await wallet._signTypedData(
+        domain,
+        actionTypedDataField,
+        actionMessage,
+      );
+      const action = {
+        ...actionMessage,
+        signature: actionSignatrue,
+      };
+      console.log(JSON.stringify(action));
     });
   });
 });
