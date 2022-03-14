@@ -21,6 +21,7 @@ async function bootstrap() {
   assertConfig(!isEmptyObj(msServerConfig), 'microservice.server');
   const cookieName = configService.get<string>('jwt.ucenter.cookieName');
   assertConfig(cookieName, 'jwt.ucenter.cookieName');
+  const limit = configService.get<string>('app.bodyParser.limit', '50mb');
 
   if (enableSwagger) {
     const swaggerConfig = new DocumentBuilder()
@@ -48,18 +49,13 @@ async function bootstrap() {
     );
     next();
   });
-  const limit = configService.get<string>('app.bodyParser.limit', '50mb');
+
   app.use(bodyParser.json({ limit }));
   app.use(bodyParser.urlencoded({ limit, extended: true }));
   app.use(cookieParser());
-  app.use(
-    formCors({
-      exception: new RequestNotAcceptableException(),
-    }),
-  );
+  app.use(formCors({ exception: new RequestNotAcceptableException() }));
   app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
   app.connectMicroservice<MicroserviceOptions>(msServerConfig);
-
   // app.useGlobalFilters(new EntityNotFoundExceptionFilter());
 
   await app.startAllMicroservices();
