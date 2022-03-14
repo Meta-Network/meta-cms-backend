@@ -9,9 +9,7 @@ export class SiteConfigThemeToTemplateID1628590113534
     await queryRunner.query(
       "ALTER TABLE `site_config_entity` CHANGE `theme` `templateId` varchar(255) NOT NULL COMMENT 'Site theme' DEFAULT ''",
     );
-    await queryRunner.query(
-      "ALTER TABLE `site_info_entity` CHANGE `description` `description` text NOT NULL COMMENT 'Site description' DEFAULT ''",
-    );
+
     await queryRunner.query(
       'ALTER TABLE `site_config_entity` DROP COLUMN `templateId`',
     );
@@ -27,9 +25,7 @@ export class SiteConfigThemeToTemplateID1628590113534
     await queryRunner.query(
       "ALTER TABLE `site_config_entity` ADD `templateId` varchar(255) NOT NULL COMMENT 'Site theme' DEFAULT ''",
     );
-    await queryRunner.query(
-      "ALTER TABLE `site_info_entity` CHANGE `description` `description` text NOT NULL COMMENT 'Site description'",
-    );
+
     await queryRunner.query(
       "ALTER TABLE `site_config_entity` CHANGE `templateId` `theme` varchar(255) NOT NULL COMMENT 'Site theme' DEFAULT ''",
     );

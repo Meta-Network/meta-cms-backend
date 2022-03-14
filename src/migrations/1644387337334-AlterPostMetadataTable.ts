@@ -5,7 +5,7 @@ export class AlterPostMetadataTable1644387337334 implements MigrationInterface {
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(
-      `ALTER TABLE \`post_metadata_entity\` ADD \`content\` text NOT NULL COMMENT 'Post content' DEFAULT ''`,
+      `ALTER TABLE \`post_metadata_entity\` ADD \`content\` text NOT NULL COMMENT 'Post content'`,
     );
   }
 
