@@ -48,16 +48,29 @@ export class PostOrdersLogicService {
     private readonly configService: ConfigService,
     private readonly postOrdersBaseService: PostOrdersBaseService,
     private readonly serverVerificationBaseService: ServerVerificationBaseService,
-
     private readonly metadataStorageService: MetadataStorageService,
     private readonly metaSignatureHelper: MetaSignatureHelper,
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async getFirstPendingPostOrder(): Promise<PostOrderEntity> {
-    return await this.postOrdersBaseService.getFirstBySubmitState(
-      PipelineOrderTaskCommonState.PENDING,
-    );
+    return await this.postOrdersBaseService
+      .createQueryBuilder()
+      .where('submitState = :submitState', {
+        submitState: PipelineOrderTaskCommonState.PENDING,
+      })
+      .andWhere(`(certificateStorageType = '' OR certificateId != '')`)
+
+      .andWhere(
+        `NOT EXISTS (SELECT 1 from publish_site_order_entity AS publishSiteOrderEntity WHERE publishSiteOrderEntity.state In (:...state) AND publishSiteOrderEntity.userId =postOrderEntity.userId)`,
+        {
+          state: [PipelineOrderTaskCommonState.DOING],
+        },
+      )
+      .orderBy({
+        createdAt: 'ASC',
+      })
+      .getOne();
   }
 
   async pagiUserAllPostOrders(
