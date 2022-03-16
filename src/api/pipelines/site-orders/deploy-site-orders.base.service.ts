@@ -1,7 +1,7 @@
 import { Inject, Injectable, LoggerService } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
-import { DeepPartial, Repository } from 'typeorm';
+import { DeepPartial, Repository, SelectQueryBuilder } from 'typeorm';
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 
 import { DeploySiteOrderEntity } from '../../../entities/pipeline/deploy-site-order.entity';
@@ -27,6 +27,12 @@ export class DeploySiteOrdersBaseService {
       userId,
       siteConfigId,
     });
+  }
+
+  createQueryBuilder(): SelectQueryBuilder<DeploySiteOrderEntity> {
+    return this.deploySiteOrdersRepository.createQueryBuilder(
+      'deploySiteOrderEntity',
+    );
   }
   async getFirstByState(
     state: PipelineOrderTaskCommonState,

@@ -235,14 +235,56 @@ export class SiteOrdersLogicService {
   }
 
   async getFirstPendingDeploySiteOrder(): Promise<DeploySiteOrderEntity> {
-    return await this.deploySiteOrdersBaseService.getFirstByState(
-      PipelineOrderTaskCommonState.PENDING,
-    );
+    // return await this.deploySiteOrdersBaseService.getFirstByState(
+    //   PipelineOrderTaskCommonState.PENDING,
+    // );
+    return await this.deploySiteOrdersBaseService
+      .createQueryBuilder()
+      .where('state = :state', {
+        state: PipelineOrderTaskCommonState.PENDING,
+      })
+      .andWhere(
+        `EXISTS (SELECT 1 from site_config_entity AS siteConfigEntity WHERE  siteConfigEntity.status In (:...status) AND siteConfigEntity.id = deploySiteOrderEntity.siteConfigId
+        )`,
+        {
+          status: [SiteStatus.Configured, SiteStatus.DeployFailed],
+        },
+      )
+      .orderBy({
+        createdAt: 'ASC',
+      })
+      .getOne();
   }
   async getFirstPendingPublishSiteOrder(): Promise<PublishSiteOrderEntity> {
-    return await this.publishSiteOrdersBaseService.getFirstByState(
-      PipelineOrderTaskCommonState.PENDING,
-    );
+    // return await this.publishSiteOrdersBaseService.getFirstByState(
+    //   PipelineOrderTaskCommonState.PENDING,
+    // );
+    return await this.publishSiteOrdersBaseService
+      .createQueryBuilder()
+      .where('state = :state', {
+        state: PipelineOrderTaskCommonState.PENDING,
+      })
+      .andWhere(
+        `EXISTS (SELECT 1 from site_config_entity AS siteConfigEntity WHERE siteConfigEntity.status In (:...status) AND siteConfigEntity.id = publishSiteOrderEntity.siteConfigId
+        )`,
+        {
+          status: [
+            SiteStatus.Deployed,
+            SiteStatus.Published,
+            SiteStatus.PublishFailed,
+          ],
+        },
+      )
+      .andWhere(
+        `NOT EXISTS (SELECT 1 from post_order_entity AS postOrderEntity WHERE postOrderEntity.submitState In (:...submitState) AND postOrderEntity.userId =publishSiteOrderEntity.userId)`,
+        {
+          submitState: [PipelineOrderTaskCommonState.DOING],
+        },
+      )
+      .orderBy({
+        createdAt: 'ASC',
+      })
+      .getOne();
   }
 
   async updatePublishSiteTaskId(
