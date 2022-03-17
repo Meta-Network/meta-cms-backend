@@ -265,8 +265,7 @@ export class SiteOrdersLogicService {
         state: PipelineOrderTaskCommonState.PENDING,
       })
       .andWhere(
-        `EXISTS (SELECT 1 from site_config_entity AS siteConfigEntity WHERE siteConfigEntity.status In (:...status) AND siteConfigEntity.id = publishSiteOrderEntity.siteConfigId
-        )`,
+        `EXISTS (SELECT 1 from site_config_entity AS siteConfigEntity WHERE siteConfigEntity.status In (:...status) AND siteConfigEntity.id = publishSiteOrderEntity.siteConfigId)`,
         {
           status: [
             SiteStatus.Deployed,
@@ -276,9 +275,16 @@ export class SiteOrdersLogicService {
         },
       )
       .andWhere(
-        `NOT EXISTS (SELECT 1 from post_order_entity AS postOrderEntity WHERE postOrderEntity.submitState In (:...submitState) AND postOrderEntity.userId =publishSiteOrderEntity.userId)`,
+        `NOT EXISTS (SELECT 1 from publish_site_order_entity AS myPublishSiteOrderEntity WHERE myPublishSiteOrderEntity.state In (:...myPublishSiteOrderEntityState) AND myPublishSiteOrderEntity.userId =publishSiteOrderEntity.userId)`,
         {
-          submitState: [PipelineOrderTaskCommonState.DOING],
+          myPublishSiteOrderEntityState: [PipelineOrderTaskCommonState.DOING],
+        },
+      )
+      .andWhere(
+        `NOT EXISTS (SELECT 1 from post_order_entity AS postOrderEntity WHERE (postOrderEntity.submitState In (:...postOrderEntitySubmitState) OR postOrderEntity.publishState In (:...postOrderEntityPublishState)) AND postOrderEntity.userId =publishSiteOrderEntity.userId)`,
+        {
+          postOrderEntitySubmitState: [PipelineOrderTaskCommonState.DOING],
+          postOrderEntityPublishState: [PipelineOrderTaskCommonState.DOING],
         },
       )
       .orderBy({

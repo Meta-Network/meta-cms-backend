@@ -60,11 +60,17 @@ export class PostOrdersLogicService {
         submitState: PipelineOrderTaskCommonState.PENDING,
       })
       .andWhere(`(certificateStorageType = '' OR certificateId != '')`)
-
       .andWhere(
-        `NOT EXISTS (SELECT 1 from publish_site_order_entity AS publishSiteOrderEntity WHERE publishSiteOrderEntity.state In (:...state) AND publishSiteOrderEntity.userId =postOrderEntity.userId)`,
+        `NOT EXISTS (SELECT 1 from post_order_entity AS myPostOrderEntity WHERE (myPostOrderEntity.submitState In (:...myPostOrderEntitySubmitState) OR myPostOrderEntity.publishState In (:...myPostOrderEntityPublishState)) AND myPostOrderEntity.userId =postOrderEntity.userId)`,
         {
-          state: [PipelineOrderTaskCommonState.DOING],
+          myPostOrderEntitySubmitState: [PipelineOrderTaskCommonState.DOING],
+          myPostOrderEntityPublishState: [PipelineOrderTaskCommonState.DOING],
+        },
+      )
+      .andWhere(
+        `NOT EXISTS (SELECT 1 from publish_site_order_entity AS publishSiteOrderEntity WHERE publishSiteOrderEntity.state In (:...publishSiteOrderEntityState) AND publishSiteOrderEntity.userId =postOrderEntity.userId)`,
+        {
+          publishSiteOrderEntityState: [PipelineOrderTaskCommonState.DOING],
         },
       )
       .orderBy({
