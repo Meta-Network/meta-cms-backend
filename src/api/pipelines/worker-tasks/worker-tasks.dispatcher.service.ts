@@ -454,7 +454,7 @@ export class WorkerTasksDispatcherService {
         // return await this.workerTasksJobProcessor.process(job);
       } catch (err) {
         this.logger.error(`Pipeline Exception: ${err}`, this.constructor.name);
-        throw new InternalServerErrorException('Pipeline Exception');
+        throw new InternalServerErrorException(err, 'Pipeline Exception');
       } finally {
         this.logger.verbose(
           `Dispatch task finished Queue active count: ${await this.workerTasksQueue.getActiveCount()} waiting count: ${await this.workerTasksQueue.getWaitingCount()}`,
