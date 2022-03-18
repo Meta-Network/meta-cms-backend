@@ -76,7 +76,7 @@ const options: ConnectionOptions = {
   timezone: config.db.timezone || 'Z',
   logging: isDevelopment(),
   migrationsTableName: 'be_migrations',
-  migrations: ['src/migrations/**/*.ts'],
+  migrations: process.env.DB_MIGRATION && ['src/migrations/**/*.ts'],
   cli: { migrationsDir: 'src/migrations' },
 };
 
