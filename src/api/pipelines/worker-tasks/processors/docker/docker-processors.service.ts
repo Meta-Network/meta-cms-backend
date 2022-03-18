@@ -66,7 +66,10 @@ export class DockerProcessorsService implements WorkerTasksJobProcessor {
     if (output && output.StatusCode === 0) {
       return;
     }
-    throw new InternalServerErrorException('Task processor: Docker Exception');
+    throw new InternalServerErrorException(
+      output,
+      'Task processor: Docker Exception',
+    );
   }
   getImage(job: Job<WorkerTasksJobDetail>): string {
     return this.configService.get<string>(`pipeline.processor.docker.image`);
