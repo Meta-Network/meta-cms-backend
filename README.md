@@ -1,56 +1,77 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo_text.svg" width="320" alt="Nest Logo" /></a>
-</p>
+# Meta CMS Backend
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+## Requirements
 
-## Description
-
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+- Node.js: >= 16 <17
+- Nats: >= 2.7.0
+- Redis: >= 6.0.0
+- MySQL: >= 8.0.0
+- Docker: latest
+- Grafana + Loki: latest
 
 ## Installation
 
-```bash
-$ npm install
+```shell
+yarn install
 ```
+
+Edit development config `config/config.development.yaml`
 
 ## Running the app
 
-```bash
+```shell
 # development
-$ npm run start
+yarn run start
 
 # watch mode
-$ npm run start:dev
+yarn run start:dev
 
-# production mode
-$ npm run start:prod
+# debug mode
+yarn run start:debug
 ```
 
 ## Test
 
-```bash
+```shell
 # unit tests
-$ npm run test
+yarn run test
 
 # e2e tests
-$ npm run test:e2e
+yarn run test:e2e
 
 # test coverage
-$ npm run test:cov
+yarn run test:cov
 ```
 
-## Support
+## Production deployment
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+### Checkout production code
 
-## Stay in touch
+```
+git checkout production
+```
 
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+### Installation
+
+```shell
+yarn install
+```
+
+Edit `config.production.yaml`
+
+### Migration database
+
+```shell
+yarn run typeorm migration:run
+```
+
+### Build and start
+
+```shell
+yarn run build
+yarn run start:prod
+```
 
 ## License
 
-Nest is [MIT licensed](LICENSE).
+[MIT licensed](LICENSE).
