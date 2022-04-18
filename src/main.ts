@@ -36,18 +36,15 @@ async function bootstrap() {
     });
   }
 
+  let corsOrigins: boolean | string[] =
+    configService.get<string[]>('cors.origins');
+  if (corsOrigins.includes('*')) {
+    corsOrigins = true;
+  }
   app.enableCors({
     methods: 'POST, PUT, GET, OPTIONS, DELETE, PATCH, HEAD',
-    origin: configService.get<string[]>('cors.origins'),
+    origin: corsOrigins,
     credentials: true,
-  });
-
-  app.use((req, res, next) => {
-    res.header(
-      'Access-Control-Allow-Methods',
-      'POST, PUT, GET, OPTIONS, DELETE, PATCH, HEAD',
-    );
-    next();
   });
 
   app.use(bodyParser.json({ limit }));
