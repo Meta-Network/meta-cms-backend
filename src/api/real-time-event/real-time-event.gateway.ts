@@ -5,7 +5,6 @@ import { WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 import { parse as cookieParse } from 'cookie';
 
 import { UCenterAuthenticationService } from '../../auth/ucenter/service';
-import { configBuilder } from '../../configs';
 import type { StateData, VerifiedSocket } from '../../types';
 import {
   InternalRealTimeEvent,
@@ -21,10 +20,8 @@ import {
   cookie: true,
   cors: {
     credentials: true,
-    // can't use '*' here because of the cors limit,
-    // also no ConfigService instance is available in this scope,
-    // thus use configBuilder here
-    origin: configBuilder().cors.origins,
+    // true means '*'
+    origin: true,
   },
 })
 export class RealTimeEventGateway {
